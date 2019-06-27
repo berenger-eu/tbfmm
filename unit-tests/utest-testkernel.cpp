@@ -67,7 +67,7 @@ class TestTestKernel : public UTester< TestTestKernel > {
             TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2M | TbfAlgorithmUtils::LFmmM2M | TbfAlgorithmUtils::LFmmM2L);
 
-            tree.applyToAllLeaves([&tree, NbParticles](auto&& leafHeader, const long int* /*particleIndexes*/,
+            tree.applyToAllLeaves([this, &tree, NbParticles, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> /*particleRhsPtr*/){
                 auto groupForCell = tree.findGroupWithCell(TreeHeight-1, leafHeader.spaceIndex);
 
@@ -82,7 +82,7 @@ class TestTestKernel : public UTester< TestTestKernel > {
                 UASSERTEEQUAL(multipoleData[0], leafHeader.nbParticles);
             });
 
-            tree.applyToAllCells([&spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
+            tree.applyToAllCells([this, &spacialSystem,&tree, TreeHeight](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> cellMultipole,
                                  const std::optional<std::reference_wrapper<LocalClass>> /*cellLocalr*/){
                 if(1 < inLevel && inLevel < TreeHeight-1){
@@ -99,11 +99,11 @@ class TestTestKernel : public UTester< TestTestKernel > {
 
                     assert(totalSum);
 
-                    UASSERTEEQUAL((*cellMultipole).get()[0] != totalSum);
+                    UASSERTEEQUAL((*cellMultipole).get()[0], totalSum);
                 }
             });
 
-            tree.applyToAllCells([&spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
+            tree.applyToAllCells([this, &spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> /*cellMultipole*/,
                                  const std::optional<std::reference_wrapper<LocalClass>> cellLocalr){
                 auto indexes = spacialSystem.getInteractionListForIndex(cellHeader.spaceIndex, inLevel);
@@ -126,7 +126,7 @@ class TestTestKernel : public UTester< TestTestKernel > {
             TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2P);
 
-            tree.applyToAllLeaves([&tree, &spacialSystem](auto&& leafHeader, const long int* /*particleIndexes*/,
+            tree.applyToAllLeaves([this, &tree, &spacialSystem, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
                 auto indexes = spacialSystem.getNeighborListForBlock(leafHeader.spaceIndex, TreeHeight-1);
                 long int totalSum = 0;
@@ -153,7 +153,7 @@ class TestTestKernel : public UTester< TestTestKernel > {
             TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
             algorithm.execute(tree);
 
-            tree.applyToAllCells([&spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
+            tree.applyToAllCells([this, &spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> /*cellMultipole*/,
                                  const std::optional<std::reference_wrapper<LocalClass>> cellLocalr){
                 auto indexes = spacialSystem.getInteractionListForIndex(cellHeader.spaceIndex, inLevel);
@@ -179,12 +179,13 @@ class TestTestKernel : public UTester< TestTestKernel > {
             });
 
 
-            tree.applyToAllLeaves([NbParticles](auto&& leafHeader, const long int* /*particleIndexes*/,
+            tree.applyToAllLeaves([this, NbParticles](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
                 for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
                     UASSERTEEQUAL(particleRhsPtr[0][idxPart], NbParticles-1);
                 }
             });
+        }
     }
 
     void TestBasic() {

@@ -21,7 +21,7 @@ public:
 protected:
     const SpacialConfiguration configuration;
     const SpaceIndexType spaceSystem;
-    const int nbElementsPerBlock;
+    const long int nbElementsPerBlock;
 
     std::vector<std::vector<CellGroupClass>> cellBlocks;
     std::vector<LeafGroupClass> particleGroups;
@@ -30,7 +30,7 @@ public:
 
     template<class ParticleContainer>
     TbfTree(const SpacialConfiguration& inConfiguration,
-               const int inNbElementsPerBlock, const ParticleContainer& inParticlePositions,
+               const long int inNbElementsPerBlock, const ParticleContainer& inParticlePositions,
                const bool inOneGroupPerParent)
         : configuration(inConfiguration), spaceSystem(configuration), nbElementsPerBlock(inNbElementsPerBlock){
 

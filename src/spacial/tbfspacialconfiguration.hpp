@@ -17,7 +17,7 @@ private:
     const std::array<RealType, Dim> boxWidthsAtLeafLevel;
 
 public:
-    TbfSpacialConfiguration(const int inTreeHeight, const std::array<RealType, Dim>& inBoxWidths, const std::array<RealType, Dim>& inBoxCenter)
+    TbfSpacialConfiguration(const long int inTreeHeight, const std::array<RealType, Dim>& inBoxWidths, const std::array<RealType, Dim>& inBoxCenter)
         : treeHeight(inTreeHeight),
           boxCenter(inBoxCenter),
           boxCorner(TbfUtils::AddVecToVec(inBoxCenter, TbfUtils::MulToVec(inBoxWidths, -RealType(1)/RealType(2)))),
