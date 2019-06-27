@@ -1,0 +1,60 @@
+image: berenger/spetabaruci
+
+# See how to setup a runner at: https://docs.gitlab.com/runner/
+# And more precisely on docker runners at: https://docs.gitlab.com/runner/executors/docker.html
+
+# Here is a simple example that will run the unit test
+example:
+  tags:
+    - docker
+  script:
+    - mkdir build
+    - cd build
+    - CXX=g++-7 cmake -DUSE_TESTING=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+
+# Just to illustrate that this test will run for merge request only
+example-full:
+  tags:
+    - docker
+  only:
+    - mergerequests
+  script:
+    - mkdir build
+    - cd build
+    - CXX=g++-7 cmake -DUSE_TESTING=ON -DUSE_SIMU_TESTING=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+
+# Just to illustrate how to use coverage
+# See https://about.gitlab.com/2016/11/03/publish-code-coverage-report-with-gitlab-pages/
+example-full-coverage:
+  tags:
+    - docker
+  script:
+    - mkdir build
+    - cd build
+    - CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DUSE_TESTING=ON -DUSE_SIMU_TESTING=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - lcov --directory CMakeFiles/ -c -o coverage-rapport.info
+    - lcov --list coverage-rapport.info
+    - genhtml -o ../coverage -t "Coverage example" coverage-rapport.info
+  artifacts:
+    paths:
+      - coverage/
+# We need to publish the result of the coverage
+pages:
+  stage: deploy
+  dependencies:
+    - example-full-coverage
+  script:
+    - mv coverage/ public/
+  artifacts:
+    paths:
+      - public
+    expire_in: 30 days
+  only:
+    - master
+
