@@ -36,7 +36,7 @@ int main(){
     TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
     std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
-    
+
     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
         particlePositions[idxPart] = randomGenerator.getNewItem();
     }
