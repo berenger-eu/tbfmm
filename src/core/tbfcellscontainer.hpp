@@ -191,7 +191,19 @@ public:
             inFunc(inLevel, cellHeader, cellMultipole, cellLocal);
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfCellsContainer& inCellContainer) {
+        inStream << "Cell block @ " << &inCellContainer << "\n";
+        inStream << " - size " << inCellContainer.getNbCells() << "\n";
+        inStream << " - starting index " << inCellContainer.getStartingSpacialIndex() << "\n";
+        inStream << " - ending index " << inCellContainer.getEndingSpacialIndex() << "\n";
+        return inStream;
+    }
 };
+
 
 
 #endif

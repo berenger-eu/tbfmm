@@ -306,6 +306,17 @@ public:
             inFunc(leafHeader, particleIndexes, particleDataPtr, particleRhsPtr);
         }
     }
+
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfParticlesContainer& inParticlesContainer) {
+        inStream << "Particle block @ " << &inParticlesContainer << "\n";
+        inStream << " - size " << inParticlesContainer.getNbLeaves() << "\n";
+        inStream << " - starting index " << inParticlesContainer.getStartingSpacialIndex() << "\n";
+        inStream << " - ending index " << inParticlesContainer.getEndingSpacialIndex() << "\n";
+        return inStream;
+    }
 };
 
 

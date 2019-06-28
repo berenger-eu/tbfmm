@@ -66,15 +66,14 @@ protected:
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
                 kernelWrapper.M2M(idxLevel, kernel, *currentLowerGroup, *currentUpperGroup);
-                if(currentUpperGroup->getEndingSpacialIndex() == spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex())){
-                    ++currentUpperGroup;
+                if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
-                }
-                else if(currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex())){
-                    ++currentUpperGroup;
+                    if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
+                        ++currentUpperGroup;
+                    }
                 }
                 else{
-                    ++currentLowerGroup;
+                    ++currentUpperGroup;
                 }
             }
         }
@@ -123,15 +122,14 @@ protected:
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
                 kernelWrapper.L2L(kernel, *currentUpperGroup, *currentLowerGroup);
-                if(currentUpperGroup->getEndingSpacialIndex() == spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex())){
-                    ++currentUpperGroup;
+                if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
-                }
-                else if(currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex())){
-                    ++currentUpperGroup;
+                    if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
+                        ++currentUpperGroup;
+                    }
                 }
                 else{
-                    ++currentLowerGroup;
+                    ++currentUpperGroup;
                 }
             }
         }
