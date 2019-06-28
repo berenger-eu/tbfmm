@@ -19,17 +19,20 @@ public:
     template <class FuncType>
     static void ApplyToAllElements(DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         assert(inNbItems == 1);
+        (void)inNbItems;
         inFunc(*inPtrToData);
     }
 
     template <class FuncType>
     static void ApplyToAllElementsConst(const DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         assert(inNbItems == 1);
+        (void)inNbItems;
         inFunc(*inPtrToData);
     }
 
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         assert(inNbItems == 1);
+        (void)inNbItems;
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes);
         return  leadingDim;
     }
@@ -39,6 +42,7 @@ public:
     public:
         explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
+            (void)inNbItems;
         }
 
         DataType& getItem(){
@@ -51,6 +55,7 @@ public:
     public:
         explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
+            (void)inNbItems;
         }
 
         const DataType& getItem() const{
