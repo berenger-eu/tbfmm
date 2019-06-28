@@ -7,6 +7,7 @@
 #include "core/tbftree.hpp"
 #include "kernels/testkernel/tbftestkernel.hpp"
 #include "algorithms/sequential/tbfalgorithm.hpp"
+#include "utils/tbftimer.hpp"
 
 /// - add uniform kernels
 /// - add GPU kernels
@@ -68,8 +69,13 @@ int main(){
     const bool inOneGroupPerParent = false;
 
     if(TreeHeight > 2){
+        TbfTimer timerBuildTree;
+
         TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
                                                                                     particlePositions, inOneGroupPerParent);
+
+        timerBuildTree.stop();
+        std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
         TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
         algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2M | TbfAlgorithmUtils::LFmmM2M | TbfAlgorithmUtils::LFmmM2L);
