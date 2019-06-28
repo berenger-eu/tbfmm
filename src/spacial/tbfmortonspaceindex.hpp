@@ -38,8 +38,8 @@ public:
         : configuration(inConfiguration){
     }
 
-    IndexType lowerBound() const{
-        return 0;
+    IndexType getUpperBound(const long int inLevel) const{
+        return (IndexType(1) << (inLevel * Dim));
     }
 
     template <class PositionType>
