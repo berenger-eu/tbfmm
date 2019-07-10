@@ -59,6 +59,7 @@ option(BUILD_TESTS "Should be ON to enable unit tests" OFF)
 
 if( BUILD_TESTS )
     MESSAGE(STATUS "Testing is enable")
+    set(TBFMM_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     enable_testing()
     add_subdirectory(unit-tests)
 endif()

@@ -38,7 +38,7 @@ example-full-coverage:
     - CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON -DUSE_SIMU_TESTING=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
-    - lcov --directory CMakeFiles/ -c -o coverage-rapport.info
+    - lcov --directory CMakeFiles/ --directory unit-tests/CMakeFiles/ -c -o coverage-rapport.info
     - lcov --list coverage-rapport.info
     - genhtml -o ../coverage -t "Coverage example" coverage-rapport.info
   artifacts:
