@@ -29,6 +29,18 @@ endif()
 
 #################################################
 
+option(USE_SPETABARU "Should be ON to use SPETABARU" ON)
+if(USE_SPETABARU)
+    set(SPETABARU_DIR "/home/berenger/Téléchargements/spetabaru-install/")
+    include_directories("${SPETABARU_DIR}/include/")
+    link_directories("${SPETABARU_DIR}/lib/")
+    list(APPEND TBFMM_LIBRARIES spetabaru)
+    list(APPEND TBFMM_LIBRARIES pthread)
+    add_definitions(-DUSE_SPETABARU)
+endif()
+
+#################################################
+
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 file(GLOB_RECURSE cpp_for_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -37,6 +49,7 @@ if(cpp_for_lib)
     add_library(TBFMM STATIC ${cpp_for_lib} ${hpp_for_lib})
     list(APPEND TBFMM_LIBRARIES TBFMM)
 endif()
+
 
 #################################################
 
