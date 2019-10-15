@@ -244,7 +244,7 @@ public:
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::LFmmOperations::LFmmNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
-        SpRuntime runtime(1);
+        SpRuntime runtime;
 
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2M){
             P2M(runtime, inTree);
