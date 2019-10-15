@@ -31,6 +31,15 @@ public:
         assert(inIndex < length);
         return vector[offset+inIndex];
     }
+
+    explicit operator std::vector<ElementType_T>() const{
+        return toStdVector();
+    }
+
+    std::vector<ElementType_T> toStdVector() const{
+        return std::vector<ElementType_T>(vector.begin() + offset,
+                                   vector.begin() + offset + length);
+    }
 };
 
 template <class ElementType_T>

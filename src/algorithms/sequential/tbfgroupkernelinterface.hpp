@@ -54,7 +54,7 @@ public:
     }
 
     template <class KernelClass, class CellGroupClass, class IndexClass>
-    void M2LInGroup(KernelClass& inKernel, CellGroupClass& inCellGroup, const IndexClass& inIndexes) const {
+    void M2LInGroup(const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup, const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
 
@@ -63,14 +63,15 @@ public:
             assert(inCellGroup.getElementFromSpacialIndex(interaction.indexTarget)
                    && *inCellGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-            inKernel.M2L(inCellGroup.getCellMultipole(*foundSrc),
+            inKernel.M2L(inLevel,
+                         inCellGroup.getCellMultipole(*foundSrc),
                          interaction.arrayIndexSrc,
                          inCellGroup.getCellLocal(interaction.globalTargetPos));
         }
     }
 
     template <class KernelClass, class CellGroupClass, class IndexClass>
-    void M2LBetweenGroups(KernelClass& inKernel, CellGroupClass& inCellGroup,
+    void M2LBetweenGroups(const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup,
                           const CellGroupClass& inOtherCellGroup, const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
@@ -80,7 +81,8 @@ public:
                 assert(inCellGroup.getElementFromSpacialIndex(interaction.indexTarget)
                        && *inCellGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-                inKernel.M2L(inOtherCellGroup.getCellMultipole(*foundSrc),
+                inKernel.M2L(inLevel,
+                             inOtherCellGroup.getCellMultipole(*foundSrc),
                              interaction.arrayIndexSrc,
                              inCellGroup.getCellLocal(interaction.globalTargetPos));
             }
@@ -88,7 +90,7 @@ public:
     }
 
     template <class KernelClass, class CellGroupClass>
-    void L2L(KernelClass& inKernel, const CellGroupClass& inUpperGroup,
+    void L2L(const long int inLevel, KernelClass& inKernel, const CellGroupClass& inUpperGroup,
              CellGroupClass& inLowerGroup) const {
         const auto startingIndex = std::max(spaceSystem.getParentIndex(inLowerGroup.getStartingSpacialIndex()),
                                             inUpperGroup.getStartingSpacialIndex());
@@ -105,7 +107,7 @@ public:
         while(idxParent != inUpperGroup.getNbCells()
               && idxChild != inLowerGroup.getNbCells()){
             assert(spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) == inUpperGroup.getCellSpacialIndex(idxParent));
-            inKernel.L2L(inUpperGroup.getCellLocal(idxParent), inLowerGroup.getCellLocal(idxChild),
+            inKernel.L2L(inLevel, inUpperGroup.getCellLocal(idxParent), inLowerGroup.getCellLocal(idxChild),
                          spaceSystem.childPositionFromParent(inLowerGroup.getCellSpacialIndex(idxChild)));
             idxChild += 1;
             if(idxChild != inLowerGroup.getNbCells()

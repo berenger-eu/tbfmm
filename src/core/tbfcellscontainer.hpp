@@ -121,6 +121,33 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
+    unsigned char* getDataPtr(){
+        return objectData.getPtr();
+    }
+
+    const unsigned char* getDataPtr() const {
+        return objectData.getPtr();
+    }
+
+    unsigned char* getMultipolePtr(){
+        return objectMultipole.getPtr();
+    }
+
+    const unsigned char* getMultipolePtr() const {
+        return objectMultipole.getPtr();
+    }
+
+    unsigned char* getLocalPtr(){
+        return objectLocal.getPtr();
+    }
+
+    const unsigned char* getLocalPtr() const {
+        return objectLocal.getPtr();
+    }
+
+
+    ///////////////////////////////////////////////////////////////////////////
+
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
         const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
 
