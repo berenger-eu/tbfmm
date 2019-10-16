@@ -29,15 +29,17 @@ endif()
 
 #################################################
 
-option(USE_SPETABARU "Should be ON to use SPETABARU" ON)
-if(USE_SPETABARU)
-    set(SPETABARU_DIR "/home/berenger/Téléchargements/spetabaru-install/")
-    include_directories("${SPETABARU_DIR}/include/")
-    link_directories("${SPETABARU_DIR}/lib/")
-    list(APPEND TBFMM_LIBRARIES spetabaru)
-    list(APPEND TBFMM_LIBRARIES pthread)
-    add_definitions(-DUSE_SPETABARU)
-endif()
+set(SPETABARU_JUST_LIB TRUE)
+add_subdirectory(deps/spetabaru)
+INCLUDE_DIRECTORIES(
+         ${SPETABARU_BINARY_DIR}/Src
+         ${SPETABARU_SOURCE_DIR}/Src
+         ${SPETABARU_INCLUDE_DIR}
+    )
+link_directories("${SPETABARU_DIR}/lib/")
+list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+
 
 #################################################
 
