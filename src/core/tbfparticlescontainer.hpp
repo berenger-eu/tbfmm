@@ -243,6 +243,24 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
+    unsigned char* getDataPtr(){
+        return objectData.getPtr();
+    }
+
+    const unsigned char* getDataPtr() const {
+        return objectData.getPtr();
+    }
+
+    unsigned char* getRhsPtr(){
+        return objectRhs.getPtr();
+    }
+
+    const unsigned char* getRhsPtr() const {
+        return objectRhs.getPtr();
+    }
+
+    ///////////////////////////////////////////////////////////////////////////
+
     template <class FuncClass>
     void applyToAllLeaves(FuncClass&& inFunc) const {
         const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();

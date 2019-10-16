@@ -29,6 +29,20 @@ endif()
 
 #################################################
 
+set(SPETABARU_JUST_LIB TRUE)
+add_subdirectory(deps/spetabaru)
+INCLUDE_DIRECTORIES(
+         ${SPETABARU_BINARY_DIR}/Src
+         ${SPETABARU_SOURCE_DIR}/Src
+         ${SPETABARU_INCLUDE_DIR}
+    )
+link_directories("${SPETABARU_DIR}/lib/")
+list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+
+
+#################################################
+
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 file(GLOB_RECURSE cpp_for_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -37,6 +51,7 @@ if(cpp_for_lib)
     add_library(TBFMM STATIC ${cpp_for_lib} ${hpp_for_lib})
     list(APPEND TBFMM_LIBRARIES TBFMM)
 endif()
+
 
 #################################################
 

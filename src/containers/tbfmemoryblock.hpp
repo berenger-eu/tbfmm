@@ -155,6 +155,14 @@ public:
         return !nbItemsInBlocks;
     }
 
+    unsigned char* getPtr(){
+        return rawMemoryPtr.get();
+    }
+
+    const unsigned char* getPtr() const{
+        return rawMemoryPtr.get();
+    }
+
     //////////////////////////////////////////////////////////////////////
 
     template <class FuncType>

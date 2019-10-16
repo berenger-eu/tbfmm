@@ -7,6 +7,7 @@
 #include "core/tbftree.hpp"
 #include "kernels/testkernel/tbftestkernel.hpp"
 #include "algorithms/sequential/tbfalgorithm.hpp"
+#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
 #include "utils/tbftimer.hpp"
 
 /// - add uniform kernels
@@ -61,7 +62,8 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+    //TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+    TbfSmSpetabaruAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
 
     TbfTimer timerExecute;
 

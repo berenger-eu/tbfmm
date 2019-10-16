@@ -1,17 +1,20 @@
-#ifndef TBFALGORITHM_HPP
-#define TBFALGORITHM_HPP
+#ifndef TBFSMSPETABARUALGORITHM_HPP
+#define TBFSMSPETABARUALGORITHM_HPP
 
 #include "tbfglobal.hpp"
 
-#include "tbfgroupkernelinterface.hpp"
+#include "../sequential/tbfgroupkernelinterface.hpp"
 #include "spacial/tbfspacialconfiguration.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
+
+#include <Runtimes/SpRuntime.hpp>
+
 
 #include <cassert>
 #include <iterator>
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfAlgorithm {
+class TbfSmSpetabaruAlgorithm {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -26,7 +29,7 @@ protected:
     KernelClass kernel;
 
     template <class TreeClass>
-    void P2M(TreeClass& inTree){
+    void P2M(SpRuntime& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
@@ -43,7 +46,12 @@ protected:
                 assert((*currentParticleGroup).getStartingSpacialIndex() == (*currentLeafGroup).getStartingSpacialIndex()
                        && (*currentParticleGroup).getEndingSpacialIndex() == (*currentLeafGroup).getEndingSpacialIndex()
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
-                kernelWrapper.P2M(kernel, *currentParticleGroup, *currentLeafGroup);
+                auto& leafGroupObj = *currentLeafGroup;
+                const auto& particleGroupObj = *currentParticleGroup;
+                runtime.task(SpRead(*particleGroupObj.getDataPtr()), SpCommuteWrite(*leafGroupObj.getMultipolePtr()),
+                                   [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
+                    kernelWrapper.P2M(kernel, particleGroupObj, leafGroupObj);
+                });
                 ++currentParticleGroup;
                 ++currentLeafGroup;
             }
@@ -51,7 +59,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2M(TreeClass& inTree){
+    void M2M(SpRuntime& runtime, TreeClass& inTree){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){// TODO parent
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -65,7 +73,14 @@ protected:
             while(currentUpperGroup != endUpperGroup && currentLowerGroup != endLowerGroup){
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
-                kernelWrapper.M2M(idxLevel, kernel, *currentLowerGroup, *currentUpperGroup);
+
+                auto& upperGroup = *currentUpperGroup;
+                const auto& lowerGroup = *currentLowerGroup;
+                runtime.task(SpRead(*lowerGroup.getMultipolePtr()), SpCommuteWrite(*upperGroup.getMultipolePtr()),
+                                   [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
+                    kernelWrapper.M2M(idxLevel, kernel, lowerGroup, upperGroup);
+                });
+
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
                     if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
@@ -80,7 +95,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2L(TreeClass& inTree){
+    void M2L(SpRuntime& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -90,16 +105,22 @@ protected:
             const auto endCellGroup = cellGroups.end();
 
             while(currentCellGroup != endCellGroup){
-
                 auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel);
                 TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroups, std::distance(cellGroups.begin(),currentCellGroup),
                                                [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                     assert(&groupTarget == &*currentCellGroup);
-                    kernelWrapper.M2LBetweenGroups(idxLevel, kernel, groupTarget, groupSrc, indexes);
+
+                    runtime.task(SpRead(*groupSrc.getMultipolePtr()), SpCommuteWrite(*groupTarget.getLocalPtr()),
+                                       [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
+                        kernelWrapper.M2LBetweenGroups(idxLevel, kernel, groupTarget, groupSrc, std::move(indexesVec));
+                    });
                 });
 
-                kernelWrapper.M2LInGroup(idxLevel, kernel, *currentCellGroup, indexesForGroup.first);
-
+                auto& currentGroup = *currentCellGroup;
+                runtime.task(SpRead(*currentGroup.getMultipolePtr()), SpCommuteWrite(*currentGroup.getLocalPtr()),
+                                   [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
+                    kernelWrapper.M2LInGroup(idxLevel, kernel, currentGroup, indexesForGroup_first);
+                });
 
                 ++currentCellGroup;
             }
@@ -107,7 +128,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2L(TreeClass& inTree){
+    void L2L(SpRuntime& runtime, TreeClass& inTree){
         for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -121,7 +142,14 @@ protected:
             while(currentUpperGroup != endUpperGroup && currentLowerGroup != endLowerGroup){
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
-                kernelWrapper.L2L(idxLevel, kernel, *currentUpperGroup, *currentLowerGroup);
+
+                const auto& upperGroup = *currentUpperGroup;
+                auto& lowerGroup = *currentLowerGroup;
+                runtime.task(SpRead(*upperGroup.getLocalPtr()), SpCommuteWrite(*lowerGroup.getLocalPtr()),
+                                   [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
+                    kernelWrapper.L2L(idxLevel, kernel, upperGroup, lowerGroup);
+                });
+
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
                     if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
@@ -136,7 +164,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2P(TreeClass& inTree){
+    void L2P(SpRuntime& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
@@ -153,7 +181,14 @@ protected:
                 assert((*currentParticleGroup).getStartingSpacialIndex() == (*currentLeafGroup).getStartingSpacialIndex()
                        && (*currentParticleGroup).getEndingSpacialIndex() == (*currentLeafGroup).getEndingSpacialIndex()
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
-                kernelWrapper.L2P(kernel, *currentLeafGroup, *currentParticleGroup);
+
+                const auto& leafGroupObj = *currentLeafGroup;
+                auto& particleGroupObj = *currentParticleGroup;
+                runtime.task(SpRead(*leafGroupObj.getLocalPtr()), SpCommuteWrite(*particleGroupObj.getRhsPtr()),
+                                   [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
+                    kernelWrapper.L2P(kernel, leafGroupObj, particleGroupObj);
+                });
+
                 ++currentParticleGroup;
                 ++currentLeafGroup;
             }
@@ -161,7 +196,7 @@ protected:
     }
 
     template <class TreeClass>
-    void P2P(TreeClass& inTree){
+    void P2P(SpRuntime& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroups = inTree.getParticleGroups();
@@ -175,24 +210,33 @@ protected:
             TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
                                            [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
-                kernelWrapper.P2PBetweenGroups(kernel, groupTarget, groupSrc, indexes);
+
+                runtime.task(SpRead(*groupSrc.getDataPtr()), SpCommuteWrite(*groupTarget.getRhsPtr()),
+                                   [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
+                    kernelWrapper.P2PBetweenGroups(kernel, groupTarget, groupSrc, std::move(indexesVec));
+                });
+
             });
 
-            kernelWrapper.P2PInGroup(kernel, *currentParticleGroup, indexesForGroup.first);
+            auto& currentGroup = *currentParticleGroup;
+            runtime.task(SpRead(*currentGroup.getDataPtr()),SpCommuteWrite(*currentGroup.getRhsPtr()),
+                               [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
+                kernelWrapper.P2PInGroup(kernel, currentGroup, indexesForGroup_first);
 
-            kernelWrapper.P2PInner(kernel, *currentParticleGroup);
+                kernelWrapper.P2PInner(kernel, currentGroup);
+            });
 
             ++currentParticleGroup;
         }
     }
 
 public:
-    TbfAlgorithm(const SpacialConfiguration& inConfiguration)
+    TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration)
         : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(configuration){
     }
 
     template <class SourceKernelClass>
-    TbfAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
+    TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
         : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)){
     }
 
@@ -200,24 +244,28 @@ public:
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::LFmmOperations::LFmmNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
+        SpRuntime runtime;
+
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2M){
-            P2M(inTree);
+            P2M(runtime, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2M){
-            M2M(inTree);
+            M2M(runtime, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2L){
-            M2L(inTree);
+            M2L(runtime, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2L){
-            L2L(inTree);
+            L2L(runtime, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2P){
-            L2P(inTree);
+            L2P(runtime, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2P){
-            P2P(inTree);
+            P2P(runtime, inTree);
         }
+
+        runtime.waitAllTasks();
     }
 };
 

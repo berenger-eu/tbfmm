@@ -24,12 +24,12 @@ public:
     }
 
     template <class CellClass>
-    void M2L(const CellClass& inInteractingCell, const long int /*neighPos*/, CellClass& inOutCell) const {
+    void M2L(const long int /*inLevel*/, const CellClass& inInteractingCell, const long int /*neighPos*/, CellClass& inOutCell) const {
         inOutCell[0] += inInteractingCell[0];
     }
 
     template <class CellClass>
-    void L2L(const CellClass& inUpperCell, CellClass& inOutLowerCell, const long int /*childPos*/) const {
+    void L2L(const long int /*inLevel*/, const CellClass& inUpperCell, CellClass& inOutLowerCell, const long int /*childPos*/) const {
         inOutLowerCell[0] += inUpperCell[0];
     }
 
