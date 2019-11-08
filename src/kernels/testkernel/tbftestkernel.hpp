@@ -18,19 +18,31 @@ public:
         inOutLeaf[0] += inNbParticles;
     }
 
-    template <class CellClass>
-    void M2M(const long int /*inLevel*/, const CellClass& inLowerCell, CellClass& inOutUpperCell, const long int /*childPos*/) const {
-        inOutUpperCell[0] += inLowerCell[0];
+    template <class CellClassContainer, class CellClass>
+    void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
+             const long int /*childrenPos*/[], const int inNbChildren) const {
+        for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
+            const CellClass& child = inLowerCell[idxChild];
+            inOutUpperCell[0] += child[0];
+        }
     }
 
-    template <class CellClass>
-    void M2L(const long int /*inLevel*/, const CellClass& inInteractingCell, const long int /*neighPos*/, CellClass& inOutCell) const {
-        inOutCell[0] += inInteractingCell[0];
+    template <class CellClassContainer, class CellClass>
+    void M2L(const long int /*inLevel*/, const CellClassContainer& inInteractingCells, const long int /*neighPos*/[], const long int inNbNeighbors,
+             CellClass& inOutCell) const {
+        for(long int idxNeigh = 0 ; idxNeigh < inNbNeighbors ; ++idxNeigh){
+            const CellClass& neighbor = inInteractingCells[idxNeigh];
+            inOutCell[0] += neighbor[0];
+        }
     }
 
-    template <class CellClass>
-    void L2L(const long int /*inLevel*/, const CellClass& inUpperCell, CellClass& inOutLowerCell, const long int /*childPos*/) const {
-        inOutLowerCell[0] += inUpperCell[0];
+    template <class CellClass, class CellClassContainer>
+    void L2L(const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
+             const long int /*childrednPos*/[], const long int inNbChildren) const {
+        for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
+            CellClass& child = inOutLowerCell[idxChild];
+            child[0] += inUpperCell[0];
+        }
     }
 
     template <class LeafClass, class ParticlesClass>

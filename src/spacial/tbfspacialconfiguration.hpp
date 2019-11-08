@@ -39,7 +39,7 @@ public:
         return boxCenter;
     }
 
-    const std::array<RealType, Dim> getBoxCorner() const{
+    const std::array<RealType, Dim>& getBoxCorner() const{
         return boxCorner;
     }
 

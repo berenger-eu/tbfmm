@@ -473,6 +473,21 @@ public:
 
         return std::make_pair(std::move(indexesInternal), std::move(indexesExternal));
     }
+
+
+    constexpr long int getNbChildrenPerCell() const {
+        return 1L << Dim;
+    }
+
+    constexpr long int getNbNeighborsPerCell() const {
+        long int nbNeighbors = 1;
+        long int nbNeighborsTooClose = 1;
+        for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
+            nbNeighbors *= 6;
+            nbNeighborsTooClose *= 3;
+        }
+        return nbNeighbors - nbNeighborsTooClose;
+    }
 };
 
 #endif

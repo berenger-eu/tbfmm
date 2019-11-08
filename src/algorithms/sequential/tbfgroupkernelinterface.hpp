@@ -26,6 +26,11 @@ public:
     template <class KernelClass, class CellGroupClass>
     void M2M(const long int inLevel, KernelClass& inKernel, const CellGroupClass& inLowerGroup,
              CellGroupClass& inUpperGroup) const {
+        using CellMultipoleType = typename std::remove_reference<decltype(inLowerGroup.getCellMultipole(0))>::type;
+        std::vector<std::reference_wrapper<const CellMultipoleType>> children;
+        long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+        long int nbChildren = 0;
+
         const auto startingIndex = std::max(spaceSystem.getParentIndex(inLowerGroup.getStartingSpacialIndex()),
                                             inUpperGroup.getStartingSpacialIndex());
 
@@ -41,50 +46,116 @@ public:
         while(idxParent != inUpperGroup.getNbCells()
               && idxChild != inLowerGroup.getNbCells()){
             assert(spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) == inUpperGroup.getCellSpacialIndex(idxParent));
-            inKernel.M2M(inLevel, inLowerGroup.getCellMultipole(idxChild), inUpperGroup.getCellMultipole(idxParent),
-                         spaceSystem.childPositionFromParent(inLowerGroup.getCellSpacialIndex(idxChild)));
+
+            assert(nbChildren < spaceSystem.getNbChildrenPerCell());
+            children.emplace_back(inLowerGroup.getCellMultipole(idxChild));
+            positionsOfChildren[nbChildren] = spaceSystem.childPositionFromParent(inLowerGroup.getCellSpacialIndex(idxChild));
+            nbChildren += 1;
+
             idxChild += 1;
             if(idxChild != inLowerGroup.getNbCells()
                     && spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) != inUpperGroup.getCellSpacialIndex(idxParent)){
+
+                inKernel.M2M(inLevel, children, inUpperGroup.getCellMultipole(idxParent),
+                             positionsOfChildren, nbChildren);
+
                 idxParent += 1;
                 assert(idxParent == inUpperGroup.getNbCells()
                         || spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) == inUpperGroup.getCellSpacialIndex(idxParent));
+
+                children.clear();
+                nbChildren = 0;
             }
+        }
+
+        if(nbChildren){
+            inKernel.M2M(inLevel, children, inUpperGroup.getCellMultipole(idxParent),
+                     positionsOfChildren, nbChildren);
         }
     }
 
     template <class KernelClass, class CellGroupClass, class IndexClass>
     void M2LInGroup(const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup, const IndexClass& inIndexes) const {
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+        using CellMultipoleType = typename std::remove_reference<decltype(inCellGroup.getCellMultipole(0))>::type;
+        using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
+
+        std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
+        long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+        long int nbNeighbors = 0;
+
+        long int idxInteraction = 0;
+
+        while(idxInteraction < static_cast<long int>(inIndexes.size())){
             const auto interaction = inIndexes[idxInteraction];
 
-            auto foundSrc = inCellGroup.getElementFromSpacialIndex(interaction.indexSrc);
-            assert(foundSrc);
-            assert(inCellGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                   && *inCellGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
+            auto& targetCell = inCellGroup.getCellLocal(interaction.globalTargetPos);
+
+            do{
+                auto foundSrc = inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexSrc);
+                assert(foundSrc);
+                assert(inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget)
+                       && *inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget) == inIndexes[idxInteraction].globalTargetPos);
+
+                assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                neighbors.emplace_back(inCellGroup.getCellMultipole(*foundSrc));
+                positionsOfNeighbors[nbNeighbors] = inIndexes[idxInteraction].arrayIndexSrc;
+                nbNeighbors += 1;
+
+                idxInteraction += 1;
+            } while(idxInteraction < static_cast<long int>(inIndexes.size())
+                    && interaction.indexTarget == inIndexes[idxInteraction].indexTarget);
 
             inKernel.M2L(inLevel,
-                         inCellGroup.getCellMultipole(*foundSrc),
-                         interaction.arrayIndexSrc,
-                         inCellGroup.getCellLocal(interaction.globalTargetPos));
+                         neighbors,
+                         positionsOfNeighbors,
+                         nbNeighbors,
+                         targetCell);
+            neighbors.clear();
+            nbNeighbors = 0;
         }
     }
 
     template <class KernelClass, class CellGroupClass, class IndexClass>
     void M2LBetweenGroups(const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup,
                           const CellGroupClass& inOtherCellGroup, const IndexClass& inIndexes) const {
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+        using CellMultipoleType = typename std::remove_reference<decltype(inOtherCellGroup.getCellMultipole(0))>::type;
+        using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
+
+        std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
+        long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+        long int nbNeighbors = 0;
+
+        long int idxInteraction = 0;
+
+        while(idxInteraction < static_cast<long int>(inIndexes.size())){
             const auto interaction = inIndexes[idxInteraction];
 
-            auto foundSrc = inOtherCellGroup.getElementFromSpacialIndex(interaction.indexSrc);
-            if(foundSrc){
-                assert(inCellGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                       && *inCellGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
+            auto& targetCell = inCellGroup.getCellLocal(interaction.globalTargetPos);
 
+            do{
+                auto foundSrc = inOtherCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexSrc);
+                if(foundSrc){
+                    assert(inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget)
+                          && *inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget) == inIndexes[idxInteraction].globalTargetPos);
+
+                    assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                    neighbors.emplace_back(inOtherCellGroup.getCellMultipole(*foundSrc));
+                    positionsOfNeighbors[nbNeighbors] = inIndexes[idxInteraction].arrayIndexSrc;
+                    nbNeighbors += 1;
+                }
+
+                idxInteraction += 1;
+            } while(idxInteraction < static_cast<long int>(inIndexes.size())
+                    && interaction.indexTarget == inIndexes[idxInteraction].indexTarget);
+
+            if(nbNeighbors){
                 inKernel.M2L(inLevel,
-                             inOtherCellGroup.getCellMultipole(*foundSrc),
-                             interaction.arrayIndexSrc,
-                             inCellGroup.getCellLocal(interaction.globalTargetPos));
+                         neighbors,
+                         positionsOfNeighbors,
+                         nbNeighbors,
+                         targetCell);
+                neighbors.clear();
+                nbNeighbors = 0;
             }
         }
     }
@@ -92,6 +163,11 @@ public:
     template <class KernelClass, class CellGroupClass>
     void L2L(const long int inLevel, KernelClass& inKernel, const CellGroupClass& inUpperGroup,
              CellGroupClass& inLowerGroup) const {
+        using CellLocalType = typename std::remove_reference<decltype(inLowerGroup.getCellMultipole(0))>::type;
+        std::vector<std::reference_wrapper<CellLocalType>> children;
+        long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+        long int nbChildren = 0;
+
         const auto startingIndex = std::max(spaceSystem.getParentIndex(inLowerGroup.getStartingSpacialIndex()),
                                             inUpperGroup.getStartingSpacialIndex());
 
@@ -107,15 +183,31 @@ public:
         while(idxParent != inUpperGroup.getNbCells()
               && idxChild != inLowerGroup.getNbCells()){
             assert(spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) == inUpperGroup.getCellSpacialIndex(idxParent));
-            inKernel.L2L(inLevel, inUpperGroup.getCellLocal(idxParent), inLowerGroup.getCellLocal(idxChild),
-                         spaceSystem.childPositionFromParent(inLowerGroup.getCellSpacialIndex(idxChild)));
+
+            assert(nbChildren < spaceSystem.getNbChildrenPerCell());
+            children.emplace_back(inLowerGroup.getCellLocal(idxChild));
+            positionsOfChildren[nbChildren] = spaceSystem.childPositionFromParent(inLowerGroup.getCellSpacialIndex(idxChild));
+            nbChildren += 1;
+
             idxChild += 1;
             if(idxChild != inLowerGroup.getNbCells()
                     && spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) != inUpperGroup.getCellSpacialIndex(idxParent)){
+
+                inKernel.L2L(inLevel, inUpperGroup.getCellLocal(idxParent), children,
+                             positionsOfChildren, nbChildren);
+
                 idxParent += 1;
                 assert(idxParent == inUpperGroup.getNbCells()
                         || spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) == inUpperGroup.getCellSpacialIndex(idxParent));
+
+                children.clear();
+                nbChildren = 0;
             }
+        }
+
+        if(nbChildren){
+            inKernel.L2L(inLevel, inUpperGroup.getCellLocal(idxParent), children,
+                         positionsOfChildren, nbChildren);
         }
     }
 
