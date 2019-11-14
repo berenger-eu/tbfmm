@@ -10,9 +10,7 @@
 #include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
 #include "utils/tbftimer.hpp"
 
-/// - add uniform kernels
 /// - add GPU kernels
-/// - do unit tests
 /// - periodicity
 /// - ensure code quality with visilibity of Template
 
