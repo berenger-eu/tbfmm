@@ -43,32 +43,47 @@ int main(){
 
     const unsigned int ORDER = 5;
     constexpr long int NbDataValuesPerParticle = Dim;
-    constexpr long int NbRhsValuesPerParticle = 1;
-    using MultipoleClass = std::array<long int,1>;
-    using LocalClass = std::array<long int,1>;
+    constexpr long int NbRhsValuesPerParticle = 4;
+
+    constexpr long int VectorSize = TensorTraits<ORDER>::nnodes;
+    constexpr long int TransformedVectorSize = (2*ORDER-1)*(2*ORDER-1)*(2*ORDER-1);
+
+    struct MultipoleData{
+        RealType multipole_exp[NbRhsValuesPerParticle * 1 * VectorSize];
+        std::complex<RealType> transformed_multipole_exp[NbRhsValuesPerParticle * 1 * TransformedVectorSize];
+    };
+
+    struct LocalData{
+        RealType     local_exp[NbRhsValuesPerParticle * 1 * VectorSize];
+        std::complex<RealType>     transformed_local_exp[NbRhsValuesPerParticle * 1 * TransformedVectorSize];
+    };
+
+    using MultipoleClass = MultipoleData;
+    using LocalClass = LocalData;
     typedef FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER> KernelClass;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-//    TbfTimer timerBuildTree;
+    TbfTimer timerBuildTree;
 
-//    TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-//                                                                                particlePositions, inOneGroupPerParent);
+    TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
+                                                                                particlePositions, inOneGroupPerParent);
 
-//    timerBuildTree.stop();
-//    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    timerBuildTree.stop();
+    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-//    //TbfAlgorithm<RealType, FUnifKernel<RealType>> algorithm(configuration);
-//    TbfSmSpetabaruAlgorithm<RealType, FUnifKernel<RealType>> algorithm(configuration);
+    FInterpMatrixKernelR<RealType> interpolator;
+    TbfAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+    //TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
 
-//    TbfTimer timerExecute;
+    TbfTimer timerExecute;
 
-//    algorithm.execute(tree);
+    algorithm.execute(tree);
 
-//    timerExecute.stop();
-//    std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+    timerExecute.stop();
+    std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
 
     return 0;
 }

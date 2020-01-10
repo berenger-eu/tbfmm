@@ -51,6 +51,7 @@ enum KERNEL_FUNCTION_TYPE {HOMOGENEOUS, NON_HOMOGENEOUS};
 template <class FReal>
 struct FInterpAbstractMatrixKernel
 { 
+    FInterpAbstractMatrixKernel(){}
     FInterpAbstractMatrixKernel(const FInterpAbstractMatrixKernel&) = delete;
     FInterpAbstractMatrixKernel& operator=(const FInterpAbstractMatrixKernel&) = delete;
 

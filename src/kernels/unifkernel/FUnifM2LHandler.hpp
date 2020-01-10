@@ -54,7 +54,7 @@ static void Compute(const MatrixKernelClass *const MatrixKernel, const FReal Cel
     // interpolation points of source (Y) and target (X) cell
     std::array<FReal, Dim> X[nnodes], Y[nnodes];
     // set roots of target cell (X)
-    TensorType::setRoots(std::array<FReal, Dim>(0.,0.,0.), CellWidth, X);
+    TensorType::setRoots(std::array<FReal, Dim>{{0.,0.,0.}}, CellWidth, X);
 
     // allocate memory and compute 316 m2l operators (342 if separation equals 0, 343 if separation equals -1)
     FReal    *_C;
@@ -81,7 +81,7 @@ static void Compute(const MatrixKernelClass *const MatrixKernel, const FReal Cel
             for (int k=-3; k<=3; ++k) {
                 if (abs(i)>SeparationCriterion || abs(j)>SeparationCriterion || abs(k)>SeparationCriterion) {
                     // set roots of source cell (Y)
-                    const std::array<FReal, Dim> cy(CellWidth*FReal(i), CellWidth*FReal(j), CellWidth*FReal(k));
+                    const std::array<FReal, Dim> cy{{CellWidth*FReal(i), CellWidth*FReal(j), CellWidth*FReal(k)}};
                     FUnifTensor<FReal,order>::setRoots(cy, CellWidth, Y);
                     // evaluate m2l operator
                     unsigned int ido=0;
@@ -237,7 +237,7 @@ public:
         const FReal ReferenceCellWidth = FReal(2.);
         std::complex<FReal>* pFC = NULL;
         Compute<FReal,order>(MatrixKernel,ReferenceCellWidth,pFC,LeafLevelSeparationCriterion);
-        FC.assign(pFC);
+        FC.reset(pFC);
 
         // Compute memory usage
         unsigned long sizeM2L = 343*opt_rc*sizeof(std::complex<FReal>);
@@ -289,9 +289,8 @@ public:
     {
         // Perform entrywise product manually
         for (unsigned int j=0; j<opt_rc; ++j){
-            FX[j].addMul(std::complex<FReal>(scale*FC[idx*opt_rc + j].getReal(),
-                                  scale*FC[idx*opt_rc + j].getImag()),
-                         FY[j]);
+            FX[j] += (std::complex<FReal>(scale*FC[idx*opt_rc + j].real(),
+                                  scale*FC[idx*opt_rc + j].imag()) * FY[j]);
         }
     }
 
@@ -469,7 +468,7 @@ public:
     {
         // Perform entrywise product manually
         for (unsigned int j=0; j<opt_rc; ++j){
-            FX[j].addMul(FC[TreeLevel][idx*opt_rc + j],FY[j]);
+            FX[j] += (FC[TreeLevel][idx*opt_rc + j] * FY[j]);
         }
     }
 

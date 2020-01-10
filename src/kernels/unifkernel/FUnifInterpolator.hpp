@@ -301,38 +301,45 @@ public:
   void applyP2M(const std::array<FReal, Dim>& center,
                 const FReal width,
                 FReal *const multipoleExpansion,
-                const ContainerClass *const sourceParticles) const;
+                const ContainerClass&& sourceParticles,
+                const long int inNbParticles) const;
 
 
 
   /**
    * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
    */
-  template <class ContainerClass>
+  template <class ContainerClass, class ContainerClassRhs>
   void applyL2P(const std::array<FReal, Dim>& center,
                 const FReal width,
                 const FReal *const localExpansion,
-                ContainerClass *const localParticles) const;
+                const ContainerClass&& localParticles,
+                ContainerClassRhs&& localParticlesRhs,
+                const long int inNbParticles) const;
 
 
   /**
    * Local to particle operation: application of \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
    */
-  template <class ContainerClass>
+  template <class ContainerClass, class ContainerClassRhs>
   void applyL2PGradient(const std::array<FReal, Dim>& center,
                         const FReal width,
                         const FReal *const localExpansion,
-                        ContainerClass *const localParticles) const;
+                        const ContainerClass&& localParticles,
+                        ContainerClassRhs&& localParticlesRhs,
+                        const long int inNbParticles) const;
 
   /**
    * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ and
    * \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
    */
-  template <class ContainerClass>
+  template <class ContainerClass, class ContainerClassRhs>
   void applyL2PTotal(const std::array<FReal, Dim>& center,
                      const FReal width,
-                     const FReal *const localExpansion,
-                     ContainerClass *const localParticles) const;
+                     const FReal * localExpansion,
+                     const ContainerClass&& localParticles,
+                     ContainerClass&& localParticlesRhs,
+                     const long int inNbParticles) const;
 
   // PB: ORDER^6 version of applyM2M/L2L
   /*
@@ -427,27 +434,27 @@ template <class ContainerClass>
 inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(const std::array<FReal, Dim>& center,
                                                                  const FReal width,
                                                                  FReal *const multipoleExpansion,
-                                                                 const ContainerClass *const inParticles) const
+                                                                 const ContainerClass&& inParticles,
+                                                                 const long int inNbParticles) const
 {
 
   // allocate stuff
   const map_glob_loc<FReal> map(center, width);
-  std::array<FReal, Dim> localPosition;
 
-  // loop over source particles
-  const FReal*const positionsX = inParticles->getPositions()[0];
-  const FReal*const positionsY = inParticles->getPositions()[1];
-  const FReal*const positionsZ = inParticles->getPositions()[2];
-
-  for(long int idxPart = 0 ; idxPart < inParticles->getNbParticles() ; ++idxPart){
+  for(long int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
     // map global position to [-1,1]
-    map(std::array<FReal, Dim>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition); // 15 flops
+    std::array<FReal, Dim> globalPosition;
+    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+        globalPosition[idxDim] = inParticles[idxDim][idxPart];
+    }
+    std::array<FReal, Dim> localPosition;
+    map(globalPosition, localPosition); // 15 flops
     // evaluate Lagrange polynomial at local position
-    FReal L_of_x[ORDER][3];
+    FReal L_of_x[ORDER][Dim];
     for (unsigned int o=0; o<ORDER; ++o) {
-      L_of_x[o][0] = BasisType::L(o, localPosition[0]); // 3 * ORDER*(ORDER-1) flops PB: TODO confirm
-      L_of_x[o][1] = BasisType::L(o, localPosition[1]); // 3 * ORDER*(ORDER-1) flops
-      L_of_x[o][2] = BasisType::L(o, localPosition[2]); // 3 * ORDER*(ORDER-1) flops
+      for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            L_of_x[o][idxDim] = BasisType::L(o, localPosition[idxDim]); // 3 * ORDER*(ORDER-1) flops PB: TODO confirm
+      }
     }
 
     for(int idxRhs = 0 ; idxRhs < nRhs ; ++idxRhs){
@@ -457,10 +464,12 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
       for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
 
         // read physicalValue
-        const FReal*const physicalValues = inParticles->getPhysicalValues(idxVals,idxRhs);
-        weight[idxVals] = physicalValues[idxPart];
+        const FReal physicalValue = inParticles[Dim+idxRhs][idxPart];
+        weight[idxVals] = physicalValue;
 
       } // nVals
+
+      static_assert(Dim == 3, "The rest of the code only works for Dim == 3");
 
       // assemble multipole expansions
       for (unsigned int i=0; i<ORDER; ++i) {
@@ -486,26 +495,27 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
  * Local to particle operation: application of \f$S_\ell(x,\bar x_m)\f$ (interpolation)
  */
 template <class FReal, int ORDER, class MatrixKernelClass, int NVALS>
-template <class ContainerClass>
+template <class ContainerClass, class ContainerClassRhs>
 inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2P(const std::array<FReal, Dim>& center,
                                                                  const FReal width,
                                                                  const FReal *const localExpansion,
-                                                                 ContainerClass *const inParticles) const
+                                                                 const ContainerClass&& inParticles,
+                                                                 ContainerClassRhs&& inParticlesRhs,
+                                                                 const long int inNbParticles) const
 {
+    static_assert(Dim == 3, "Must be 3 here");
+
   // loop over particles
   const map_glob_loc<FReal> map(center, width);
   std::array<FReal, Dim> localPosition;
 
-  const FReal*const positionsX = inParticles->getPositions()[0];
-  const FReal*const positionsY = inParticles->getPositions()[1];
-  const FReal*const positionsZ = inParticles->getPositions()[2];
-
-  const  long int nParticles = inParticles->getNbParticles();
-
-  for(long int idxPart = 0 ; idxPart < nParticles ; ++ idxPart){
-
+  for(long int idxPart = 0 ; idxPart < inNbParticles ; ++ idxPart){
+      std::array<FReal, Dim> globalPosition;
+      for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+          globalPosition[idxDim] = inParticles[idxDim][idxPart];
+      }
     // map global position to [-1,1]
-    map(std::array<FReal, Dim>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition); // 15 flops
+    map(globalPosition, localPosition); // 15 flops
 
     // evaluate Lagrange polynomial at local position
     FReal L_of_x[ORDER][3];
@@ -548,7 +558,7 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2P(co
       for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
 
         // get potential
-        FReal*const potentials = inParticles->getPotentials(idxVals,idxPot);
+        FReal*const potentials = inParticlesRhs[4*idxVals+3];
         // add contribution to potential
         potentials[idxPart] += (targetValue[idxVals]);
 
@@ -565,11 +575,13 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2P(co
  * Local to particle operation: application of \f$\nabla_x S_\ell(x,\bar x_m)\f$ (interpolation)
  */
 template <class FReal, int ORDER, class MatrixKernelClass, int NVALS>
-template <class ContainerClass>
+template <class ContainerClass,class ContainerClassRhs>
 inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PGradient(const std::array<FReal, Dim>& center,
                                                                          const FReal width,
                                                                          const FReal *const localExpansion,
-                                                                         ContainerClass *const inParticles) const
+                                                                         const ContainerClass&& inParticles,
+                                                                         ContainerClassRhs&& inParticlesRhs,
+                                                                         const long int inNbParticles) const
 {
   ////////////////////////////////////////////////////////////////////
   // TENSOR-PRODUCT INTERPOLUTION NOT IMPLEMENTED YET HERE!!! ////////
@@ -584,16 +596,13 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PGra
   FReal L_of_x[ORDER][3];
   FReal dL_of_x[ORDER][3];
 
-  const FReal*const positionsX = inParticles->getPositions()[0];
-  const FReal*const positionsY = inParticles->getPositions()[1];
-  const FReal*const positionsZ = inParticles->getPositions()[2];
-
-//  const long int nParticles = inParticles->getNbParticles();
-
-  for(long int idxPart = 0 ; idxPart < inParticles->getNbParticles() ; ++ idxPart){
-
+  for(long int idxPart = 0 ; idxPart < inNbParticles ; ++ idxPart){
+    std::array<FReal, Dim> globalPosition;
+    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+        globalPosition[idxDim] = inParticles[idxDim][idxPart];
+    }
     // map global position to [-1,1]
-    map(std::array<FReal, Dim>(positionsX[idxPart],positionsY[idxPart],positionsZ[idxPart]), localPosition);
+    map(globalPosition, localPosition);
 
     // evaluate Lagrange polynomials of source particle
     for (unsigned int o=0; o<ORDER; ++o) {
@@ -645,10 +654,10 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PGra
 
       for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
 
-        const FReal*const physicalValues = inParticles->getPhysicalValues(idxVals,idxPV);
-        FReal*const forcesX = inParticles->getForcesX(idxVals,idxPot);
-        FReal*const forcesY = inParticles->getForcesY(idxVals,idxPot);
-        FReal*const forcesZ = inParticles->getForcesZ(idxVals,idxPot);
+        const FReal*const physicalValues = inParticles[Dim+idxVals];
+        FReal*const forcesX = inParticlesRhs[4*idxVals];
+        FReal*const forcesY = inParticlesRhs[4*idxVals+1];
+        FReal*const forcesZ = inParticlesRhs[4*idxVals+2];
 
         // set computed forces
         forcesX[idxPart] += forces[idxVals][0] * physicalValues[idxPart];

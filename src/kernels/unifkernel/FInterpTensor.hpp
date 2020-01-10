@@ -116,7 +116,7 @@ public:
     for (unsigned int n=0; n<ORDER; ++n) {
       lPos[0] = (FReal(BasisType::roots[n]));
       lPos[1] = (FReal(BasisType::roots[n]));
-      lPos[2](FReal(BasisType::roots[n]));
+      lPos[2] = (FReal(BasisType::roots[n]));
       map(lPos, gPos);
       roots[0][n] = gPos[0];
       roots[1][n] = gPos[1];
@@ -149,7 +149,7 @@ public:
 
     ChildCenter[0] = (FReal(RelativeChildPositions[ChildIndex][0]) * frac);
     ChildCenter[1] = (FReal(RelativeChildPositions[ChildIndex][1]) * frac);
-    ChildCenter[2](FReal(RelativeChildPositions[ChildIndex][2]) * frac);
+    ChildCenter[2] = (FReal(RelativeChildPositions[ChildIndex][2]) * frac);
   }
 };
 

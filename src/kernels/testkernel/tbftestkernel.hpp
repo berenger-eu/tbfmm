@@ -14,7 +14,8 @@ public:
     explicit TbfTestKernel(const TbfTestKernel&){}
 
     template <class ParticlesClass, class LeafClass>
-    void P2M(const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf) const {
+    void P2M(const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf,
+             const typename SpaceIndexType::IndexType& /*inLeafIndex*/) const {
         inOutLeaf[0] += inNbParticles;
     }
 
@@ -45,18 +46,21 @@ public:
         }
     }
 
-    template <class LeafClass, class ParticlesClass>
-    void L2P(const LeafClass& inLeaf, ParticlesClass&& inOutParticles, const long int inNbParticles) const {
+    template <class LeafClass, class ParticlesClass, class ParticlesClassRhs>
+    void L2P(const LeafClass& inLeaf,  const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+             const ParticlesClassValues&& /*inOutParticles*/, ParticlesClass&& inOutParticlesRhs,
+             const long int inNbParticles) const {
         for(int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inLeaf[0];
+            inOutParticlesRhs[0][idxPart] += inLeaf[0];
         }
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
     void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, const long int inNbParticlesNeighbors,
-             const long int /*inNeighborPos*/, ParticlesClassRhs&& inOutParticles, const long int inNbOutParticles) const {
+             const long int /*inNeighborPos*/, const ParticlesClassValues&& /*inOutParticles*/,
+             ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inNbParticlesNeighbors;
+            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
         }
     }
 
@@ -64,7 +68,7 @@ public:
     void P2PInner(const ParticlesClassValues&& /*inParticlesNeighbors*/,
                   ParticlesClassRhs&& inOutParticles, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inNbOutParticles - 1;
+            inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
         }
     }
 };
