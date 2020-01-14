@@ -197,9 +197,11 @@ inline void MutualParticlesKIJ(const FReal sourceX,const FReal sourceY,const FRe
 /**
  * @brief FullMutualKIJ
  */
-template <class FReal, class ContainerClass, typename MatrixKernelClass>
-inline void FullMutualKIJ(ContainerClass* const  inTargets, ContainerClass* const inNeighbors[],
-                          const int limiteNeighbors, const MatrixKernelClass *const MatrixKernel){
+template <class FReal, typename ContainerClass, typename ContainerClassRhs, typename MatrixKernelClass>
+inline void FullMutualKIJ(const ContainerClass& inTarget, ContainerClassRhs& inTargetRhs,
+                          const long int inTargetNbParticles,
+                          const ContainerClass& inNeigh, const long int inNeighNbParticles,
+                          const MatrixKernelClass *const MatrixKernel){
     const int Dim = 3;
     // get information on tensorial aspect of matrix kernel
     const int ncmp = MatrixKernelClass::NCMP;
@@ -267,8 +269,9 @@ inline void FullMutualKIJ(ContainerClass* const  inTargets, ContainerClass* cons
     }
 }
 
-template <class FReal, class ContainerClass, typename MatrixKernelClass>
-inline void InnerKIJ(ContainerClass* const  inTargets, const MatrixKernelClass *const MatrixKernel){
+template <class FReal, typename ContainerClass, typename ContainerClassRhs, typename MatrixKernelClass>
+inline void InnerKIJ(const ContainerClass& inTarget, ContainerClassRhs& inTargetRhs,
+                     const long int inTargetNbParticles, const MatrixKernelClass *const MatrixKernel){
     const int Dim = 3;
     // get information on tensorial aspect of matrix kernel
     const int ncmp = MatrixKernelClass::NCMP;

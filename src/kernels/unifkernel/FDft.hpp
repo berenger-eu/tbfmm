@@ -25,6 +25,7 @@
 // elseif libfftw_dev: usr/include/fftw3.h
 #include <fftw3.h>
 
+
 // for @class FDft only
 #include "FBlas.hpp"
 #include "FMath.hpp"
@@ -251,11 +252,11 @@ protected:
         }
     }
     static void Bind_fftw_alloc(double** ptr, const int size){
-        *ptr = (double*) fftw_malloc(sizeof(double) * size);
+        *ptr = static_cast<double*>(fftw_malloc(sizeof(double) * size));
         //SpErrAEH(*ptr);
     }
     static void Bind_fftw_alloc(fftw_complex** ptr, const int size){
-        *ptr = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * size);
+        *ptr = static_cast<fftw_complex*>(fftw_malloc(sizeof(fftw_complex) * size));
         //SpErrAEH(*ptr);
     }
     static void Bind_fftw_destroy_plan(fftw_plan plan){
@@ -317,11 +318,11 @@ protected:
         }
     }    
     static void Bind_fftw_alloc(float** ptr, const int size){
-        *ptr = (float*) fftwf_malloc(sizeof(float) * size);
+        *ptr = static_cast<float*>(fftwf_malloc(sizeof(float) * size));
         //SpErrAEH(*ptr);
     }
     static void Bind_fftw_alloc(fftwf_complex** ptr, const int size){
-        *ptr = (fftwf_complex*) fftw_malloc(sizeof(fftwf_complex) * size);
+        *ptr = static_cast<fftwf_complex*>(fftw_malloc(sizeof(fftwf_complex) * size));
         //SpErrAEH(*ptr);
     }
     static void Bind_fftw_destroy_plan(fftwf_plan plan){

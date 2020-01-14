@@ -170,15 +170,18 @@ public:
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
     void P2P(const ParticlesClassValues&& inNeighbors, const long int inNbParticlesNeighbors,
-             const long int inNeighborPos,  const ParticlesClassValues&& /*inTargets*/,
+             const long int /*inNeighborPos*/,  const ParticlesClassValues&& inTargets,
              ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
-//        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP, NVALS>::P2PRemote(inTargets, MatrixKernel, inNbOutParticles);
+        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP>::P2PRemote(inNeighbors, inNbParticlesNeighbors,
+                                                                                MatrixKernel, inTargets,
+                                                                                inTargetsRhs, inNbOutParticles);
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const ParticlesClassValues&& inNeighbors,
-                  ParticlesClassRhs&& inTargets, const long int inNbOutParticles) const {
-//        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP, NVALS>::P2PInner(inTargets, MatrixKernel, inNbOutParticles);
+    void P2PInner(const ParticlesClassValues&& inTargets,
+                  ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
+        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP>::P2PInner(MatrixKernel, inTargets,
+                                                                               inTargetsRhs, inNbOutParticles);
     }
 };
 

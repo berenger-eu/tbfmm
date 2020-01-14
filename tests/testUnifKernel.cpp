@@ -75,8 +75,8 @@ int main(){
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     FInterpMatrixKernelR<RealType> interpolator;
-    TbfAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
-    //TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+    //TbfAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+    TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
 
     TbfTimer timerExecute;
 

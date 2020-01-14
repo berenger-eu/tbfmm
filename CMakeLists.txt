@@ -40,6 +40,10 @@ link_directories("${SPETABARU_DIR}/lib/")
 list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
 
+#################################################
+
+list(APPEND TBFMM_LIBRARIES fftw3)
+
 
 #################################################
 
