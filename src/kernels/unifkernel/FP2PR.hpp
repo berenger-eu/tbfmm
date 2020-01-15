@@ -78,8 +78,8 @@ inline void NonMutualParticles(const FReal sourceX,const FReal sourceY,const FRe
 
 
 template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
-static void FullMutual(const ParticlesClassValues&& inNeighbors, ParticlesClassRhs inNeighborsRhs, const long int nbParticlesSources,
-                      const ParticlesClassValues&& inTargets, ParticlesClassRhs inTargetsRhs, const long int nbParticlesTargets){
+static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int nbParticlesSources,
+                      const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
 
     const FReal*const targetsX = inTargets[0];
     const FReal*const targetsY = inTargets[1];
@@ -145,8 +145,8 @@ static void FullMutual(const ParticlesClassValues&& inNeighbors, ParticlesClassR
 }
 
 template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
-static void GenericInner(const ParticlesClassValues&& inTargets,
-                         ParticlesClassRhs&& inTargetsRhs, const long int nbParticlesTargets){
+static void GenericInner(const ParticlesClassValues& inTargets,
+                         ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
 
     const FReal*const targetsX = inTargets[0];
     const FReal*const targetsY = inTargets[1];
@@ -158,8 +158,7 @@ static void GenericInner(const ParticlesClassValues&& inTargets,
     FReal*const targetsPotentials = inTargetsRhs[3];
 
     for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
-        for(long int idxS = 1 ; idxS < nbParticlesTargets ; ++idxS){
-            const long int idxSource = idxTarget + idxS;
+        for(long int idxSource = idxTarget+1 ; idxSource < nbParticlesTargets ; ++idxSource){
             FReal dx = targetsX[idxSource] - targetsX[idxTarget];
             FReal dy = targetsY[idxSource] - targetsY[idxTarget];
             FReal dz = targetsZ[idxSource] - targetsZ[idxTarget];

@@ -103,6 +103,11 @@ inline long int lipow(long int val, const long int power){
     return res;
 }
 
+template <class ObjectType>
+static const ObjectType& make_const(ObjectType& obj){
+    return obj;
+}
+
 }
 
 #endif

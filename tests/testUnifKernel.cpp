@@ -33,10 +33,14 @@ int main(){
 
     TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
-    std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
+    std::vector<std::array<RealType, Dim+1>> particlePositions(NbParticles);
 
     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        particlePositions[idxPart] = randomGenerator.getNewItem();
+        auto position = randomGenerator.getNewItem();
+        particlePositions[idxPart][0] = position[0];
+        particlePositions[idxPart][1] = position[1];
+        particlePositions[idxPart][2] = position[2];
+        particlePositions[idxPart][3] = 0.1;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -69,7 +73,7 @@ int main(){
     TbfTimer timerBuildTree;
 
     TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                particlePositions, inOneGroupPerParent);
+                                                                                TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
@@ -84,6 +88,42 @@ int main(){
 
     timerExecute.stop();
     std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    {
+        std::array<RealType*, 4> particles;
+        for(auto& vec : particles){
+            vec = new RealType[NbParticles]();
+        }
+        std::array<RealType*, NbRhsValuesPerParticle> particlesRhs;
+        for(auto& vec : particlesRhs){
+            vec = new RealType[NbParticles]();
+        }
+
+        for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+            particles[0][idxPart] = particlePositions[idxPart][0];
+            particles[1][idxPart] = particlePositions[idxPart][1];
+            particles[2][idxPart] = particlePositions[idxPart][2];
+            particles[3][idxPart] = particlePositions[idxPart][3];
+        }
+
+        TbfTimer timerDirect;
+
+        FP2PR::template GenericInner<RealType>( particles, particlesRhs, NbParticles);
+
+        timerDirect.stop();
+
+        for(auto& vec : particles){
+            delete[] vec;
+        }
+        for(auto& vec : particlesRhs){
+            delete[] vec;
+        }
+
+
+        std::cout << "Direct execute in " << timerDirect.getElapsed() << std::endl;
+    }
 
     return 0;
 }

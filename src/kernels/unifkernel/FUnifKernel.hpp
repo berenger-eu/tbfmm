@@ -171,20 +171,20 @@ public:
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const ParticlesClassValues&& inNeighbors, const ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
+    void P2P(const ParticlesClassValues&& inNeighbors, ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
              const long int /*inNeighborPos*/,  const ParticlesClassValues&& inTargets,
              ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template FullMutual<RealType, ParticlesClassValues, ParticlesClassRhs> (std::forward<const ParticlesClassValues>(inNeighbors),
+        FP2PR::template FullMutual<RealType> (/*std::forward<const ParticlesClassValues>*/(inNeighbors),
                                                                                        /*std::forward<ParticlesClassRhs>*/(inNeighborsRhs), inNbParticlesNeighbors,
-                                                                                       std::forward<const ParticlesClassValues>(inTargets),
-                                                                                       std::forward<ParticlesClassRhs>(inTargetsRhs), inNbOutParticles);
+                                                                                       /*std::forward<const ParticlesClassValues>*/(inTargets),
+                                                                                       /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const ParticlesClassValues&& inTargets,
                   ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template GenericInner<RealType, ParticlesClassValues, ParticlesClassRhs>(std::forward<const ParticlesClassValues>(inTargets),
-                                                                                        std::forward<ParticlesClassRhs>(inTargetsRhs), inNbOutParticles);
+        FP2PR::template GenericInner<RealType>(/*std::forward<const ParticlesClassValues>*/(inTargets),
+                                                                                        /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
     }
 };
 
