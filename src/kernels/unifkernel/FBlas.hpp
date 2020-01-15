@@ -54,8 +54,8 @@ inline void add(const unsigned n, const Type* const x, Type* const y)
 // y += d Ax
 template <class Type>
 inline void gemva(const unsigned m, const unsigned n, Type d, const Type* A, const Type *x, Type *y){
-    for(int idxRow = 0 ; idxRow < m ; ++idxRow){
-        for(int idxCol = 0 ; idxCol < n ; ++idxCol){
+    for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
+        for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
             y[idxRow] += d * A[idxRow*n+idxCol] * x[idxCol];
         }
     }
@@ -65,8 +65,8 @@ inline void gemva(const unsigned m, const unsigned n, Type d, const Type* A, con
 // y += d A^T x
 template <class Type>
 inline void gemtva(const unsigned m, const unsigned n, Type d, const Type* A, const Type *x, Type *y){
-    for(int idxRow = 0 ; idxRow < n ; ++idxRow){
-        for(int idxCol = 0 ; idxCol < m ; ++idxCol){
+    for(unsigned idxRow = 0 ; idxRow < n ; ++idxRow){
+        for(unsigned idxCol = 0 ; idxCol < m ; ++idxCol){
             y[idxRow] += d * A[idxCol*n+idxRow] * x[idxCol];
         }
     }
@@ -78,10 +78,10 @@ template <class Type>
 inline void gemm(unsigned m, unsigned p, unsigned n, Type d,
                  const Type* A, unsigned ldA, const Type* B, unsigned ldB, Type* C, unsigned ldC)
 {
-    for(int idxRow = 0 ; idxRow < m ; ++idxRow){
-        for(int idxCol = 0 ; idxCol < n ; ++idxCol){
-            for(int idxK = 0 ; idxK < p ; ++idxK){
-                C[idxRow*ldC+idxCol] += d * A[idxRow*p+idxK] * B[idxK*n+idxCol];
+    for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
+        for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
+            for(unsigned idxK = 0 ; idxK < p ; ++idxK){
+                C[idxRow*ldC+idxCol] += d * A[idxRow*ldA+idxK] * B[idxK*ldB+idxCol];
             }
         }
     }
@@ -93,10 +93,10 @@ template <class Type>
 inline void gemtm(unsigned m, unsigned p, unsigned n, Type d,
                   const Type* A, unsigned ldA, const Type *B, unsigned ldB, Type* C, unsigned ldC)
 {
-    for(int idxRow = 0 ; idxRow < m ; ++idxRow){
-        for(int idxCol = 0 ; idxCol < n ; ++idxCol){
-            for(int idxK = 0 ; idxK < p ; ++idxK){
-                C[idxRow*ldC+idxCol] += d * A[idxK*m+idxRow] * B[idxK*n+idxCol];
+    for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
+        for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
+            for(unsigned idxK = 0 ; idxK < p ; ++idxK){
+                C[idxRow*ldC+idxCol] += d * A[idxK*ldA+idxRow] * B[idxK*ldB+idxCol];
             }
         }
     }

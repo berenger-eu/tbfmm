@@ -56,11 +56,15 @@ public:
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, const long int inNbParticlesNeighbors,
+    void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
+             const long int inNbParticlesNeighbors,
              const long int /*inNeighborPos*/, const ParticlesClassValues&& /*inOutParticles*/,
              ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
+        }
+        for(int idxPart = 0 ; idxPart < inNbParticlesNeighbors ; ++idxPart){
+            inParticlesNeighborsRhs[0][idxPart] += inNbOutParticles;
         }
     }
 

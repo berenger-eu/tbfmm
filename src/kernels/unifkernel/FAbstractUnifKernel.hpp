@@ -21,7 +21,6 @@
 
 #include <memory>
 
-#include "FInterpP2PKernels.hpp"
 #include "FUnifInterpolator.hpp"
 
 /**
@@ -128,14 +127,14 @@ public:
    */
   FAbstractUnifKernel(const SpacialConfiguration& inConfiguration,
                       const RealType inBoxWidthExtension = 0.0)
-    : Interpolator(new InterpolatorClass(inConfiguration.getTreeHeight(),
+    : Interpolator(new InterpolatorClass(int(inConfiguration.getTreeHeight()),
                                          inConfiguration.getBoxWidths()[0],
                                          inBoxWidthExtension)),
       spaceIndexSystem(inConfiguration),
-      TreeHeight(inConfiguration.getTreeHeight()),
+      TreeHeight(int(inConfiguration.getTreeHeight())),
       BoxCorner(BoxCornerFromCenterAndWidth(inConfiguration.getBoxCenter(), inConfiguration.getBoxWidths()[0])),
       BoxWidth(inConfiguration.getBoxWidths()[0]),
-      BoxWidthLeaf(inConfiguration.getBoxWidths()[0] / RealType(FMath::pow(2, inConfiguration.getTreeHeight() - 1))),
+      BoxWidthLeaf(inConfiguration.getBoxWidths()[0] / RealType(FMath::pow(2, int(inConfiguration.getTreeHeight()) - 1))),
       BoxWidthExtension(inBoxWidthExtension)
   {
     /* empty */

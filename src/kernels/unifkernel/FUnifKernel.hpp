@@ -21,6 +21,7 @@
 
 #include "FUnifM2LHandler.hpp"
 #include "FAbstractUnifKernel.hpp"
+#include "FP2PR.hpp"
 
 #include "tbfglobal.hpp"
 
@@ -78,7 +79,7 @@ public:
     : FAbstractUnifKernel< RealType, MatrixKernelClass, ORDER, Dim>(inConfiguration),
       MatrixKernel(inMatrixKernel),
       M2LHandler(MatrixKernel,
-                 inConfiguration.getTreeHeight(),
+                 int(inConfiguration.getTreeHeight()),
                  inConfiguration.getBoxWidths()[0],
                  inLeafLevelSeparationCriterion),
       LeafLevelSeparationCriterion(inLeafLevelSeparationCriterion)
@@ -99,11 +100,11 @@ public:
 
         template <class CellClassContainer, class CellClass>
         void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
-                 const long int childrenPos[], const int inNbChildren) const {
+                 const long int childrenPos[], const long int inNbChildren) const {
         // 1) apply Sy
         //FBlas::scal(AbstractBaseClass::nnodes, RealType(0.), ParentCell->getMultipole(idxRhs));
         for (unsigned int idxChild=0 ; idxChild < inNbChildren ; ++idxChild){
-            AbstractBaseClass::Interpolator->applyM2M(childrenPos[idxChild], inLowerCell[idxChild].get().multipole_exp,
+            AbstractBaseClass::Interpolator->applyM2M(int(childrenPos[idxChild]), inLowerCell[idxChild].get().multipole_exp,
                                                       inOutUpperCell.multipole_exp);
         }
         // 2) Apply Discete Fourier Transform
@@ -115,13 +116,14 @@ public:
     template <class CellClassContainer, class CellClass>
     void M2L(const long int inLevel, const CellClassContainer& inInteractingCells, const long int neighPos[], const long int inNbNeighbors,
              CellClass& inOutCell) {
-        const RealType CellWidth(AbstractBaseClass::BoxWidth / RealType(FMath::pow(2, inLevel)));
+        const RealType CellWidth(AbstractBaseClass::BoxWidth / RealType(FMath::pow(2, int(inLevel))));
         const RealType scale(MatrixKernel->getScaleFactor(CellWidth));
 
+        assert(inNbNeighbors == int(inInteractingCells.size()));
 
-        for(long int idxExistingNeigh = 0 ; idxExistingNeigh < inInteractingCells.size() ; ++idxExistingNeigh){
-            const int idxNeigh = neighPos[idxExistingNeigh];
-            M2LHandler.applyFC(idxNeigh, inLevel, scale,
+        for(long int idxExistingNeigh = 0 ; idxExistingNeigh < inNbNeighbors ; ++idxExistingNeigh){
+            const int idxNeigh = int(neighPos[idxExistingNeigh]);
+            M2LHandler.applyFC(idxNeigh, int(inLevel), scale,
                                inInteractingCells[idxExistingNeigh].get().transformed_multipole_exp,
                                inOutCell.transformed_local_exp);
         }
@@ -139,7 +141,7 @@ public:
 
         // 2) apply Sx
         for (unsigned int idxChild=0; idxChild < inNbChildren; ++idxChild){
-            AbstractBaseClass::Interpolator->applyL2L(childrenPos[idxChild], localExp,
+            AbstractBaseClass::Interpolator->applyL2L(int(childrenPos[idxChild]), localExp,
                                                       inOutLowerCell[idxChild].get().local_exp);
         }
     }
@@ -169,19 +171,20 @@ public:
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const ParticlesClassValues&& inNeighbors, const long int inNbParticlesNeighbors,
+    void P2P(const ParticlesClassValues&& inNeighbors, const ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
              const long int /*inNeighborPos*/,  const ParticlesClassValues&& inTargets,
              ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
-        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP>::P2PRemote(inNeighbors, inNbParticlesNeighbors,
-                                                                                MatrixKernel, inTargets,
-                                                                                inTargetsRhs, inNbOutParticles);
+        FP2PR::template FullMutual<RealType, ParticlesClassValues, ParticlesClassRhs> (std::forward<const ParticlesClassValues>(inNeighbors),
+                                                                                       /*std::forward<ParticlesClassRhs>*/(inNeighborsRhs), inNbParticlesNeighbors,
+                                                                                       std::forward<const ParticlesClassValues>(inTargets),
+                                                                                       std::forward<ParticlesClassRhs>(inTargetsRhs), inNbOutParticles);
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const ParticlesClassValues&& inTargets,
                   ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
-        DirectInteractionComputer<RealType, MatrixKernelClass::NCMP>::P2PInner(MatrixKernel, inTargets,
-                                                                               inTargetsRhs, inNbOutParticles);
+        FP2PR::template GenericInner<RealType, ParticlesClassValues, ParticlesClassRhs>(std::forward<const ParticlesClassValues>(inTargets),
+                                                                                        std::forward<ParticlesClassRhs>(inTargetsRhs), inNbOutParticles);
     }
 };
 

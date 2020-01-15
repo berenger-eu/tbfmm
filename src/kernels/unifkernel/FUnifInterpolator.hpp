@@ -532,7 +532,7 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2P(co
       // This was originally done at M2L step but moved here 
       // because their storage is required by the force computation.
       // In fact : f_{ik}(x)=w_j(x) \nabla_{x_i} K_{ij}(x,y)w_j(y))
-      const unsigned int idxPot = idxLhs / nPV; 
+      //const unsigned int idxPot = idxLhs / nPV;
 
 
 
@@ -615,8 +615,8 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyL2PGra
     }
 
     for(int idxLhs = 0 ; idxLhs < nLhs ; ++idxLhs){
-      const unsigned int idxPot = idxLhs / nPV; 
-      const unsigned int idxPV  = idxLhs % nPV; 
+      //const unsigned int idxPot = idxLhs / nPV;
+      //const unsigned int idxPV  = idxLhs % nPV;
 
       // interpolate and increment forces value
       FReal forces[nVals][3];

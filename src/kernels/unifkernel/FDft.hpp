@@ -265,7 +265,7 @@ protected:
             fftw_destroy_plan(plan);
         //}
     }
-    static fftw_plan Bind_fftw_plan_dft(int d, int *n0, fftw_complex *in, double *out, int sign, unsigned flags){
+    static fftw_plan Bind_fftw_plan_dft(int d, int *n0, fftw_complex *in, double *out, int /*sign*/, unsigned flags){
         //SpErrAE(sign == 1);
         fftw_plan plan;
         //#pragma omp critical(SF_KEEP_FFTW)
@@ -274,7 +274,7 @@ protected:
         //}
         return plan;
     }
-    static fftw_plan Bind_fftw_plan_dft(int d, int *n0, double *in, fftw_complex *out, int sign, unsigned flags){
+    static fftw_plan Bind_fftw_plan_dft(int d, int *n0, double *in, fftw_complex *out, int /*sign*/, unsigned flags){
         //SpErrAE(sign == -1);
         fftw_plan plan;
         //#pragma omp critical(SF_KEEP_FFTW)

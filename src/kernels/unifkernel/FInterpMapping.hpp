@@ -50,6 +50,7 @@ protected:
 public:
     FInterpMapping(const FInterpMapping&) = delete;
     FInterpMapping& operator=(const FInterpMapping&) = delete;
+    virtual ~FInterpMapping(){}
 
     /**
      * Checks wheter @p position is within cluster, ie within @p a and @p b, or

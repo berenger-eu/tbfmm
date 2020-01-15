@@ -238,7 +238,8 @@ public:
             assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                    && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-            inKernel.P2P(make_const(inParticleGroup).getParticleData(*foundSrc), inParticleGroup.getNbParticlesInLeaf(*foundSrc),
+            inKernel.P2P(make_const(inParticleGroup).getParticleData(*foundSrc), inParticleGroup.getParticleRhs(*foundSrc),
+                         inParticleGroup.getNbParticlesInLeaf(*foundSrc),
                          interaction.arrayIndexSrc, make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                          inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
         }
@@ -254,7 +255,7 @@ public:
 
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
     void P2PBetweenGroups(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
-                          const ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
+                          ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
 
@@ -263,7 +264,8 @@ public:
                 assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                        && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-                inKernel.P2P(inOtherParticleGroup.getParticleData(*foundSrc), inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
+                inKernel.P2P(make_const(inOtherParticleGroup).getParticleData(*foundSrc), inOtherParticleGroup.getParticleRhs(*foundSrc),
+                             inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
                              interaction.arrayIndexSrc, make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                              inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
             }

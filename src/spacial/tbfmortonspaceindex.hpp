@@ -308,7 +308,7 @@ public:
     }
 
 
-    auto getNeighborListForBlock(const IndexType cellIndex, const long int inLevel) const{
+    auto getNeighborListForBlock(const IndexType cellIndex, const long int inLevel, const bool upperExclusion = false) const{
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<IndexType> indexes;
@@ -371,7 +371,9 @@ public:
 
                 const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
-                indexes.push_back(otherIndex);
+                if(upperExclusion == false || otherIndex < cellIndex){
+                    indexes.push_back(otherIndex);
+                }
             }
 
             currentTest[Dim-1] += 1;
@@ -381,7 +383,7 @@ public:
     }
 
     template <class GroupClass>
-    auto getNeighborListForBlock(const GroupClass& inGroup, const long int inLevel) const{
+    auto getNeighborListForBlock(const GroupClass& inGroup, const long int inLevel, const bool upperExclusion = false) const{
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesInternal;
@@ -450,20 +452,22 @@ public:
 
                     const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
-                    TbfXtoXInteraction<IndexType> interaction;
-                    interaction.indexTarget = cellIndex;
-                    interaction.indexSrc = otherIndex;
-                    interaction.globalTargetPos = idxCell;
-                    interaction.arrayIndexSrc = arrayPos;
+                    if(upperExclusion == false || otherIndex < cellIndex){
+                        TbfXtoXInteraction<IndexType> interaction;
+                        interaction.indexTarget = cellIndex;
+                        interaction.indexSrc = otherIndex;
+                        interaction.globalTargetPos = idxCell;
+                        interaction.arrayIndexSrc = arrayPos;
 
-                    if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
-                            && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
-                        if(inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
-                            indexesInternal.push_back(interaction);
+                        if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
+                                && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
+                            if(inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
+                                indexesInternal.push_back(interaction);
+                            }
                         }
-                    }
-                    else{
-                        indexesExternal.push_back(interaction);
+                        else{
+                            indexesExternal.push_back(interaction);
+                        }
                     }
                 }
 
@@ -475,11 +479,11 @@ public:
     }
 
 
-    constexpr long int getNbChildrenPerCell() const {
+    static long int constexpr getNbChildrenPerCell() {
         return 1L << Dim;
     }
 
-    constexpr long int getNbNeighborsPerCell() const {
+    static long int constexpr getNbNeighborsPerCell() {
         long int nbNeighbors = 1;
         long int nbNeighborsTooClose = 1;
         for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
