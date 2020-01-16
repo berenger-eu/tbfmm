@@ -134,7 +134,7 @@ public:
     void L2L(const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
              const long int childrenPos[], const long int inNbChildren) {
         // 1) Apply Inverse Discete Fourier Transform
-        RealType localExp[AbstractBaseClass::nnodes];
+        RealType localExp[AbstractBaseClass::nnodes] = {0};
         M2LHandler.unapplyZeroPaddingAndDFT(inUpperCell.transformed_local_exp,
                                             localExp);
         FBlas::add(AbstractBaseClass::nnodes,const_cast<RealType*>(inUpperCell.local_exp),localExp);
@@ -152,7 +152,7 @@ public:
              const long int inNbParticles) {
         const std::array<RealType, Dim> LeafCellCenter(AbstractBaseClass::getLeafCellCenter(LeafIndex));
 
-        RealType localExp[AbstractBaseClass::nnodes];
+        RealType localExp[AbstractBaseClass::nnodes] = {0};
 
         // 1)  Apply Inverse Discete Fourier Transform
         M2LHandler.unapplyZeroPaddingAndDFT(LeafCell.transformed_local_exp,

@@ -78,7 +78,8 @@ struct FUnifRoots
         int omn = order-n-1;
         if(omn%2) scale=FReal(-1.); // (-1)^(n-1-(k+1)+1)=(-1)^(omn-1)
         else scale=FReal(1.);
-        scale/=FReal(FMath::pow(FReal(2.),order-1)*FMath::factorial<FReal>(n)*FMath::factorial<FReal>(omn));
+        const FReal coef = FReal(FMath::pow(FReal(2.),order-1)*FMath::factorial<FReal>(n)*FMath::factorial<FReal>(omn));
+        scale/=coef;
 
         // compute L
         FReal L=FReal(1.);

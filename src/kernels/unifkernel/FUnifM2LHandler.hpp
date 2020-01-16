@@ -62,8 +62,8 @@ static void Compute(const MatrixKernelClass *const MatrixKernel, const FReal Cel
 
     // reduce storage from nnodes^2=order^6 to (2order-1)^3
     const unsigned int rc = (2*order-1)*(2*order-1)*(2*order-1);
-    _C = new FReal [rc];
-    _FC = new std::complex<FReal> [rc * ninteractions];
+    _C = new FReal [rc]();
+    _FC = new std::complex<FReal> [rc * ninteractions]();
 
     // initialize root node ids pairs
     unsigned int node_ids_pairs[rc][2];

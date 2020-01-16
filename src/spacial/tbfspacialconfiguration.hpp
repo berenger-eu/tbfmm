@@ -59,6 +59,17 @@ public:
                 && boxWidths == other.boxWidths
                 && boxWidthsAtLeafLevel == other.boxWidthsAtLeafLevel;
     }
+
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSpacialConfiguration& inConfiguration) {
+        inStream << "TbfSpacialConfiguration @ " << &inConfiguration << "\n";
+        inStream << " - Dim " << Dim << "\n";
+        inStream << " - treeHeight " << inConfiguration.getTreeHeight() << "\n";
+        inStream << " - box center " << TbfUtils::ArrayPrinter(inConfiguration.getBoxCenter()) << "\n";
+        inStream << " - box widths " << TbfUtils::ArrayPrinter(inConfiguration.getBoxWidths()) << "\n";
+        return inStream;
+    }
 };
 
 #endif
