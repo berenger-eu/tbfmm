@@ -114,15 +114,47 @@ int main(){
 
         timerDirect.stop();
 
+        std::cout << "Direct execute in " << timerDirect.getElapsed() << std::endl;
+
+        //////////////////////////////////////////////////////////////////////
+
+        std::array<RealType, 4> partcilesAccuracy;
+        std::array<RealType, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+
+        tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
+                              (auto&& leafHeader, const long int* particleIndexes,
+                              const std::array<RealType*, 4> particleDataPtr,
+                              const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
+            for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   partcilesAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleDataPtr[idxValue][idxPart],
+                                                                                   particles[idxValue][particleIndexes[idxPart]]),
+                                                        partcilesAccuracy[idxValue]);
+                }
+                for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                   partcilesRhsAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleRhsPtr[idxValue][idxPart],
+                                                                                   particlesRhs[idxValue][particleIndexes[idxPart]]),
+                                                        partcilesRhsAccuracy[idxValue]);
+                }
+            }
+        });
+
+        std::cout << "Relative differences:" << std::endl;
+        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+           std::cout << "- Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
+        }
+        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+           std::cout << "- Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+
         for(auto& vec : particles){
             delete[] vec;
         }
         for(auto& vec : particlesRhs){
             delete[] vec;
         }
-
-
-        std::cout << "Direct execute in " << timerDirect.getElapsed() << std::endl;
     }
 
     return 0;

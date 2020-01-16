@@ -103,6 +103,16 @@ inline long int lipow(long int val, const long int power){
     return res;
 }
 
+template <typename RealType>
+RealType RelativeAccuracy(const RealType inGood, const RealType inBad){
+    if(inGood == 0){
+        return inBad;
+    }
+    else{
+        return std::abs(inGood-inBad)/std::abs(inGood);
+    }
+}
+
 template <class ObjectType>
 static const ObjectType& make_const(ObjectType& obj){
     return obj;
