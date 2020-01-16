@@ -98,9 +98,9 @@ public:
                                           LeafCell.transformed_multipole_exp);
     }
 
-        template <class CellClassContainer, class CellClass>
-        void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
-                 const long int childrenPos[], const long int inNbChildren) const {
+    template <class CellClassContainer, class CellClass>
+    void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
+             const long int childrenPos[], const long int inNbChildren) const {
         // 1) apply Sy
         //FBlas::scal(AbstractBaseClass::nnodes, RealType(0.), ParentCell->getMultipole(idxRhs));
         for (unsigned int idxChild=0 ; idxChild < inNbChildren ; ++idxChild){

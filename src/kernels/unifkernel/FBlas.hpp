@@ -55,8 +55,9 @@ inline void add(const unsigned n, const Type* const x, Type* const y)
 template <class Type>
 inline void gemva(const unsigned m, const unsigned n, Type d, const Type* A, const Type *x, Type *y){
     for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
+        y[idxRow] = 0;
         for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
-            y[idxRow] += d * A[idxRow*n+idxCol] * x[idxCol];
+            y[idxRow] += d * A[idxRow+n*idxCol] * x[idxCol];
         }
     }
 }
@@ -66,6 +67,7 @@ inline void gemva(const unsigned m, const unsigned n, Type d, const Type* A, con
 template <class Type>
 inline void gemtva(const unsigned m, const unsigned n, Type d, const Type* A, const Type *x, Type *y){
     for(unsigned idxRow = 0 ; idxRow < n ; ++idxRow){
+        y[idxRow] = 0;
         for(unsigned idxCol = 0 ; idxCol < m ; ++idxCol){
             y[idxRow] += d * A[idxCol*n+idxRow] * x[idxCol];
         }
@@ -80,8 +82,9 @@ inline void gemm(unsigned m, unsigned p, unsigned n, Type d,
 {
     for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
         for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
+            C[idxRow+ldC*idxCol] = 0;
             for(unsigned idxK = 0 ; idxK < p ; ++idxK){
-                C[idxRow*ldC+idxCol] += d * A[idxRow*ldA+idxK] * B[idxK*ldB+idxCol];
+                C[idxRow+ldC*idxCol] += d * A[idxRow+ldA*idxK] * B[idxK+ldB*idxCol];
             }
         }
     }
@@ -95,8 +98,9 @@ inline void gemtm(unsigned m, unsigned p, unsigned n, Type d,
 {
     for(unsigned idxRow = 0 ; idxRow < m ; ++idxRow){
         for(unsigned idxCol = 0 ; idxCol < n ; ++idxCol){
+            C[idxRow+ldC*idxCol] = 0;
             for(unsigned idxK = 0 ; idxK < p ; ++idxK){
-                C[idxRow*ldC+idxCol] += d * A[idxK*ldA+idxRow] * B[idxK*ldB+idxCol];
+                C[idxRow+ldC*idxCol] += d * A[idxK+ldA*idxRow] * B[idxK+ldB*idxCol];
             }
         }
     }

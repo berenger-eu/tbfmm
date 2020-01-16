@@ -478,8 +478,9 @@ inline void FUnifInterpolator<FReal, ORDER,MatrixKernelClass,NVALS>::applyP2M(co
             const unsigned int idx = idxRhs*nVals*nnodes + k*ORDER*ORDER + j*ORDER + i;              
             const FReal S = L_of_x[i][0] * L_of_x[j][1] * L_of_x[k][2];
 
-            for(int idxVals = 0 ; idxVals < nVals ; ++idxVals)
+            for(int idxVals = 0 ; idxVals < nVals ; ++idxVals){
               multipoleExpansion[idxVals*nnodes+idx] += S * weight[idxVals]; // 3 * ORDER*ORDER*ORDER flops
+            }
           }
         }
       }
