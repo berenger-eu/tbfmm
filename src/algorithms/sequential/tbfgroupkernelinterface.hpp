@@ -2,6 +2,7 @@
 #define TBFGROUPKERNELINTERFACE_HPP
 
 #include "tbfglobal.hpp"
+#include "utils/tbfutils.hpp"
 
 #include <cassert>
 
@@ -19,7 +20,7 @@ public:
         for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
             inKernel.P2M(inParticleGroup.getParticleData(idxLeaf), inParticleGroup.getNbParticlesInLeaf(idxLeaf),
-                         inLeafGroup.getCellMultipole(idxLeaf));
+                         inLeafGroup.getCellMultipole(idxLeaf), inLeafGroup.getCellSpacialIndex(idxLeaf));
         }
     }
 
@@ -163,7 +164,7 @@ public:
     template <class KernelClass, class CellGroupClass>
     void L2L(const long int inLevel, KernelClass& inKernel, const CellGroupClass& inUpperGroup,
              CellGroupClass& inLowerGroup) const {
-        using CellLocalType = typename std::remove_reference<decltype(inLowerGroup.getCellMultipole(0))>::type;
+        using CellLocalType = typename std::remove_reference<decltype(inLowerGroup.getCellLocal(0))>::type;
         std::vector<std::reference_wrapper<CellLocalType>> children;
         long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
         long int nbChildren = 0;
@@ -217,8 +218,9 @@ public:
         assert(inParticleGroup.getNbLeaves() == inLeafGroup.getNbCells());
         for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
-            inKernel.L2P(inLeafGroup.getCellLocal(idxLeaf), inParticleGroup.getParticleRhs(idxLeaf),
-                          inParticleGroup.getNbParticlesInLeaf(idxLeaf));
+            inKernel.L2P(inLeafGroup.getCellLocal(idxLeaf), inLeafGroup.getCellSpacialIndex(idxLeaf),
+                         TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf), inParticleGroup.getParticleRhs(idxLeaf),
+                         inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
     }
 
@@ -232,8 +234,9 @@ public:
             assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                    && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-            inKernel.P2P(inParticleGroup.getParticleData(*foundSrc), inParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                         interaction.arrayIndexSrc,
+            inKernel.P2P(TbfUtils::make_const(inParticleGroup).getParticleData(*foundSrc), inParticleGroup.getParticleRhs(*foundSrc),
+                         inParticleGroup.getNbParticlesInLeaf(*foundSrc),
+                         interaction.arrayIndexSrc, TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                          inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
         }
     }
@@ -241,14 +244,14 @@ public:
     template <class KernelClass, class ParticleGroupClass>
     void P2PInner(KernelClass& inKernel, ParticleGroupClass& inParticleGroup) const {
         for(long int idxLeaf = 0 ; idxLeaf < static_cast<long int>(inParticleGroup.getNbLeaves()) ; ++idxLeaf){
-            inKernel.P2PInner(inParticleGroup.getParticleData(idxLeaf),
+            inKernel.P2PInner(TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf),
                          inParticleGroup.getParticleRhs(idxLeaf), inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
     }
 
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
     void P2PBetweenGroups(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
-                          const ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
+                          ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
 
@@ -257,8 +260,9 @@ public:
                 assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                        && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-                inKernel.P2P(inOtherParticleGroup.getParticleData(*foundSrc), inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                             interaction.arrayIndexSrc,
+                inKernel.P2P(TbfUtils::make_const(inOtherParticleGroup).getParticleData(*foundSrc), inOtherParticleGroup.getParticleRhs(*foundSrc),
+                             inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
+                             interaction.arrayIndexSrc, TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                              inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
             }
         }

@@ -171,9 +171,9 @@ protected:
 
         while(currentParticleGroup != endParticleGroup){
 
-            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroup, configuration.getTreeHeight()-1);
+            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroup, configuration.getTreeHeight()-1, true);
             TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
-                                           [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
+                                           [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
                 kernelWrapper.P2PBetweenGroups(kernel, groupTarget, groupSrc, indexes);
             });

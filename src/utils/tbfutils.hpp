@@ -5,6 +5,7 @@
 #include <type_traits>
 #include <utility>
 #include <iterator>
+#include <array>
 
 namespace TbfUtils {
 template <bool...>
@@ -102,6 +103,50 @@ inline long int lipow(long int val, const long int power){
 
     return res;
 }
+
+template <typename RealType>
+RealType RelativeAccuracy(const RealType inBad, const RealType inGood){
+    if(inGood == 0){
+        return inBad;
+    }
+    else{
+        return std::abs(inGood-inBad)/std::abs(inGood);
+    }
+}
+
+template <class ObjectType>
+static const ObjectType& make_const(ObjectType& obj){
+    return obj;
+}
+
+template <class ArrayType>
+class ArrayPrinterCore{
+    const ArrayType& array;
+
+public:
+    ArrayPrinterCore(const ArrayType& inArray) : array(inArray){}
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const ArrayPrinterCore<ArrayType>& inArray) {
+        inStream << "std::" << typeid(ArrayType).name() << " @ " << &inArray;
+        inStream << " - Size " << std::size(inArray.array);
+        inStream << " - Data { ";
+        for(long int idx = 0 ; idx < static_cast<long int>(std::size(inArray.array)) ; ++idx){
+            inStream << inArray.array[idx];
+            if(idx != static_cast<long int>(std::size(inArray.array))-1){
+                inStream << ",";
+            }
+        }
+        inStream << "}";
+        return inStream;
+    }
+};
+
+template <class ArrayType>
+inline ArrayPrinterCore<ArrayType> ArrayPrinter(const ArrayType& inArray){
+    return ArrayPrinterCore<ArrayType>(inArray);
+}
+
 
 }
 

@@ -14,13 +14,14 @@ public:
     explicit TbfTestKernel(const TbfTestKernel&){}
 
     template <class ParticlesClass, class LeafClass>
-    void P2M(const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf) const {
+    void P2M(const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf,
+             const typename SpaceIndexType::IndexType& /*inLeafIndex*/) const {
         inOutLeaf[0] += inNbParticles;
     }
 
     template <class CellClassContainer, class CellClass>
     void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
-             const long int /*childrenPos*/[], const int inNbChildren) const {
+             const long int /*childrenPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
             const CellClass& child = inLowerCell[idxChild];
             inOutUpperCell[0] += child[0];
@@ -45,26 +46,33 @@ public:
         }
     }
 
-    template <class LeafClass, class ParticlesClass>
-    void L2P(const LeafClass& inLeaf, ParticlesClass&& inOutParticles, const long int inNbParticles) const {
+    template <class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
+    void L2P(const LeafClass& inLeaf,  const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+             const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& inOutParticlesRhs,
+             const long int inNbParticles) const {
         for(int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inLeaf[0];
+            inOutParticlesRhs[0][idxPart] += inLeaf[0];
         }
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, const long int inNbParticlesNeighbors,
-             const long int /*inNeighborPos*/, ParticlesClassRhs&& inOutParticles, const long int inNbOutParticles) const {
+    void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
+             const long int inNbParticlesNeighbors,
+             const long int /*inNeighborPos*/, const ParticlesClassValues&& /*inOutParticles*/,
+             ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inNbParticlesNeighbors;
+            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
+        }
+        for(int idxPart = 0 ; idxPart < inNbParticlesNeighbors ; ++idxPart){
+            inParticlesNeighborsRhs[0][idxPart] += inNbOutParticles;
         }
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const ParticlesClassValues&& /*inParticlesNeighbors*/,
-                  ParticlesClassRhs&& inOutParticles, const long int inNbOutParticles) const {
+    void P2PInner(const ParticlesClassValues&& /*inOutParticles*/,
+                  ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticles[0][idxPart] += inNbOutParticles - 1;
+            inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
         }
     }
 };
