@@ -10,7 +10,6 @@
 #include "utils/tbftimer.hpp"
 
 #include "kernels/unifkernel/FUnifKernel.hpp"
-#include "kernels/unifkernel/FUnifKernel.hpp"
 #include "loader/tbffmaloader.hpp"
 
 #include <iostream>
@@ -99,7 +98,7 @@ int main(int argc, char** argv){
 
     using MultipoleClass = MultipoleData;
     using LocalClass = LocalData;
-    typedef FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER> KernelClass;
+    using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
 
