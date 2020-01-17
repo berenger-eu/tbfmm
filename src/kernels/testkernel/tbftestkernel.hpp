@@ -14,13 +14,14 @@ public:
     explicit TbfTestKernel(const TbfTestKernel&){}
 
     template <class ParticlesClass, class LeafClass>
-    void P2M(const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf,
-             const typename SpaceIndexType::IndexType& /*inLeafIndex*/) const {
+    void P2M(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+             const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf) const {
         inOutLeaf[0] += inNbParticles;
     }
 
     template <class CellClassContainer, class CellClass>
-    void M2M(const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
+    void M2M(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+             const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
              const long int /*childrenPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
             const CellClass& child = inLowerCell[idxChild];
@@ -29,7 +30,8 @@ public:
     }
 
     template <class CellClassContainer, class CellClass>
-    void M2L(const long int /*inLevel*/, const CellClassContainer& inInteractingCells, const long int /*neighPos*/[], const long int inNbNeighbors,
+    void M2L(const typename SpaceIndexType::IndexType& /*inTargetIndex*/,
+             const long int /*inLevel*/, const CellClassContainer& inInteractingCells, const long int /*neighPos*/[], const long int inNbNeighbors,
              CellClass& inOutCell) const {
         for(long int idxNeigh = 0 ; idxNeigh < inNbNeighbors ; ++idxNeigh){
             const CellClass& neighbor = inInteractingCells[idxNeigh];
@@ -38,7 +40,8 @@ public:
     }
 
     template <class CellClass, class CellClassContainer>
-    void L2L(const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
+    void L2L(const typename SpaceIndexType::IndexType& /*inParentIndex*/,
+             const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
              const long int /*childrednPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
             CellClass& child = inOutLowerCell[idxChild];
@@ -47,7 +50,8 @@ public:
     }
 
     template <class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
-    void L2P(const LeafClass& inLeaf,  const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+    void L2P(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+             const LeafClass& inLeaf,
              const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& inOutParticlesRhs,
              const long int inNbParticles) const {
         for(int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
@@ -56,7 +60,8 @@ public:
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
+    void P2P(const typename SpaceIndexType::IndexType& /*inNeighborIndex*/,
+             const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
              const long int /*inNeighborPos*/, const ParticlesClassValues&& /*inOutParticles*/,
              ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
@@ -69,7 +74,8 @@ public:
     }
 
     template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const ParticlesClassValues&& /*inOutParticles*/,
+    void P2PInner(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+                  const ParticlesClassValues&& /*inOutParticles*/,
                   ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
