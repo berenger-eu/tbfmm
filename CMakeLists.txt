@@ -42,7 +42,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
 
 #################################################
 
-list(APPEND TBFMM_LIBRARIES fftw3)
+list(APPEND TBFMM_LIBRARIES fftw3 fftw3f)
 
 
 #################################################
