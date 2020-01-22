@@ -148,6 +148,11 @@ inline ArrayPrinterCore<ArrayType> ArrayPrinter(const ArrayType& inArray){
 }
 
 
+template <class Type>
+inline Type* CreateNew(Type&& inObject){
+    return new Type(std::forward<Type>(inObject));
+}
+
 }
 
 #endif
