@@ -52,7 +52,19 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
 
 #################################################
 
-find_package(FFTW REQUIRED COMPONENTS FLOAT_LIB DOUBLE_LIB)
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    list(APPEND TBF_USE_LIST OPENMP)
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE OPENMP)
+
+#################################################
+
+find_package(FFTW COMPONENTS FLOAT_LIB DOUBLE_LIB)
 if(FFTW_FOUND)
     message(STATUS "FFTW Found")
     if(NOT FFTW_FLOAT_LIB_FOUND OR NOT FFTW_DOUBLE_LIB_FOUND)
