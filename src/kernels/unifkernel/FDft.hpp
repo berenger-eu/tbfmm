@@ -20,11 +20,6 @@
 #include <iostream>
 #include <stdlib.h>
 
-// include fftw3 (specify path in cmake)
-// if MKL: path/to/mkl/include/fftw/fftw3.h 
-// elseif libfftw_dev: usr/include/fftw3.h
-#include <fftw3.h>
-
 
 // for @class FDft only
 #include "FBlas.hpp"
@@ -32,6 +27,7 @@
 
 #include <complex>
 
+#include <fftw3.h>
 
 /**
  * @author Pierre Blanchard (pierre.blanchard@inria.fr)
@@ -283,14 +279,6 @@ protected:
         //}
         return plan;
     }
-    static fftw_plan Bind_fftw_plan_dft(int d, int *n0, fftw_complex *in, fftw_complex *out, int sign, unsigned flags){
-        fftw_plan plan;
-        //#pragma omp critical(SF_KEEP_FFTW)
-        //{
-            plan = fftw_plan_dft(d, n0, in, out, sign, flags);
-        //}
-        return plan;
-    }
     static void Bind_fftw_execute(fftw_plan plan){
         fftw_execute(plan);
     }
@@ -344,14 +332,6 @@ protected:
         //#pragma omp critical(SF_KEEP_FFTW)
         //{
             plan = fftwf_plan_dft_r2c(d, n0, in, out, flags);
-        //}
-        return plan;
-    }
-    static fftwf_plan Bind_fftw_plan_dft(int d, int *n0, fftwf_complex *in, fftwf_complex *out, int sign, unsigned flags){
-        fftwf_plan plan;
-        //#pragma omp critical(SF_KEEP_FFTW)
-        //{
-            plan = fftwf_plan_dft(d, n0, in, out, sign, flags);
         //}
         return plan;
     }

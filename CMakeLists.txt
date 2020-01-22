@@ -1,6 +1,11 @@
 project(TBFMM CXX)
 cmake_minimum_required(VERSION 3.0)
 
+cmake_policy(SET CMP0074 NEW)
+cmake_policy(SET CMP0057 NEW)
+
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/CMakeModules/")
+
 #################################################
 
 set(CMAKE_CXX_STANDARD 17)
@@ -29,6 +34,11 @@ endif()
 
 #################################################
 
+set(TBF_USE_LIST "")
+set(TBF_USE_LIST_AVAILABLE "")
+
+#################################################
+
 set(SPETABARU_JUST_LIB TRUE)
 add_subdirectory(deps/spetabaru)
 INCLUDE_DIRECTORIES(
@@ -42,8 +52,24 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
 
 #################################################
 
-list(APPEND TBFMM_LIBRARIES fftw3 fftw3f)
+find_package(FFTW REQUIRED COMPONENTS FLOAT_LIB DOUBLE_LIB)
+if(FFTW_FOUND)
+    message(STATUS "FFTW Found")
+    if(NOT FFTW_FLOAT_LIB_FOUND OR NOT FFTW_DOUBLE_LIB_FOUND)
+        message(STATUS "Problem FFTW is only in double or float")    
+        message(STATUS "FFTW_FLOAT_LIB_FOUND = ${FFTW_FLOAT_LIB_FOUND}")  
+        message(STATUS "FFTW_DOUBLE_LIB_FOUND = ${FFTW_DOUBLE_LIB_FOUND}")   
+    else()
+        INCLUDE_DIRECTORIES("${FFTW_INCLUDE_DIRS}")
+        link_directories("${FFTW_LIBRARIES}")
+        list(APPEND TBFMM_LIBRARIES ${FFTW_FLOAT_LIB} ${FFTW_DOUBLE_LIB})
+        list(APPEND TBF_USE_LIST FFTW)
+    endif()
+else()
+    message(STATUS "FFTW Cannot be found")
+endif()
 
+list(APPEND TBF_USE_LIST_AVAILABLE FFTW)
 
 #################################################
 
@@ -62,14 +88,29 @@ endif()
 
 file(GLOB_RECURSE cpp_for_examples ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
 foreach(an_example ${cpp_for_examples})
+    set(compile_exec TRUE)
     get_filename_component(execname ${an_example} NAME_WE)
-    
-    message(STATUS "Add example ${execname} for ${an_example}")
+    	
+    foreach(tbf_use_key ${TBF_USE_LIST_AVAILABLE})
+        file(STRINGS "${an_example}" lines_tbf_use REGEX "@TBF_USE_${tbf_use_key}")
+        if(lines_tbf_use AND NOT ${tbf_use_key} IN_LIST TBF_USE_LIST)
+            message( STATUS "Examples -- ${execname} needs ${tbf_use_key}" )
+            set(compile_exec FALSE)
+        endif()
+    endforeach()
 
-    add_executable(${execname} ${an_example})
-    if(TBFMM_LIBRARIES)
-        target_link_libraries(${execname} ${TBFMM_LIBRARIES}) 
-    endif()
+    # Dependency are OK
+    if( compile_exec )
+        
+        message(STATUS "Add example ${execname}")
+
+        add_executable(${execname} ${an_example})
+        if(TBFMM_LIBRARIES)
+            target_link_libraries(${execname} ${TBFMM_LIBRARIES}) 
+        endif()
+    else()
+        MESSAGE(STATUS "Examples -- ${execname} cannot be compiled due to missing libs (${an_example})")
+   endif()
 endforeach()
 
 #################################################
@@ -77,6 +118,8 @@ endforeach()
 option(BUILD_TESTS "Should be ON to enable unit tests" OFF)
 
 if( BUILD_TESTS )
+    list(APPEND TBF_USE_LIST_AVAILABLE IMPOSSIBLE_LIB)
+
     MESSAGE(STATUS "Testing is enable")
     set(TBFMM_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
     enable_testing()

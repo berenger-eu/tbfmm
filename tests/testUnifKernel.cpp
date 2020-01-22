@@ -14,6 +14,9 @@
 
 #include <iostream>
 
+// -- DOT NOT REMOVE AS LONG AS LIBS ARE USED --
+// @TBF_USE_FFTW
+// -- END --
 
 int main(int argc, char** argv){
     using RealType = double;
