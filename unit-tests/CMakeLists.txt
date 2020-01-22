@@ -23,23 +23,29 @@ INCLUDE_DIRECTORIES(
 
 
 # Add execs - 1 cpp = 1 exec
-foreach(exec ${source_tests_files}) 
-    get_filename_component(
-	    execname ${exec}
-	    NAME_WE
-    )
-    if($ENV{VERBOSE})
-        MESSAGE(STATUS "UTests -- Add ${execname}")
+foreach(exec ${source_tests_files})
+    get_filename_component( execname ${exec} NAME_WE)
+    set(compile_exec TRUE)
+    	
+    foreach(tbf_use_key ${TBF_USE_LIST_AVAILABLE})
+        file(STRINGS "${exec}" lines_tbf_use REGEX "@TBF_USE_${tbf_use_key}")
+        if(lines_tbf_use AND NOT ${tbf_use_key} IN_LIST TBF_USE_LIST)
+            message( STATUS "UTests -- ${execname} needs ${tbf_use_key}" )
+            set(compile_exec FALSE)
+        endif()
+    endforeach()
+
+    # Dependency are OK
+    if( compile_exec )
+        if($ENV{VERBOSE})
+            MESSAGE(STATUS "UTests -- Add ${execname}")
+        endif()
+
+        add_executable(${execname} ${exec})
+
+        target_link_libraries(${execname} ${TBFMM_LIBRARIES})
+        add_test(${execname} ${CMAKE_CURRENT_BINARY_DIR}/${execname})
+    else()
+        MESSAGE(STATUS "UTests -- ${execname} cannot be compiled due to missing libs (${exec})")
     endif()
-
-    add_executable(
-		    ${execname}
-		    ${exec}
-	    )
-
-    target_link_libraries(
-        ${execname}
-        ${TBFMM_LIBRARIES}
-        )
-    add_test(${execname} ${CMAKE_CURRENT_BINARY_DIR}/${execname})
 endforeach(exec)
