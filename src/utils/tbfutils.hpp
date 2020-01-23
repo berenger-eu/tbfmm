@@ -153,6 +153,23 @@ inline Type* CreateNew(Type&& inObject){
     return new Type(std::forward<Type>(inObject));
 }
 
+
+template <class Type, size_t Size, size_t... OtherSizes>
+struct marray_core
+{
+  using SubArray = typename marray_core<Type, OtherSizes...>::type;
+  using type = std::array<SubArray, Size>;
+};
+
+template <class Type, size_t Size>
+struct marray_core<Type, Size>
+{
+  using type = std::array<Type, Size>;
+};
+
+template <class Type, size_t... AllSizes>
+using marray = typename marray_core<Type, AllSizes...>::type;
+
 }
 
 #endif

@@ -16,6 +16,7 @@
 #ifndef FP2PR_HPP
 #define FP2PR_HPP
 
+#include "FMath.hpp"
 
 /**
  * @brief The FP2PR namespace
