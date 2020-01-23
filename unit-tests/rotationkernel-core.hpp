@@ -10,14 +10,14 @@
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-#include "kernels/unifkernel/FUnifKernel.hpp"
+#include "kernels/rotationkernel/FRotationKernel.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
 #include "utils/tbftimer.hpp"
 
 
 template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestUnifKernel<RealType, AlgorithmClass> >;
+class TestRotationKernel : public UTester< TestRotationKernel<RealType, AlgorithmClass> > {
+    using Parent = UTester< TestRotationKernel<RealType, AlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -46,26 +46,16 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        const unsigned int ORDER = 8;
+        const unsigned int P = 12;
         constexpr long int NbDataValuesPerParticle = Dim+1;
         constexpr long int NbRhsValuesPerParticle = 4;
 
-        constexpr long int VectorSize = TensorTraits<ORDER>::nnodes;
-        constexpr long int TransformedVectorSize = (2*ORDER-1)*(2*ORDER-1)*(2*ORDER-1);
+        constexpr long int VectorSize = ((P+2)*(P+1))/2;
 
-        struct MultipoleData{
-            RealType multipole_exp[VectorSize];
-            std::complex<RealType> transformed_multipole_exp[TransformedVectorSize];
-        };
+        using MultipoleClass = std::array<std::complex<RealType>, VectorSize>;
+        using LocalClass = std::array<std::complex<RealType>, VectorSize>;
 
-        struct LocalData{
-            RealType     local_exp[VectorSize];
-            std::complex<RealType>     transformed_local_exp[TransformedVectorSize];
-        };
-
-        using MultipoleClass = MultipoleData;
-        using LocalClass = LocalData;
-        using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
+        using KernelClass = FRotationKernel<RealType, P>;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -77,12 +67,11 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-        FInterpMatrixKernelR<RealType> interpolator;
-        AlgorithmClass<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+        std::unique_ptr<AlgorithmClass<RealType, KernelClass>> algorithm(new AlgorithmClass<RealType, KernelClass>(configuration));
 
         TbfTimer timerExecute;
 
-        algorithm.execute(tree);
+        algorithm->execute(tree);
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
@@ -177,7 +166,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
     }
 
     void SetTests() {
-        Parent::AddTest(&TestUnifKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the test kernel");
+        Parent::AddTest(&TestRotationKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the test kernel");
     }
 };
 
