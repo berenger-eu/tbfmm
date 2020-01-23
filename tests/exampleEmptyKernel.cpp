@@ -190,8 +190,8 @@ int main(){
     constexpr long int NbDataValuesPerParticle = Dim;
     using ParticleRhsType = double; // TODO what type are the particle RHS
     constexpr long int NbRhsValuesPerParticle = 1; // TODO how many real values you need in the rhs part
-    using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part
-    using LocalClass = std::array<RealType,1>; // TODO what is a local part
+    using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part, could be a class, but must be POD
+    using LocalClass = std::array<RealType,1>; // TODO what is a local part, could be a class, but must be POD
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
 
