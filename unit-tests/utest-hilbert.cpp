@@ -1,13 +1,13 @@
 #include "UTester.hpp"
 
 #include "utils/tbfutils.hpp"
-#include "spacial/tbfmortonspaceindex.hpp"
+#include "spacial/tbfhilbertspaceindex.hpp"
 #include "spacial/tbfspacialconfiguration.hpp"
 
 #include <set>
 
-class TestMorton : public UTester< TestMorton > {
-    using Parent = UTester< TestMorton >;
+class TestHilbert : public UTester< TestHilbert > {
+    using Parent = UTester< TestHilbert >;
     
     void TestBasic() {
         const int Dim = 3;
@@ -19,41 +19,41 @@ class TestMorton : public UTester< TestMorton > {
         const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
 
         const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
-        const TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> > morton(configuration);
+        const TbfHilbertSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> > hilbert(configuration);
 
-        using IndexType = typename TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
+        using IndexType = typename TbfHilbertSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
 
-        UASSERTEEQUAL(morton.getUpperBound(0), IndexType(1));
-        UASSERTEEQUAL(morton.getUpperBound(1), IndexType(8));
-        UASSERTEEQUAL(morton.getUpperBound(2), IndexType(8*8));
+        UASSERTEEQUAL(hilbert.getUpperBound(0), IndexType(1));
+        UASSERTEEQUAL(hilbert.getUpperBound(1), IndexType(8));
+        UASSERTEEQUAL(hilbert.getUpperBound(2), IndexType(8*8));
 
         for(long int idxLevel = 0 ; idxLevel < TreeHeight-1 ; ++idxLevel){
             std::set<std::array<long int,Dim>> generatedPositions;
             std::set<IndexType> generatedChildIndexes;
 
-            for(IndexType idx = 0 ; idx < morton.getUpperBound(idxLevel) ; ++idx){
-                auto pos = morton.getBoxPosFromIndex(idx);
+            for(IndexType idx = 0 ; idx < hilbert.getUpperBound(idxLevel) ; ++idx){
+                auto pos = hilbert.getBoxPosFromIndex(idx);
                 UASSERTETRUE(generatedPositions.find(pos) == generatedPositions.end());
                 generatedPositions.insert(pos);
 
-                UASSERTETRUE(idx == morton.getIndexFromBoxPos(pos));
+                UASSERTETRUE(idx == hilbert.getIndexFromBoxPos(pos));
 
                 for(long int idxChild = 0 ; idxChild < 8 ; ++idxChild){
-                    auto childIndex = morton.getChildIndexFromParent(idx, idxChild);
-                    UASSERTETRUE(idxChild == morton.childPositionFromParent(childIndex));
-                    UASSERTETRUE(idx == morton.getParentIndex(childIndex));
-                    UASSERTETRUE(childIndex < morton.getUpperBound(idxLevel+1));
+                    auto childIndex = hilbert.getChildIndexFromParent(idx, idxChild);
+                    UASSERTETRUE(idxChild == hilbert.childPositionFromParent(childIndex));
+                    UASSERTETRUE(idx == hilbert.getParentIndex(childIndex));
+                    UASSERTETRUE(childIndex < hilbert.getUpperBound(idxLevel+1));
                     UASSERTETRUE(generatedChildIndexes.find(childIndex) == generatedChildIndexes.end());
                     generatedChildIndexes.insert(childIndex);
                 }
 
                 {
-                    const auto parent = morton.getParentIndex(idx);
-                    const auto parentPos = morton.getBoxPosFromIndex(parent);
+                    const auto parent = hilbert.getParentIndex(idx);
+                    const auto parentPos = hilbert.getBoxPosFromIndex(parent);
 
-                    const auto interactionList = morton.getInteractionListForIndex(idx, idxLevel);
+                    const auto interactionList = hilbert.getInteractionListForIndex(idx, idxLevel);
                     for(auto interaction : interactionList){
-                        const auto posInteraction = morton.getBoxPosFromIndex(interaction);
+                        const auto posInteraction = hilbert.getBoxPosFromIndex(interaction);
 
                         {
                             bool atLeastOneMoreThanOne = false;
@@ -69,8 +69,8 @@ class TestMorton : public UTester< TestMorton > {
                         {
                             bool atLeastOneMoreThanZero = false;
 
-                            const auto interactionParent = morton.getParentIndex(interaction);
-                            const auto interactionParentPos = morton.getBoxPosFromIndex(interactionParent);
+                            const auto interactionParent = hilbert.getParentIndex(interaction);
+                            const auto interactionParentPos = hilbert.getBoxPosFromIndex(interactionParent);
                             for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                                 UASSERTETRUE(std::abs(parentPos[idxDim] - interactionParentPos[idxDim]) <= 1);
                                 if(std::abs(pos[idxDim] - posInteraction[idxDim]) > 0){
@@ -83,9 +83,9 @@ class TestMorton : public UTester< TestMorton > {
                 }
 
                 {
-                    const auto interactionList = morton.getNeighborListForBlock(idx, idxLevel);
+                    const auto interactionList = hilbert.getNeighborListForBlock(idx, idxLevel);
                     for(auto interaction : interactionList){
-                        const auto posInteraction = morton.getBoxPosFromIndex(interaction);
+                        const auto posInteraction = hilbert.getBoxPosFromIndex(interaction);
 
                         {
                             bool atLeastOneMoreThanZero = false;
@@ -105,11 +105,11 @@ class TestMorton : public UTester< TestMorton > {
     }
     
     void SetTests() {
-        Parent::AddTest(&TestMorton::TestBasic, "Basic test for Morton");
+        Parent::AddTest(&TestHilbert::TestBasic, "Basic test for Hilbert");
     }
 };
 
 // You must do this
-TestClass(TestMorton)
+TestClass(TestHilbert)
 
 
