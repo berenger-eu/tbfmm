@@ -36,10 +36,12 @@ public:
     /// shared pointer and safely update it in this copy function
     explicit KernelExample(const KernelExample&){}
 
-    template <class ParticlesClass, class LeafClass>
-    void P2M(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+    template <class CellSymbolicData, class ParticlesClass, class LeafClass>
+    void P2M(const CellSymbolicData& /*inLeafIndex*/,
              const ParticlesClass&& /*inParticles*/, const long int /*inNbParticles*/, LeafClass& /*inOutLeaf*/) const {
-        /// inLeafIndex: is the spacial index (Morton index for example) of the current leaf
+        /// inLeafIndex:
+        ///  - .spacialIndex is the spacial index (Morton index for example) of the current leaf
+        ///  - .boxCoord is the coordinate in the spacial box of the current leaf
         /// inParticles: is an array of pointers on the particles' data (not on the RHS)
         ///  - For i from 0 to Dim-1, inParticles[i][idxPart] gives the position of particle idxPart on axis i
         ///  - Then, for Dim <= i < NbData inParticles[i][idxPart] gives the data value for particle idxPart
@@ -47,8 +49,8 @@ public:
         /// inOutLeaf: is the multipole part (here MultipoleClass defined in the main)
     }
 
-    template <class CellClassContainer, class CellClass>
-    void M2M(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    void M2M(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/, const CellClassContainer& /*inLowerCell*/, CellClass& /*inOutUpperCell*/,
              const long int /*childrenPos*/[], const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
@@ -68,8 +70,8 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class CellClassContainer, class CellClass>
-    void M2L(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    void M2L(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/, const CellClassContainer& /*inInteractingCells*/,
              const long int /*neighPos*/[], const long int /*inNbNeighbors*/,
              CellClass& /*inOutCell*/) const {
@@ -90,8 +92,8 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class CellClass, class CellClassContainer>
-    void L2L(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+    template <class CellSymbolicData, class CellClass, class CellClassContainer>
+    void L2L(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/, const CellClass& /*inUpperCell*/, CellClassContainer& /*inOutLowerCells*/,
              const long int /*childrednPos*/[], const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
@@ -111,8 +113,8 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
-    void L2P(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+    template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
+    void L2P(const CellSymbolicData& /*inCellIndex*/,
              const LeafClass& /*inLeaf*/,
              const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& /*inOutParticlesRhs*/,
              const long int /*inNbParticles*/) const {
@@ -127,11 +129,11 @@ public:
         /// inNbParticles: is the number of particles
     }
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const typename SpaceIndexType::IndexType& /*inNeighborIndex*/,
+    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
+    void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
              const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
-             const typename SpaceIndexType::IndexType& /*inTargetIndex*/, const ParticlesClassValues&& /*inOutParticles*/,
+             const LeafSymbolicData& /*inTargetIndex*/, const ParticlesClassValues&& /*inOutParticles*/,
              ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         /// To compute the interations between a leaf and a neighbor (should be done in both way).
         /// inNeighborIndex: is the spacial index (Morton index for example) of the neighbor
@@ -149,8 +151,8 @@ public:
         /// inNbOutParticles: is the number of particles in the target container
     }
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const typename SpaceIndexType::IndexType& /*inSpacialIndex*/,
+    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
+    void P2PInner(const LeafSymbolicData& /*inSpacialIndex*/,
                   const ParticlesClassValues&& /*inOutParticles*/,
                   ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         /// To compute the interations inside a leaf.

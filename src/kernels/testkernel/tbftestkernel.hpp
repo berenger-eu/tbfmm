@@ -13,14 +13,14 @@ public:
     explicit TbfTestKernel(const SpacialConfiguration& /*inConfiguration*/){}
     explicit TbfTestKernel(const TbfTestKernel&){}
 
-    template <class ParticlesClass, class LeafClass>
-    void P2M(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+    template <class CellSymbolicData, class ParticlesClass, class LeafClass>
+    void P2M(const CellSymbolicData& /*inLeafIndex*/,
              const ParticlesClass&& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf) const {
         inOutLeaf[0] += inNbParticles;
     }
 
-    template <class CellClassContainer, class CellClass>
-    void M2M(const typename SpaceIndexType::IndexType& /*inCellIndex*/,
+    template <class CellSymbolicData,class CellClassContainer, class CellClass>
+    void M2M(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
              const long int /*childrenPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
@@ -29,8 +29,8 @@ public:
         }
     }
 
-    template <class CellClassContainer, class CellClass>
-    void M2L(const typename SpaceIndexType::IndexType& /*inTargetIndex*/,
+    template <class CellSymbolicData,class CellClassContainer, class CellClass>
+    void M2L(const CellSymbolicData& /*inTargetIndex*/,
              const long int /*inLevel*/, const CellClassContainer& inInteractingCells, const long int /*neighPos*/[], const long int inNbNeighbors,
              CellClass& inOutCell) const {
         for(long int idxNeigh = 0 ; idxNeigh < inNbNeighbors ; ++idxNeigh){
@@ -39,8 +39,8 @@ public:
         }
     }
 
-    template <class CellClass, class CellClassContainer>
-    void L2L(const typename SpaceIndexType::IndexType& /*inParentIndex*/,
+    template <class CellSymbolicData,class CellClass, class CellClassContainer>
+    void L2L(const CellSymbolicData& /*inParentIndex*/,
              const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
              const long int /*childrednPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
@@ -49,8 +49,8 @@ public:
         }
     }
 
-    template <class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
-    void L2P(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+    template <class CellSymbolicData,class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
+    void L2P(const CellSymbolicData& /*inLeafIndex*/,
              const LeafClass& inLeaf,
              const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& inOutParticlesRhs,
              const long int inNbParticles) const {
@@ -59,11 +59,11 @@ public:
         }
     }
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const typename SpaceIndexType::IndexType& /*inNeighborIndex*/,
+    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
+    void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
              const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
-             const long int /*inNeighborPos*/, const ParticlesClassValues&& /*inOutParticles*/,
+             const LeafSymbolicData& /*inParticlesIndex*/, const ParticlesClassValues&& /*inOutParticles*/,
              ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
@@ -73,8 +73,8 @@ public:
         }
     }
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const typename SpaceIndexType::IndexType& /*inLeafIndex*/,
+    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
+    void P2PInner(const LeafSymbolicData& /*inLeafIndex*/,
                   const ParticlesClassValues&& /*inOutParticles*/,
                   ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){

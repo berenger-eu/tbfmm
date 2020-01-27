@@ -19,6 +19,8 @@ public:
     using SpaceIndexType = SpaceIndexType_T;
     using IndexType = typename SpaceIndexType::IndexType;
 
+    static constexpr long int Dim = SpaceIndexType::Dim;
+
 private:
     struct ContainerHeader {
         IndexType startingSpaceIndex;
@@ -29,6 +31,7 @@ private:
 
     struct CellHeader {
         IndexType spaceIndex;
+        std::array<long int, Dim> boxCoord;
     };
 
 
@@ -44,8 +47,8 @@ private:
     LocalMemoryBlockType objectLocal;
 
 public:
-    template <class ContainerClass>
-    explicit TbfCellsContainer(const ContainerClass& inCellSpatialIndexes){
+    template <class ContainerClass, class ConverterClass>
+    explicit TbfCellsContainer(const ContainerClass& inCellSpatialIndexes, const ConverterClass& inConverter){
         const long int nbCells = static_cast<long int>(std::size(inCellSpatialIndexes));
 
         if(nbCells == 0){
@@ -76,6 +79,7 @@ public:
 
         for(long int idxCell = 0 ; idxCell < nbCells ; ++idxCell){
             cellsViewer.getItem(idxCell).spaceIndex = inCellSpatialIndexes[idxCell];
+            cellsViewer.getItem(idxCell).boxCoord = inConverter.getBoxPosFromIndex(inCellSpatialIndexes[idxCell]);
         }
     }
 
@@ -101,6 +105,14 @@ public:
 
     IndexType getCellSpacialIndex(const long int inIdxCell) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell).spaceIndex;
+    }
+
+    const std::array<long int, Dim>& getCellBoxCoord(const long int inIdxCell) const{
+        return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell).boxCoord;
+    }
+
+    const CellHeader& getCellSymbData(const long int inIdxCell) const{
+        return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell);
     }
 
     MultipoleClass& getCellMultipole(const long int inIdxCell) {
