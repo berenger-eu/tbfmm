@@ -13,8 +13,11 @@
 #include <cassert>
 #include <iterator>
 
-// Change when OpenMP will allow it
+#if _OPENMP >= 201811
+#define commute mutexinout
+#else
 #define commute inout
+#endif
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
 class TbfOpenmpAlgorithm {
@@ -30,6 +33,8 @@ protected:
 
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
     KernelClass kernel;
+
+    TbfAlgorithmUtils::LFmmOperationsPriorities priorities;
 
     template <class TreeClass>
     void P2M(TreeClass& inTree){
@@ -55,7 +60,7 @@ protected:
                 const auto particleGroupObjGetDataPtr = particleGroupObj->getDataPtr();
                 auto leafGroupObjGetMultipolePtr = leafGroupObj->getMultipolePtr();
 
-#pragma omp task depend(in:particleGroupObjGetDataPtr[0]) depend(commute:leafGroupObjGetMultipolePtr[0]) default(shared) firstprivate(particleGroupObj, leafGroupObj)
+#pragma omp task depend(in:particleGroupObjGetDataPtr[0]) depend(commute:leafGroupObjGetMultipolePtr[0]) default(shared) firstprivate(particleGroupObj, leafGroupObj) priority(priorities.getP2MPriority())
                 {
                     kernelWrapper.P2M(kernel, *particleGroupObj, *leafGroupObj);
                 }
@@ -87,7 +92,7 @@ protected:
                 const auto lowerGroupGetMultipolePtr = lowerGroup->getMultipolePtr();
                 const auto upperGroupGetMultipolePtr = upperGroup->getMultipolePtr();
 
-#pragma omp task depend(in:lowerGroupGetMultipolePtr[0]) depend(commute:upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup)
+#pragma omp task depend(in:lowerGroupGetMultipolePtr[0]) depend(commute:upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup)  priority(priorities.getM2MPriority(idxLevel))
                 {
                     kernelWrapper.M2M(idxLevel, kernel, *lowerGroup, *upperGroup);
                 }
@@ -126,7 +131,7 @@ protected:
 
                     auto groupTargetGetLocalPtr = groupTarget.getLocalPtr();
                     const auto groupSrcGetMultipolePtr = groupSrc.getMultipolePtr();
-#pragma omp task depend(in:groupSrcGetMultipolePtr[0]) depend(commute:groupTargetGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesVec, groupSrcPtr, groupTargetPtr)
+#pragma omp task depend(in:groupSrcGetMultipolePtr[0]) depend(commute:groupTargetGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesVec, groupSrcPtr, groupTargetPtr)  priority(priorities.getM2LPriority(idxLevel))
                     {
                         kernelWrapper.M2LBetweenGroups(idxLevel, kernel, *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                         delete indexesVec;
@@ -139,7 +144,7 @@ protected:
                 const auto currentGroupGetMultipolePtr = currentGroup->getMultipolePtr();
                 auto currentGroupGetLocalPtr = currentGroup->getLocalPtr();
 
-#pragma omp task depend(in:currentGroupGetMultipolePtr[0]) depend(commute:currentGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesForGroup_first, currentGroup)
+#pragma omp task depend(in:currentGroupGetMultipolePtr[0]) depend(commute:currentGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesForGroup_first, currentGroup)  priority(priorities.getM2LPriority(idxLevel))
                 {
                     kernelWrapper.M2LInGroup(idxLevel, kernel, *currentGroup, std::move(*indexesForGroup_first));
                     delete indexesForGroup_first;
@@ -172,7 +177,7 @@ protected:
                 const auto upperGroupGetLocalPtr = upperGroup->getLocalPtr();
                 auto lowerGroupGetLocalPtr = lowerGroup->getLocalPtr();
 
-#pragma omp task depend(in:upperGroupGetLocalPtr[0]) depend(commute:lowerGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup)
+#pragma omp task depend(in:upperGroupGetLocalPtr[0]) depend(commute:lowerGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup)  priority(priorities.getL2LPriority(idxLevel))
                 {
                     kernelWrapper.L2L(idxLevel, kernel, *upperGroup, *lowerGroup);
                 }
@@ -215,7 +220,7 @@ protected:
                 const auto leafGroupObjGetLocalPtr = leafGroupObj->getLocalPtr();
                 auto particleGroupObjGetRhsPtr = particleGroupObj->getRhsPtr();
 
-#pragma omp task depend(in:leafGroupObjGetLocalPtr[0]) depend(commute:particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)
+#pragma omp task depend(in:leafGroupObjGetLocalPtr[0]) depend(commute:particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
                 {
                     kernelWrapper.L2P(kernel, *leafGroupObj, *particleGroupObj);
                 }
@@ -249,7 +254,7 @@ protected:
                 auto groupTargetGetRhsPtr = groupTarget.getRhsPtr();
 
                 auto indexesVec = TbfUtils::CreateNew(indexes.toStdVector());
-#pragma omp task depend(commute:groupSrcGetDataPtr[0],groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr)
+#pragma omp task depend(commute:groupSrcGetDataPtr[0],groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
                     kernelWrapper.P2PBetweenGroups(kernel, *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                     delete indexesVec;
@@ -262,7 +267,7 @@ protected:
             auto currentGroupGetRhsPtr = currentGroup->getRhsPtr();
 
             auto indexesForGroup_first = TbfUtils::CreateNew(std::move(indexesForGroup.first));
-#pragma omp task depend(in:currentGroupGetDataPtr[0]) depend(commute:currentGroupGetRhsPtr[0]) default(shared) firstprivate(currentGroup, indexesForGroup_first)
+#pragma omp task depend(in:currentGroupGetDataPtr[0]) depend(commute:currentGroupGetRhsPtr[0]) default(shared) firstprivate(currentGroup, indexesForGroup_first) priority(priorities.getP2PPriority())
             {
                 kernelWrapper.P2PInGroup(kernel, *currentGroup, std::move(*indexesForGroup_first));
                 delete indexesForGroup_first;
@@ -276,12 +281,16 @@ protected:
 
 public:
     TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration)
-        : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(configuration){
+        : configuration(inConfiguration), spaceSystem(configuration),
+          kernelWrapper(configuration), kernel(configuration),
+          priorities(configuration.getTreeHeight()){
     }
 
     template <class SourceKernelClass>
     TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
-        : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)){
+        : configuration(inConfiguration), spaceSystem(configuration),
+          kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)),
+          priorities(configuration.getTreeHeight()){
     }
 
     template <class TreeClass>

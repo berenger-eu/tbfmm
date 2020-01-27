@@ -28,6 +28,8 @@ protected:
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
     KernelClass kernel;
 
+    TbfAlgorithmUtils::LFmmOperationsPriorities priorities;
+
     template <class TreeClass>
     void P2M(SpRuntime& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
@@ -48,7 +50,7 @@ protected:
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
                 auto& leafGroupObj = *currentLeafGroup;
                 const auto& particleGroupObj = *currentParticleGroup;
-                runtime.task(SpRead(*particleGroupObj.getDataPtr()), SpCommuteWrite(*leafGroupObj.getMultipolePtr()),
+                runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommuteWrite(*leafGroupObj.getMultipolePtr()),
                                    [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                     kernelWrapper.P2M(kernel, particleGroupObj, leafGroupObj);
                 });
@@ -76,7 +78,7 @@ protected:
 
                 auto& upperGroup = *currentUpperGroup;
                 const auto& lowerGroup = *currentLowerGroup;
-                runtime.task(SpRead(*lowerGroup.getMultipolePtr()), SpCommuteWrite(*upperGroup.getMultipolePtr()),
+                runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommuteWrite(*upperGroup.getMultipolePtr()),
                                    [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.M2M(idxLevel, kernel, lowerGroup, upperGroup);
                 });
@@ -110,14 +112,14 @@ protected:
                                                [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                     assert(&groupTarget == &*currentCellGroup);
 
-                    runtime.task(SpRead(*groupSrc.getMultipolePtr()), SpCommuteWrite(*groupTarget.getLocalPtr()),
+                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommuteWrite(*groupTarget.getLocalPtr()),
                                        [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
                         kernelWrapper.M2LBetweenGroups(idxLevel, kernel, groupTarget, groupSrc, std::move(indexesVec));
                     });
                 });
 
                 auto& currentGroup = *currentCellGroup;
-                runtime.task(SpRead(*currentGroup.getMultipolePtr()), SpCommuteWrite(*currentGroup.getLocalPtr()),
+                runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommuteWrite(*currentGroup.getLocalPtr()),
                                    [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.M2LInGroup(idxLevel, kernel, currentGroup, indexesForGroup_first);
                 });
@@ -145,7 +147,7 @@ protected:
 
                 const auto& upperGroup = *currentUpperGroup;
                 auto& lowerGroup = *currentLowerGroup;
-                runtime.task(SpRead(*upperGroup.getLocalPtr()), SpCommuteWrite(*lowerGroup.getLocalPtr()),
+                runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommuteWrite(*lowerGroup.getLocalPtr()),
                                    [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.L2L(idxLevel, kernel, upperGroup, lowerGroup);
                 });
@@ -184,7 +186,7 @@ protected:
 
                 const auto& leafGroupObj = *currentLeafGroup;
                 auto& particleGroupObj = *currentParticleGroup;
-                runtime.task(SpRead(*leafGroupObj.getLocalPtr()), SpCommuteWrite(*particleGroupObj.getRhsPtr()),
+                runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()), SpCommuteWrite(*particleGroupObj.getRhsPtr()),
                                    [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                     kernelWrapper.L2P(kernel, leafGroupObj, particleGroupObj);
                 });
@@ -211,7 +213,7 @@ protected:
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
 
-                runtime.task(SpCommuteWrite(*groupSrc.getDataPtr()), SpCommuteWrite(*groupTarget.getRhsPtr()),
+                runtime.task(SpPriority(priorities.getP2PPriority()), SpCommuteWrite(*groupSrc.getDataPtr()), SpCommuteWrite(*groupTarget.getRhsPtr()),
                                    [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
                     kernelWrapper.P2PBetweenGroups(kernel, groupTarget, groupSrc, std::move(indexesVec));
                 });
@@ -219,7 +221,7 @@ protected:
             });
 
             auto& currentGroup = *currentParticleGroup;
-            runtime.task(SpRead(*currentGroup.getDataPtr()),SpCommuteWrite(*currentGroup.getRhsPtr()),
+            runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommuteWrite(*currentGroup.getRhsPtr()),
                                [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                 kernelWrapper.P2PInGroup(kernel, currentGroup, indexesForGroup_first);
 
@@ -232,12 +234,16 @@ protected:
 
 public:
     TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration)
-        : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(configuration){
+        : configuration(inConfiguration), spaceSystem(configuration),
+          kernelWrapper(configuration), kernel(configuration),
+          priorities(configuration.getTreeHeight()){
     }
 
     template <class SourceKernelClass>
     TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
-        : configuration(inConfiguration), spaceSystem(configuration), kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)){
+        : configuration(inConfiguration), spaceSystem(configuration),
+          kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)),
+          priorities(configuration.getTreeHeight()){
     }
 
     template <class TreeClass>
