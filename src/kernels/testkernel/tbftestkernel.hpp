@@ -21,10 +21,10 @@ public:
 
     template <class CellSymbolicData,class CellClassContainer, class CellClass>
     void M2M(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
+             const long int /*inLevel*/, const CellClassContainer& inLowerCell, CellClass&& inOutUpperCell,
              const long int /*childrenPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
-            const CellClass& child = inLowerCell[idxChild];
+            const auto& child = inLowerCell[idxChild].get();
             inOutUpperCell[0] += child[0];
         }
     }
@@ -32,19 +32,19 @@ public:
     template <class CellSymbolicData,class CellClassContainer, class CellClass>
     void M2L(const CellSymbolicData& /*inTargetIndex*/,
              const long int /*inLevel*/, const CellClassContainer& inInteractingCells, const long int /*neighPos*/[], const long int inNbNeighbors,
-             CellClass& inOutCell) const {
+             CellClass&& inOutCell) const {
         for(long int idxNeigh = 0 ; idxNeigh < inNbNeighbors ; ++idxNeigh){
-            const CellClass& neighbor = inInteractingCells[idxNeigh];
+            const auto& neighbor = inInteractingCells[idxNeigh].get();
             inOutCell[0] += neighbor[0];
         }
     }
 
     template <class CellSymbolicData,class CellClass, class CellClassContainer>
     void L2L(const CellSymbolicData& /*inParentIndex*/,
-             const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
+             const long int /*inLevel*/, const CellClass& inUpperCell, CellClassContainer&& inOutLowerCell,
              const long int /*childrednPos*/[], const long int inNbChildren) const {
         for(long int idxChild = 0 ; idxChild < inNbChildren ; ++idxChild){
-            CellClass& child = inOutLowerCell[idxChild];
+            auto& child = inOutLowerCell[idxChild].get();
             child[0] += inUpperCell[0];
         }
     }
@@ -52,7 +52,7 @@ public:
     template <class CellSymbolicData,class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& /*inLeafIndex*/,
              const LeafClass& inLeaf,
-             const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& inOutParticlesRhs,
+             const ParticlesClassValues& /*inOutParticles*/, ParticlesClassRhs&& inOutParticlesRhs,
              const long int inNbParticles) const {
         for(int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inLeaf[0];
@@ -61,9 +61,9 @@ public:
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
     void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
-             const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
+             const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs&& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inParticlesIndex*/, const ParticlesClassValues&& /*inOutParticles*/,
+             const LeafSymbolicData& /*inParticlesIndex*/, const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
@@ -75,7 +75,7 @@ public:
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const LeafSymbolicData& /*inLeafIndex*/,
-                  const ParticlesClassValues&& /*inOutParticles*/,
+                  const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs&& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
