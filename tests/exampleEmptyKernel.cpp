@@ -7,8 +7,13 @@
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
 #include "algorithms/sequential/tbfalgorithm.hpp"
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
 #include "utils/tbftimer.hpp"
+#ifdef TBF_USE_SPETABARU
+#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
+#endif
+#ifdef TBF_USE_OPENMP
+#include "algorithms/openmp/tbfopenmpalgorithm.hpp"
+#endif
 
 
 #include <iostream>
@@ -205,8 +210,15 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+#ifdef TBF_USE_SPETABARU
+    TbfSmSpetabaruAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+#elif defined(TBF_USE_OPENMP)
+    TbfOpenmpAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+#else
     TbfAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
-    // TODO use a parallel version TbfSmSpetabaruAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+#endif
+    // Or use:
+    // TbfAlgorithmSelecter::type<RealType, KernelExample<RealType>> algorithm(configuration);
 
     TbfTimer timerExecute;
 

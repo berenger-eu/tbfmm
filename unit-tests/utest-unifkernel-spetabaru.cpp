@@ -4,6 +4,7 @@
 
 // -- DOT NOT REMOVE AS LONG AS LIBS ARE USED --
 // @TBF_USE_FFTW
+// @TBF_USE_SPETABARU
 // -- END --
 
 // You must do this

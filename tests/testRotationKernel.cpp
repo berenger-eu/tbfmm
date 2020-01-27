@@ -5,8 +5,7 @@
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-#include "algorithms/sequential/tbfalgorithm.hpp"
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
+#include "algorithms/tbfalgorithmselecter.hpp"
 #include "utils/tbftimer.hpp"
 
 #include "kernels/rotationkernel/FRotationKernel.hpp"
@@ -103,8 +102,7 @@ int main(int argc, char** argv){
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     // Here we put the kernel in the heap to make sure not to overflow the stack
-    std::unique_ptr<TbfAlgorithm<RealType, KernelClass>> algorithm(new TbfAlgorithm<RealType, KernelClass>(configuration));
-    //TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration);
+    std::unique_ptr<TbfAlgorithmSelecter::type<RealType, KernelClass>> algorithm(new TbfAlgorithmSelecter::type<RealType, KernelClass>(configuration));
 
     TbfTimer timerExecute;
 

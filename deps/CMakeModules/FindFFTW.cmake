@@ -43,6 +43,9 @@ endif()
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_DIR} )
   set( FFTW_ROOT $ENV{FFTW_DIR} )
 endif()
+if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_ROOT} )
+  set( FFTW_ROOT $ENV{FFTW_DIR} )
+endif()
 
 # Check if we can use PkgConfig
 find_package(PkgConfig)
