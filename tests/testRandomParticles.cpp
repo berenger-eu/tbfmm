@@ -6,8 +6,7 @@
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
 #include "kernels/testkernel/tbftestkernel.hpp"
-#include "algorithms/sequential/tbfalgorithm.hpp"
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
+#include "algorithms/tbfalgorithmselecter.hpp"
 #include "utils/tbftimer.hpp"
 
 
@@ -57,8 +56,7 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    //TbfAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
-    TbfSmSpetabaruAlgorithm<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+    TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>> algorithm(configuration);
 
     TbfTimer timerExecute;
 

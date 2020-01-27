@@ -39,16 +39,25 @@ set(TBF_USE_LIST_AVAILABLE "")
 
 #################################################
 
-set(SPETABARU_JUST_LIB TRUE)
-add_subdirectory(deps/spetabaru)
-INCLUDE_DIRECTORIES(
-         ${SPETABARU_BINARY_DIR}/Src
-         ${SPETABARU_SOURCE_DIR}/Src
-         ${SPETABARU_INCLUDE_DIR}
-    )
-link_directories("${SPETABARU_DIR}/lib/")
-list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru)
+    message(STATUS "SPETABARU Found")
+    set(SPETABARU_JUST_LIB TRUE)
+    add_subdirectory(deps/spetabaru)
+    INCLUDE_DIRECTORIES(
+             ${SPETABARU_BINARY_DIR}/Src
+             ${SPETABARU_SOURCE_DIR}/Src
+             ${SPETABARU_INCLUDE_DIR}
+        )
+    link_directories("${SPETABARU_DIR}/lib/")
+    list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+
+    list(APPEND TBF_USE_LIST SPETABARU)
+else()
+    message(STATUS "SPETABARU Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru (please use git submodule init && git submodule update")
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
 
 #################################################
 
@@ -78,10 +87,17 @@ if(FFTW_FOUND)
         list(APPEND TBF_USE_LIST FFTW)
     endif()
 else()
-    message(STATUS "FFTW Cannot be found")
+    message(STATUS "FFTW Cannot be found, try by setting -DFFTW_ROOT=... or env FFTW_ROOT")
 endif()
 
 list(APPEND TBF_USE_LIST_AVAILABLE FFTW)
+
+#################################################
+
+foreach(tbf_use_key ${TBF_USE_LIST})
+    add_definitions(-DTBF_USE_${tbf_use_key})
+endforeach()
+
 
 #################################################
 

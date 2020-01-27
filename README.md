@@ -8,12 +8,22 @@ an easy customization of the kernel.
 
 Simply go in the build dir and use cmake as usual:
 ```
+# To enable SPETABARU
+git submodule init && git submodule update
+# Go in the build dir
 mkdir build
 cd build
 # To enable testing: cmake -DUSE_TESTING=ON -DUSE_SIMU_TESTING=ON ..
 cmake ..
+# To find FFTW
+cmake -DFFTW_ROOT=path-to-fftw ..
+# or (FFTW_DIR FFTWDIR)
+cmake ..
+
+# Build
 make
 ```
+
 
 # Running the tests
 

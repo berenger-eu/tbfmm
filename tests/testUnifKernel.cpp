@@ -5,8 +5,7 @@
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-#include "algorithms/sequential/tbfalgorithm.hpp"
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
+#include "algorithms/tbfalgorithmselecter.hpp"
 #include "utils/tbftimer.hpp"
 
 #include "kernels/unifkernel/FUnifKernel.hpp"
@@ -116,8 +115,7 @@ int main(int argc, char** argv){
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     FInterpMatrixKernelR<RealType> interpolator;
-    TbfAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
-    //TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+    TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
 
     TbfTimer timerExecute;
 
