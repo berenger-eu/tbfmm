@@ -38,7 +38,7 @@ public:
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& /*inLeafIndex*/,
-             const ParticlesClass&& /*inParticles*/, const long int /*inNbParticles*/, LeafClass& /*inOutLeaf*/) const {
+             const ParticlesClass& /*inParticles*/, const long int /*inNbParticles*/, LeafClass&& /*inOutLeaf*/) const {
         /// inLeafIndex:
         ///  - .spacialIndex is the spacial index (Morton index for example) of the current leaf
         ///  - .boxCoord is the coordinate in the spacial box of the current leaf
@@ -51,7 +51,7 @@ public:
 
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
     void M2M(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClassContainer& /*inLowerCell*/, CellClass& /*inOutUpperCell*/,
+             const long int /*inLevel*/, const CellClassContainer& /*inLowerCell*/, CellClass&& /*inOutUpperCell*/,
              const long int /*childrenPos*/[], const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
         /// inLevel: the level in the tree of the parent
@@ -74,7 +74,7 @@ public:
     void M2L(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/, const CellClassContainer& /*inInteractingCells*/,
              const long int /*neighPos*/[], const long int /*inNbNeighbors*/,
-             CellClass& /*inOutCell*/) const {
+             CellClass&& /*inOutCell*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the target cell.
         ///              The indexes of the neighbors could be found from inCellIndex and neighPos.
         /// inLevel: the level in the tree of the parent
@@ -94,7 +94,7 @@ public:
 
     template <class CellSymbolicData, class CellClass, class CellClassContainer>
     void L2L(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClass& /*inUpperCell*/, CellClassContainer& /*inOutLowerCells*/,
+             const long int /*inLevel*/, const CellClass& /*inUpperCell*/, CellClassContainer&& /*inOutLowerCells*/,
              const long int /*childrednPos*/[], const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
         /// inLevel: the level in the tree of the parent
@@ -116,7 +116,7 @@ public:
     template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& /*inCellIndex*/,
              const LeafClass& /*inLeaf*/,
-             const ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& /*inOutParticlesRhs*/,
+             const ParticlesClassValues& /*inOutParticles*/, ParticlesClassRhs&& /*inOutParticlesRhs*/,
              const long int /*inNbParticles*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the current cell
         /// inLeaf: is the local part (here LocalClass defined in the main)
@@ -131,9 +131,9 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
-             const ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
+             const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
-             const LeafSymbolicData& /*inTargetIndex*/, const ParticlesClassValues&& /*inOutParticles*/,
+             const LeafSymbolicData& /*inTargetIndex*/, const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         /// To compute the interations between a leaf and a neighbor (should be done in both way).
         /// inNeighborIndex: is the spacial index (Morton index for example) of the neighbor
@@ -153,7 +153,7 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const LeafSymbolicData& /*inSpacialIndex*/,
-                  const ParticlesClassValues&& /*inOutParticles*/,
+                  const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         /// To compute the interations inside a leaf.
         /// inSpacialIndex: is the spacial index (Morton index for example) of the neighbor

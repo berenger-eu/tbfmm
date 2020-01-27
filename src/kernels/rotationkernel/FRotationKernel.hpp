@@ -925,7 +925,7 @@ public:
       */
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& LeafIndex,
-             const ParticlesClass&& SourceParticles, const long int inNbParticles, LeafClass& LeafCell)
+             const ParticlesClass& SourceParticles, const long int inNbParticles, LeafClass&& LeafCell)
     {
         const RealType i_pow_m[4] = {0, PIDiv2, PI, -PIDiv2};
         // w is the multipole moment
@@ -993,7 +993,7 @@ public:
       */
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
     void M2M(const CellSymbolicData& /*inParentIndex*/,
-             const long int inLevel, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
+             const long int inLevel, const CellClassContainer& inLowerCell, CellClass&& inOutUpperCell,
              const long int childrenPos[], const long int inNbChildren) const {
         // Get the translation coef for this level (same for all child)
         const RealType*const coef = M2MTranslationCoef[inLevel];
@@ -1050,7 +1050,7 @@ public:
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
     void M2L(const CellSymbolicData& /*inTargetIndex*/,
              const long int inLevel, const CellClassContainer& inInteractingCells, const long int neighPos[], const long int inNbNeighbors,
-             CellClass& inOutCell) {
+             CellClass&& inOutCell) {
         // To copy the multipole data allocated once
         std::complex<RealType> source_w[SizeArray];
         // For all children
@@ -1107,7 +1107,7 @@ public:
       */
     template <class CellSymbolicData, class CellClass, class CellClassContainer>
     void L2L(const CellSymbolicData& /*inParentIndex*/,
-             const long int inLevel, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
+             const long int inLevel, const CellClass& inUpperCell, CellClassContainer&& inOutLowerCell,
              const long int childrenPos[], const long int inNbChildren) {
         // Get the translation coef for this level (same for all chidl)
         const RealType*const coef = L2LTranslationCoef[inLevel];
@@ -1170,7 +1170,7 @@ public:
     template <class CellSymbolicData, class LeafClass, class ParticlesClass, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& LeafIndex,
              const LeafClass& LeafCell,
-             const ParticlesClass&& inOutParticles, ParticlesClassRhs&& inOutParticlesRhs,
+             const ParticlesClass& inOutParticles, ParticlesClassRhs&& inOutParticlesRhs,
              const long int inNbParticles) {
         const RealType i_pow_m[4] = {0, PIDiv2, PI, -PIDiv2};
         // Take the local value from the cell
@@ -1329,8 +1329,8 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     void P2P(const LeafSymbolicData& /*inNeighIndex*/,
-             const ParticlesClassValues&& inNeighbors, ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inTargetIndex*/,  const ParticlesClassValues&& inTargets,
+             const ParticlesClassValues& inNeighbors, ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
+             const LeafSymbolicData& /*inTargetIndex*/,  const ParticlesClassValues& inTargets,
              ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template FullMutual<RealType> (/*std::forward<const ParticlesClassValues>*/(inNeighbors),
                                                                                        /*std::forward<ParticlesClassRhs>*/(inNeighborsRhs), inNbParticlesNeighbors,
@@ -1340,7 +1340,7 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const LeafSymbolicData& /*inIndex*/,
-                  const ParticlesClassValues&& inTargets,
+                  const ParticlesClassValues& inTargets,
                   ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template GenericInner<RealType>(/*std::forward<const ParticlesClassValues>*/(inTargets),
                                                                                         /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
