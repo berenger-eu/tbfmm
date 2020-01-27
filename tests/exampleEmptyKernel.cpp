@@ -186,8 +186,8 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    constexpr long int NbDataValuesNeeded = 0; // TODO how many real values you need in the data part
-    constexpr long int NbDataValuesPerParticle = Dim;
+    constexpr long int NbDataValuesNeeded = 0; // TODO how many real values you need in the data part (in addition to the positions)
+    constexpr long int NbDataValuesPerParticle = Dim + NbDataValuesNeeded;
     using ParticleRhsType = double; // TODO what type are the particle RHS
     constexpr long int NbRhsValuesPerParticle = 1; // TODO how many real values you need in the rhs part
     using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part, could be a class, but must be POD
@@ -218,9 +218,9 @@ int main(){
     /////////////////////////////////////////////////////////////////////////////////////////
 
     tree.applyToAllLeaves([]
-                          (auto&& leafHeader, const long int* particleIndexes,
-                          const std::array<RealType*, NbDataValuesPerParticle> particleDataPtr,
-                          const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
+                          (auto&& /*leafHeader*/, const long int* /*particleIndexes*/,
+                          const std::array<RealType*, NbDataValuesPerParticle> /*particleDataPtr*/,
+                          const std::array<RealType*, NbRhsValuesPerParticle> /*particleRhsPtr*/){
         /// leafHeader.nbParticles: spacial index of the current cell
         /// particleIndexes: indexes of the particles, this correspond to the original order when
         ///                  creating the tree.

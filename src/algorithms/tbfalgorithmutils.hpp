@@ -77,8 +77,52 @@ enum LFmmOperations {
     LFmmNearAndFarFields = (LFmmNearField|LFmmFarField)
 };
 
-}
+class LFmmOperationsPriorities {
+    const int treeHeight;
 
+    const int prioP2P;
+    const int prioL2P;
+    const int prioL2L;
+    const int prioM2L;
+    const int prioM2M;
+    const int prioP2M;
+
+public:
+    LFmmOperationsPriorities(const long int inTreeHeight)
+        : treeHeight(int(inTreeHeight)),
+          prioP2P(0),
+          prioL2P(1),
+          prioL2L(2),
+          prioM2L(prioL2L+treeHeight),
+          prioM2M(prioM2L+treeHeight),
+          prioP2M(prioM2M+treeHeight){}
+
+    int getP2PPriority() const{
+        return prioP2P;
+    }
+
+    int getP2MPriority() const{
+        return prioP2M;
+    }
+
+    int getM2MPriority(const long int inLevel) const{
+        return prioM2M+treeHeight-int(inLevel)-1;
+    }
+
+    int getM2LPriority(const long int inLevel) const{
+        return prioM2L+treeHeight-int(inLevel)-1;
+    }
+
+    int getL2LPriority(const long int inLevel) const{
+        return prioL2L+treeHeight-int(inLevel)-1;
+    }
+
+    int getL2PPriority() const{
+        return prioL2P;
+    }
+};
+
+}
 
 #endif
 
