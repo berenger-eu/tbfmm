@@ -58,7 +58,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                 leafIndexes[idxLeaf] = particles.getLeafSpacialIndex(idxLeaf);
             }
 
-            TbfCellsContainer<RealType, MultipoleClass, LocalClass> cells(leafIndexes);
+            TbfCellsContainer<RealType, MultipoleClass, LocalClass> cells(leafIndexes, spacialSystem);
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////

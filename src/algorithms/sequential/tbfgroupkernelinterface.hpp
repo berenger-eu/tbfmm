@@ -19,7 +19,7 @@ public:
         assert(inParticleGroup.getNbLeaves() == inLeafGroup.getNbCells());
         for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
-            inKernel.P2M(inLeafGroup.getCellSpacialIndex(idxLeaf),
+            inKernel.P2M(inLeafGroup.getCellSymbData(idxLeaf),
                          inParticleGroup.getParticleData(idxLeaf), inParticleGroup.getNbParticlesInLeaf(idxLeaf),
                          inLeafGroup.getCellMultipole(idxLeaf));
         }
@@ -58,7 +58,7 @@ public:
             if(idxChild != inLowerGroup.getNbCells()
                     && spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) != inUpperGroup.getCellSpacialIndex(idxParent)){
 
-                inKernel.M2M(inUpperGroup.getCellSpacialIndex(idxParent),
+                inKernel.M2M(inUpperGroup.getCellSymbData(idxParent),
                              inLevel, children, inUpperGroup.getCellMultipole(idxParent),
                              positionsOfChildren, nbChildren);
 
@@ -72,7 +72,7 @@ public:
         }
 
         if(nbChildren){
-            inKernel.M2M(inUpperGroup.getCellSpacialIndex(idxParent),
+            inKernel.M2M(inUpperGroup.getCellSymbData(idxParent),
                          inLevel, children, inUpperGroup.getCellMultipole(idxParent),
                      positionsOfChildren, nbChildren);
         }
@@ -109,7 +109,7 @@ public:
             } while(idxInteraction < static_cast<long int>(inIndexes.size())
                     && interaction.indexTarget == inIndexes[idxInteraction].indexTarget);
 
-            inKernel.M2L(inCellGroup.getCellSpacialIndex(interaction.globalTargetPos),
+            inKernel.M2L(inCellGroup.getCellSymbData(interaction.globalTargetPos),
                          inLevel,
                          neighbors,
                          positionsOfNeighbors,
@@ -154,7 +154,7 @@ public:
                     && interaction.indexTarget == inIndexes[idxInteraction].indexTarget);
 
             if(nbNeighbors){
-                inKernel.M2L(inCellGroup.getCellSpacialIndex(interaction.globalTargetPos),
+                inKernel.M2L(inCellGroup.getCellSymbData(interaction.globalTargetPos),
                             inLevel,
                          neighbors,
                          positionsOfNeighbors,
@@ -199,7 +199,7 @@ public:
             if(idxChild != inLowerGroup.getNbCells()
                     && spaceSystem.getParentIndex(inLowerGroup.getCellSpacialIndex(idxChild)) != inUpperGroup.getCellSpacialIndex(idxParent)){
 
-                inKernel.L2L(inUpperGroup.getCellSpacialIndex(idxParent),
+                inKernel.L2L(inUpperGroup.getCellSymbData(idxParent),
                              inLevel, inUpperGroup.getCellLocal(idxParent), children,
                              positionsOfChildren, nbChildren);
 
@@ -213,7 +213,7 @@ public:
         }
 
         if(nbChildren){
-            inKernel.L2L(inUpperGroup.getCellSpacialIndex(idxParent),
+            inKernel.L2L(inUpperGroup.getCellSymbData(idxParent),
                          inLevel, inUpperGroup.getCellLocal(idxParent), children,
                          positionsOfChildren, nbChildren);
         }
@@ -225,7 +225,7 @@ public:
         assert(inParticleGroup.getNbLeaves() == inLeafGroup.getNbCells());
         for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
-            inKernel.L2P(inLeafGroup.getCellSpacialIndex(idxLeaf), inLeafGroup.getCellLocal(idxLeaf),
+            inKernel.L2P(inLeafGroup.getCellSymbData(idxLeaf), inLeafGroup.getCellLocal(idxLeaf),
                          TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf), inParticleGroup.getParticleRhs(idxLeaf),
                          inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
@@ -241,10 +241,12 @@ public:
             assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                    && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-            inKernel.P2P(interaction.indexSrc,
+            assert(inParticleGroup.getLeafSymbData(*foundSrc).spaceIndex == interaction.indexSrc);
+            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
+            inKernel.P2P(inParticleGroup.getLeafSymbData(*foundSrc),
                          TbfUtils::make_const(inParticleGroup).getParticleData(*foundSrc), inParticleGroup.getParticleRhs(*foundSrc),
                          inParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                         interaction.indexTarget, TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
+                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos), TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                          inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
         }
     }
@@ -252,7 +254,7 @@ public:
     template <class KernelClass, class ParticleGroupClass>
     void P2PInner(KernelClass& inKernel, ParticleGroupClass& inParticleGroup) const {
         for(long int idxLeaf = 0 ; idxLeaf < static_cast<long int>(inParticleGroup.getNbLeaves()) ; ++idxLeaf){
-            inKernel.P2PInner(inParticleGroup.getLeafSpacialIndex(idxLeaf),
+            inKernel.P2PInner(inParticleGroup.getLeafSymbData(idxLeaf),
                               TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf),
                          inParticleGroup.getParticleRhs(idxLeaf), inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
@@ -269,10 +271,12 @@ public:
                 assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                        && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-                inKernel.P2P(interaction.indexSrc,
+                assert(inOtherParticleGroup.getLeafSymbData(*foundSrc).spaceIndex == interaction.indexSrc);
+                assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
+                inKernel.P2P(inOtherParticleGroup.getLeafSymbData(*foundSrc),
                              TbfUtils::make_const(inOtherParticleGroup).getParticleData(*foundSrc), inOtherParticleGroup.getParticleRhs(*foundSrc),
                              inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                             interaction.indexTarget, TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
+                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos), TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos),
                              inParticleGroup.getParticleRhs(interaction.globalTargetPos), inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
             }
         }

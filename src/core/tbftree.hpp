@@ -45,7 +45,7 @@ public:
             particleGroups.reserve(std::size(groupProperties));
 
             for(const auto& groupProperty : groupProperties){
-                particleGroups.emplace_back(groupProperty, inParticlePositions);
+                particleGroups.emplace_back(groupProperty, inParticlePositions, spaceSystem);
             }
         }
 
@@ -64,7 +64,7 @@ public:
                     leafIndexes[idxLeaf] = particleGroup.getLeafSpacialIndex(idxLeaf);
                 }
 
-                cellBlocks[configuration.getTreeHeight()-1].emplace_back(leafIndexes);
+                cellBlocks[configuration.getTreeHeight()-1].emplace_back(leafIndexes, spaceSystem);
             }
         }
 
@@ -93,7 +93,7 @@ public:
                     }
 
                     if(cellIndexes.size()){
-                        cellBlocks[idxLevel].emplace_back(cellIndexes);
+                        cellBlocks[idxLevel].emplace_back(cellIndexes, spaceSystem);
                     }
                 }
             }
@@ -110,7 +110,7 @@ public:
                             previousIndex = spaceSystem.getParentIndex(lowerCellGroup.getCellSpacialIndex(idxCell));
 
                             if(static_cast<long int>(cellIndexes.size()) == nbElementsPerBlock){
-                                cellBlocks[idxLevel].emplace_back(cellIndexes);
+                                cellBlocks[idxLevel].emplace_back(cellIndexes, spaceSystem);
                                 cellIndexes.clear();
                             }
                         }
@@ -118,7 +118,7 @@ public:
                 }
 
                 if(cellIndexes.size()){
-                    cellBlocks[idxLevel].emplace_back(cellIndexes);
+                    cellBlocks[idxLevel].emplace_back(cellIndexes, spaceSystem);
                     cellIndexes.clear();
                 }
             }

@@ -923,8 +923,8 @@ public:
       * \omega (q,a) = q \frac{a^{l}}{(l+|m|)!} P_{lm}(cos( \alpha ) )e^{-im \beta}
       * \f]
       */
-    template <class ParticlesClass, class LeafClass>
-    void P2M(const typename SpaceIndexType::IndexType& LeafIndex,
+    template <class CellSymbolicData, class ParticlesClass, class LeafClass>
+    void P2M(const CellSymbolicData& LeafIndex,
              const ParticlesClass&& SourceParticles, const long int inNbParticles, LeafClass& LeafCell)
     {
         const RealType i_pow_m[4] = {0, PIDiv2, PI, -PIDiv2};
@@ -932,7 +932,7 @@ public:
         std::complex<RealType>* const w = &LeafCell[0];
 
         // Copying the position is faster than using cell position
-        const std::array<RealType,3> cellPosition = getLeafCenter(LeafIndex);
+        const std::array<RealType,3> cellPosition = getLeafCenter(LeafIndex.boxCoord);
 
         // We need a legendre array
         RealType legendre[SizeArray];
@@ -991,8 +991,8 @@ public:
       * then transfer using the formula
       * and finaly rotate back.
       */
-    template <class CellClassContainer, class CellClass>
-    void M2M(const typename SpaceIndexType::IndexType& /*inParentIndex*/,
+    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    void M2M(const CellSymbolicData& /*inParentIndex*/,
              const long int inLevel, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
              const long int childrenPos[], const long int inNbChildren) const {
         // Get the translation coef for this level (same for all child)
@@ -1047,8 +1047,8 @@ public:
       * then transfer using the formula
       * and finaly rotate back.
       */
-    template <class CellClassContainer, class CellClass>
-    void M2L(const typename SpaceIndexType::IndexType& /*inTargetIndex*/,
+    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    void M2L(const CellSymbolicData& /*inTargetIndex*/,
              const long int inLevel, const CellClassContainer& inInteractingCells, const long int neighPos[], const long int inNbNeighbors,
              CellClass& inOutCell) {
         // To copy the multipole data allocated once
@@ -1105,8 +1105,8 @@ public:
       * then transfer using the formula
       * and finaly rotate back.
       */
-    template <class CellClass, class CellClassContainer>
-    void L2L(const typename SpaceIndexType::IndexType& /*inParentIndex*/,
+    template <class CellSymbolicData, class CellClass, class CellClassContainer>
+    void L2L(const CellSymbolicData& /*inParentIndex*/,
              const long int inLevel, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
              const long int childrenPos[], const long int inNbChildren) {
         // Get the translation coef for this level (same for all chidl)
@@ -1167,8 +1167,8 @@ public:
       * F_{ \phi } = -\frac{1}{r sin \phi} \sum_{j=0}^P \sum_{k=1}^j{(-2k) Im(u_{j,k} I_{j,k}(r, \theta, \phi)) }
       * \f]
       */
-    template <class LeafClass, class ParticlesClass, class ParticlesClassRhs>
-    void L2P(const typename SpaceIndexType::IndexType& LeafIndex,
+    template <class CellSymbolicData, class LeafClass, class ParticlesClass, class ParticlesClassRhs>
+    void L2P(const CellSymbolicData& LeafIndex,
              const LeafClass& LeafCell,
              const ParticlesClass&& inOutParticles, ParticlesClassRhs&& inOutParticlesRhs,
              const long int inNbParticles) {
@@ -1177,7 +1177,7 @@ public:
         const std::complex<RealType>* const u = &LeafCell[0];
 
         // Copying the position is faster than using cell position
-        const std::array<RealType,3> cellPosition = getLeafCenter(LeafIndex);
+        const std::array<RealType,3> cellPosition = getLeafCenter(LeafIndex.boxCoord);
 
         // For all particles in the leaf box
         const RealType*const physicalValues = inOutParticles[3];
@@ -1327,10 +1327,10 @@ public:
     }
 
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const typename SpaceIndexType::IndexType& /*inNeighIndex*/,
+    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
+    void P2P(const LeafSymbolicData& /*inNeighIndex*/,
              const ParticlesClassValues&& inNeighbors, ParticlesClassRhs&& inNeighborsRhs, const long int inNbParticlesNeighbors,
-             const long int /*inNeighborPos*/,  const ParticlesClassValues&& inTargets,
+             const LeafSymbolicData& /*inTargetIndex*/,  const ParticlesClassValues&& inTargets,
              ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template FullMutual<RealType> (/*std::forward<const ParticlesClassValues>*/(inNeighbors),
                                                                                        /*std::forward<ParticlesClassRhs>*/(inNeighborsRhs), inNbParticlesNeighbors,
@@ -1338,8 +1338,8 @@ public:
                                                                                        /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
     }
 
-    template <class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const typename SpaceIndexType::IndexType& /*inIndex*/,
+    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
+    void P2PInner(const LeafSymbolicData& /*inIndex*/,
                   const ParticlesClassValues&& inTargets,
                   ParticlesClassRhs&& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template GenericInner<RealType>(/*std::forward<const ParticlesClassValues>*/(inTargets),

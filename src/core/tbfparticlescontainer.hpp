@@ -25,6 +25,8 @@ public:
     using SpaceIndexType = SpaceIndexType_T;
     using IndexType = typename SpaceIndexType::IndexType;
 
+    static constexpr long int Dim = SpaceIndexType::Dim;
+
 private:
     struct ContainerHeader {
         IndexType startingSpaceIndex;
@@ -38,6 +40,7 @@ private:
         IndexType spaceIndex;
         long int nbParticles;
         long int offSet;
+        std::array<long int, Dim> boxCoord;
     };
 
     using SymbolcMemoryBlockType = TbfMemoryBlock<TbfMemoryScalar<ContainerHeader>,
@@ -58,8 +61,9 @@ public:
     TbfParticlesContainer(TbfParticlesContainer&&) = default;
     TbfParticlesContainer& operator=(TbfParticlesContainer&&) = default;
 
-    template <class GroupInfoClass, class ContainerClass>
-    explicit TbfParticlesContainer(const GroupInfoClass& inParticleGroupInfo, const ContainerClass& inParticlePositions){
+    template <class GroupInfoClass, class ContainerClass, class ConverterClass>
+    explicit TbfParticlesContainer(const GroupInfoClass& inParticleGroupInfo, const ContainerClass& inParticlePositions,
+                                   const ConverterClass& inConverter){
         const long int nbParticles = inParticleGroupInfo.getNbParticles();
 
         const std::array<long int, 4> sizesData{{1, inParticleGroupInfo.getNbLeaves(),
@@ -81,6 +85,7 @@ public:
         leavesViewer.getItem(idxCurrentLeaf).spaceIndex = inParticleGroupInfo.getSpacialIndexForLeaf(0);
         leavesViewer.getItem(idxCurrentLeaf).nbParticles = 0;
         leavesViewer.getItem(idxCurrentLeaf).offSet = 0;
+        leavesViewer.getItem(idxCurrentLeaf).boxCoord = inConverter.getBoxPosFromIndex(leavesViewer.getItem(idxCurrentLeaf).spaceIndex);
 
         for(long int idxPart = 0 ; idxPart < nbParticles ; ++idxPart){
             auto spacialIndexPart = inParticleGroupInfo.getSpacialIndexForParticle(idxPart);
@@ -90,6 +95,7 @@ public:
                 leavesViewer.getItem(idxCurrentLeaf).spaceIndex = inParticleGroupInfo.getSpacialIndexForLeaf(idxCurrentLeaf);
                 leavesViewer.getItem(idxCurrentLeaf).nbParticles = 0;
                 leavesViewer.getItem(idxCurrentLeaf).offSet = idxPart;
+                leavesViewer.getItem(idxCurrentLeaf).boxCoord = inConverter.getBoxPosFromIndex(leavesViewer.getItem(idxCurrentLeaf).spaceIndex);
             }
             leavesViewer.getItem(idxCurrentLeaf).nbParticles += 1;
 
@@ -130,7 +136,7 @@ public:
         auto groups = partSorter.splitInGroups(partSorter.getNbLeaves());
         assert(std::size(groups) == 1);
 
-        (*this) = TbfParticlesContainer(groups.front(), inParticlePositions);
+        (*this) = TbfParticlesContainer(groups.front(), inParticlePositions, inSpaceSystem);
     }
 
     IndexType getStartingSpacialIndex() const{
@@ -153,6 +159,14 @@ public:
 
     IndexType getLeafSpacialIndex(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).spaceIndex;
+    }
+
+    const std::array<long int, Dim>& getLeafBoxCoord(const long int inIdxLeaf) const{
+        return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).boxCoord;
+    }
+
+    const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
+        return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf);
     }
 
     long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
