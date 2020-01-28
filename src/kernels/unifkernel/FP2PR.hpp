@@ -18,6 +18,10 @@
 
 #include "FMath.hpp"
 
+#ifdef TBF_USE_INASTEMP
+#include "InastempGlobal.h"
+#endif
+
 /**
  * @brief The FP2PR namespace
  */
@@ -77,9 +81,8 @@ inline void NonMutualParticles(const FReal sourceX,const FReal sourceY,const FRe
     *targetPotential += ( inv_distance * sourcePhysicalValue );
 }
 
-
 template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
-static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int nbParticlesSources,
+static void FullMutualScalar(const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int nbParticlesSources,
                       const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
 
     const FReal*const targetsX = inTargets[0];
@@ -145,10 +148,127 @@ static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRh
     }
 }
 
-template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
-static void GenericInner(const ParticlesClassValues& inTargets,
-                         ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
 
+#ifdef TBF_USE_INASTEMP
+template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
+static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int nbParticlesSources,
+                      const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
+    using VecType = InaVecBestType<FReal>;
+
+    const FReal*const targetsX = inTargets[0];
+    const FReal*const targetsY = inTargets[1];
+    const FReal*const targetsZ = inTargets[2];
+    const FReal*const targetsPhysicalValues = inTargets[3];
+    FReal*const targetsForcesX = inTargetsRhs[0];
+    FReal*const targetsForcesY = inTargetsRhs[1];
+    FReal*const targetsForcesZ = inTargetsRhs[2];
+    FReal*const targetsPotentials = inTargetsRhs[3];
+
+    const FReal*const sourcesX = inNeighbors[0];
+    const FReal*const sourcesY = inNeighbors[1];
+    const FReal*const sourcesZ = inNeighbors[2];
+    const FReal*const sourcesPhysicalValues = inNeighbors[3];
+    FReal*const sourcesForcesX = inNeighborsRhs[0];
+    FReal*const sourcesForcesY = inNeighborsRhs[1];
+    FReal*const sourcesForcesZ = inNeighborsRhs[2];
+    FReal*const sourcesPotentials = inNeighborsRhs[3];
+
+    const VecType mOne = VecType(1);
+
+    for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
+        const long int nbVectorizedInteractions = (nbParticlesSources/VecType::GetVecLength())*VecType::GetVecLength();
+        {
+            const VecType tx = VecType(targetsX[idxTarget]);
+            const VecType ty = VecType(targetsY[idxTarget]);
+            const VecType tz = VecType(targetsZ[idxTarget]);
+            const VecType tv = VecType(targetsPhysicalValues[idxTarget]);
+            VecType  tfx = VecType::GetZero();
+            VecType  tfy = VecType::GetZero();
+            VecType  tfz = VecType::GetZero();
+            VecType  tpo = VecType::GetZero();
+
+
+            for(long int idxSource = 0 ; idxSource < nbVectorizedInteractions ; idxSource += VecType::GetVecLength()){
+                VecType dx = VecType(&sourcesX[idxSource]) - tx;
+                VecType dy = VecType(&sourcesY[idxSource]) - ty;
+                VecType dz = VecType(&sourcesZ[idxSource]) - tz;
+
+                VecType inv_square_distance = mOne / (dx*dx + dy*dy + dz*dz);
+                const VecType inv_distance = inv_square_distance.sqrt();
+
+                inv_square_distance *= inv_distance;
+                inv_square_distance *= tv * VecType(&sourcesPhysicalValues[idxSource]);
+
+                dx *= inv_square_distance;
+                dy *= inv_square_distance;
+                dz *= inv_square_distance;
+
+                tfx += dx;
+                tfy += dy;
+                tfz += dz;
+                tpo += inv_distance * VecType(&sourcesPhysicalValues[idxSource]);
+
+                (VecType(&sourcesForcesX[idxSource]) - dx).storeInArray(&sourcesForcesX[idxSource]);
+                (VecType(&sourcesForcesY[idxSource]) - dy).storeInArray(&sourcesForcesY[idxSource]);
+                (VecType(&sourcesForcesZ[idxSource]) - dz).storeInArray(&sourcesForcesZ[idxSource]);
+                (VecType(&sourcesPotentials[idxSource]) + inv_distance * tv).storeInArray(&sourcesPotentials[idxSource]);
+            }
+
+            targetsForcesX[idxTarget] += (tfx.horizontalSum());
+            targetsForcesY[idxTarget] += (tfy.horizontalSum());
+            targetsForcesZ[idxTarget] += (tfz.horizontalSum());
+            targetsPotentials[idxTarget] += (tpo.horizontalSum());
+        }
+        {
+            const FReal tx = targetsX[idxTarget];
+            const FReal ty = targetsY[idxTarget];
+            const FReal tz = targetsZ[idxTarget];
+            const FReal tv = targetsPhysicalValues[idxTarget];
+            FReal  tfx = 0;
+            FReal  tfy = 0;
+            FReal  tfz = 0;
+            FReal  tpo = 0;
+
+            for(long int idxSource = nbVectorizedInteractions ; idxSource < nbParticlesSources ; ++idxSource){
+                FReal dx = sourcesX[idxSource] - tx;
+                FReal dy = sourcesY[idxSource] - ty;
+                FReal dz = sourcesZ[idxSource] - tz;
+
+                FReal inv_square_distance = FReal(1.0) / (dx*dx + dy*dy + dz*dz);
+                const FReal inv_distance = FMath::Sqrt(inv_square_distance);
+
+                inv_square_distance *= inv_distance;
+                inv_square_distance *= tv * sourcesPhysicalValues[idxSource];
+
+                dx *= inv_square_distance;
+                dy *= inv_square_distance;
+                dz *= inv_square_distance;
+
+                sourcesForcesX[idxSource] -= dx;
+                sourcesForcesY[idxSource] -= dy;
+                sourcesForcesZ[idxSource] -= dz;
+                sourcesPotentials[idxSource] += inv_distance * tv;
+
+                tfx += dx;
+                tfy += dy;
+                tfz += dz;
+                tpo += inv_distance * sourcesPhysicalValues[idxSource];
+            }
+
+            targetsForcesX[idxTarget] += (tfx);
+            targetsForcesY[idxTarget] += (tfy);
+            targetsForcesZ[idxTarget] += (tfz);
+            targetsPotentials[idxTarget] += (tpo);
+        }
+    }
+}
+#else
+#define FullMutual FullMutualScalar
+#endif
+
+template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
+static void GenericInnerScalar(const ParticlesClassValues& inTargets,
+                         ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
     const FReal*const targetsX = inTargets[0];
     const FReal*const targetsY = inTargets[1];
     const FReal*const targetsZ = inTargets[2];
@@ -187,10 +307,120 @@ static void GenericInner(const ParticlesClassValues& inTargets,
     }
 }
 
-template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
-static void GenericFullRemote(const ParticlesClassValues&& inNeighbors, const long int nbParticlesSources,
-                              const ParticlesClassValues&& inTargets, ParticlesClassRhs&& inTargetsRhs, const long int nbParticlesTargets){
+#ifdef TBF_USE_INASTEMP
 
+template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
+static void GenericInner(const ParticlesClassValues& inTargets,
+                         ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
+    using VecType = InaVecBestType<FReal>;
+
+    const FReal*const targetsX = inTargets[0];
+    const FReal*const targetsY = inTargets[1];
+    const FReal*const targetsZ = inTargets[2];
+    const FReal*const targetsPhysicalValues = inTargets[3];
+    FReal*const targetsForcesX = inTargetsRhs[0];
+    FReal*const targetsForcesY = inTargetsRhs[1];
+    FReal*const targetsForcesZ = inTargetsRhs[2];
+    FReal*const targetsPotentials = inTargetsRhs[3];
+
+    const VecType mOne = VecType(1);
+
+    for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
+        const long int nbVectorizedInteractions = ((nbParticlesTargets-(idxTarget+1))/VecType::GetVecLength())*VecType::GetVecLength() + (idxTarget+1);
+        {
+            const VecType tx = VecType(targetsX[idxTarget]);
+            const VecType ty = VecType(targetsY[idxTarget]);
+            const VecType tz = VecType(targetsZ[idxTarget]);
+            const VecType tv = VecType(targetsPhysicalValues[idxTarget]);
+            VecType  tfx = VecType::GetZero();
+            VecType  tfy = VecType::GetZero();
+            VecType  tfz = VecType::GetZero();
+            VecType  tpo = VecType::GetZero();
+
+
+            for(long int idxSource = idxTarget+1 ; idxSource < nbVectorizedInteractions ; idxSource += VecType::GetVecLength()){
+                VecType dx = VecType(&targetsX[idxSource]) - tx;
+                VecType dy = VecType(&targetsY[idxSource]) - ty;
+                VecType dz = VecType(&targetsZ[idxSource]) - tz;
+
+                VecType inv_square_distance = mOne / (dx*dx + dy*dy + dz*dz);
+                const VecType inv_distance = inv_square_distance.sqrt();
+
+                inv_square_distance *= inv_distance;
+                inv_square_distance *= tv * VecType(&targetsPhysicalValues[idxSource]);
+
+                dx *= inv_square_distance;
+                dy *= inv_square_distance;
+                dz *= inv_square_distance;
+
+                tfx += dx;
+                tfy += dy;
+                tfz += dz;
+                tpo += inv_distance * VecType(&targetsPhysicalValues[idxSource]);
+
+                (VecType(&targetsForcesX[idxSource]) - dx).storeInArray(&targetsForcesX[idxSource]);
+                (VecType(&targetsForcesY[idxSource]) - dy).storeInArray(&targetsForcesY[idxSource]);
+                (VecType(&targetsForcesZ[idxSource]) - dz).storeInArray(&targetsForcesZ[idxSource]);
+                (VecType(&targetsPotentials[idxSource]) + inv_distance * tv).storeInArray(&targetsPotentials[idxSource]);
+            }
+
+            targetsForcesX[idxTarget] += (tfx.horizontalSum());
+            targetsForcesY[idxTarget] += (tfy.horizontalSum());
+            targetsForcesZ[idxTarget] += (tfz.horizontalSum());
+            targetsPotentials[idxTarget] += (tpo.horizontalSum());
+        }
+        {
+            const FReal tx = targetsX[idxTarget];
+            const FReal ty = targetsY[idxTarget];
+            const FReal tz = targetsZ[idxTarget];
+            const FReal tv = targetsPhysicalValues[idxTarget];
+            FReal  tfx = 0;
+            FReal  tfy = 0;
+            FReal  tfz = 0;
+            FReal  tpo = 0;
+
+            for(long int idxSource = nbVectorizedInteractions ; idxSource < nbParticlesTargets ; ++idxSource){
+                FReal dx = targetsX[idxSource] - tx;
+                FReal dy = targetsY[idxSource] - ty;
+                FReal dz = targetsZ[idxSource] - tz;
+
+                FReal inv_square_distance = FReal(1.0) / (dx*dx + dy*dy + dz*dz);
+                const FReal inv_distance = FMath::Sqrt(inv_square_distance);
+
+                inv_square_distance *= inv_distance;
+                inv_square_distance *= tv * targetsPhysicalValues[idxSource];
+
+                dx *= inv_square_distance;
+                dy *= inv_square_distance;
+                dz *= inv_square_distance;
+
+                targetsForcesX[idxSource] -= dx;
+                targetsForcesY[idxSource] -= dy;
+                targetsForcesZ[idxSource] -= dz;
+                targetsPotentials[idxSource] += inv_distance * tv;
+
+                tfx += dx;
+                tfy += dy;
+                tfz += dz;
+                tpo += inv_distance * targetsPhysicalValues[idxSource];
+            }
+
+            targetsForcesX[idxTarget] += (tfx);
+            targetsForcesY[idxTarget] += (tfy);
+            targetsForcesZ[idxTarget] += (tfz);
+            targetsPotentials[idxTarget] += (tpo);
+        }
+    }
+}
+#else
+#define GenericInner GenericInnerScalar
+#endif
+
+
+
+template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
+static void GenericFullRemoteScalar(const ParticlesClassValues& inNeighbors, const long int nbParticlesSources,
+                              const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
     const FReal*const targetsX = inTargets[0];
     const FReal*const targetsY = inTargets[1];
     const FReal*const targetsZ = inTargets[2];
@@ -244,6 +474,109 @@ static void GenericFullRemote(const ParticlesClassValues&& inNeighbors, const lo
         targetsPotentials[idxTarget] += (tpo);
     }
 }
+
+#ifdef TBF_USE_INASTEMP
+template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
+static void GenericFullRemote(const ParticlesClassValues& inNeighbors, const long int nbParticlesSources,
+                              const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
+    using VecType = InaVecBestType<FReal>;
+
+    const FReal*const targetsX = inTargets[0];
+    const FReal*const targetsY = inTargets[1];
+    const FReal*const targetsZ = inTargets[2];
+    const FReal*const targetsPhysicalValues = inTargets[3];
+    FReal*const targetsForcesX = inTargetsRhs[0];
+    FReal*const targetsForcesY = inTargetsRhs[1];
+    FReal*const targetsForcesZ = inTargetsRhs[2];
+    FReal*const targetsPotentials = inTargetsRhs[3];
+
+    const VecType mOne = VecType(1);
+
+    const FReal*const sourcesX = inNeighbors[0];
+    const FReal*const sourcesY = inNeighbors[1];
+    const FReal*const sourcesZ = inNeighbors[2];
+    const FReal*const sourcesPhysicalValues = inNeighbors[3];
+
+    const long int nbVectorizedInteractions = (nbParticlesTargets/VecType::GetVecLength())*VecType::GetVecLength();
+
+    for(long int idxTarget = 0 ; idxTarget < nbVectorizedInteractions ; ++idxTarget){
+        const VecType tx = VecType(targetsX[idxTarget]);
+        const VecType ty = VecType(targetsY[idxTarget]);
+        const VecType tz = VecType(targetsZ[idxTarget]);
+        const VecType tv = VecType(targetsPhysicalValues[idxTarget]);
+        VecType  tfx = VecType::GetZero();
+        VecType  tfy = VecType::GetZero();
+        VecType  tfz = VecType::GetZero();
+        VecType  tpo = VecType::GetZero();
+
+        for(long int idxSource = 0 ; idxSource < nbParticlesSources ; idxSource += VecType::GetVecLength()){
+            VecType dx = VecType(&sourcesX[idxSource]) - tx;
+            VecType dy = VecType(&sourcesY[idxSource]) - ty;
+            VecType dz = VecType(&sourcesZ[idxSource]) - tz;
+
+            VecType inv_square_distance = mOne / (dx*dx + dy*dy + dz*dz);
+            const VecType inv_distance = inv_square_distance.sqrt();
+
+            inv_square_distance *= inv_distance;
+            inv_square_distance *= tv * VecType(&sourcesPhysicalValues[idxSource]);
+
+            dx *= inv_square_distance;
+            dy *= inv_square_distance;
+            dz *= inv_square_distance;
+
+            tfx += dx;
+            tfy += dy;
+            tfz += dz;
+            tpo += inv_distance * VecType(&sourcesPhysicalValues[idxSource]);
+        }
+
+        targetsForcesX[idxTarget] += (tfx.horizontalSum());
+        targetsForcesY[idxTarget] += (tfy.horizontalSum());
+        targetsForcesZ[idxTarget] += (tfz.horizontalSum());
+        targetsPotentials[idxTarget] += (tpo.horizontalSum());
+    }
+
+    for(long int idxTarget = nbVectorizedInteractions ; idxTarget < nbParticlesTargets ; ++idxTarget){
+        const FReal tx = targetsX[idxTarget];
+        const FReal ty = targetsY[idxTarget];
+        const FReal tz = targetsZ[idxTarget];
+        const FReal tv = targetsPhysicalValues[idxTarget];
+        FReal  tfx = 0;
+        FReal  tfy = 0;
+        FReal  tfz = 0;
+        FReal  tpo = 0;
+
+        for(long int idxSource = 0 ; idxSource < nbParticlesSources ; ++idxSource){
+            FReal dx = sourcesX[idxSource] - tx;
+            FReal dy = sourcesY[idxSource] - ty;
+            FReal dz = sourcesZ[idxSource] - tz;
+
+            FReal inv_square_distance = FReal(1) / (dx*dx + dy*dy + dz*dz);
+            const FReal inv_distance = FMath::Sqrt(inv_square_distance);
+
+            inv_square_distance *= inv_distance;
+            inv_square_distance *= tv * sourcesPhysicalValues[idxSource];
+
+            dx *= inv_square_distance;
+            dy *= inv_square_distance;
+            dz *= inv_square_distance;
+
+            tfx += dx;
+            tfy += dy;
+            tfz += dz;
+            tpo += inv_distance * sourcesPhysicalValues[idxSource];
+        }
+
+        targetsForcesX[idxTarget] += (tfx);
+        targetsForcesY[idxTarget] += (tfy);
+        targetsForcesZ[idxTarget] += (tfz);
+        targetsPotentials[idxTarget] += (tpo);
+    }
+}
+#else
+#define GenericFullRemote GenericFullRemoteScalar
+#endif
+
 
 } // End namespace
 
