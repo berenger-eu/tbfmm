@@ -185,7 +185,7 @@ public:
         return &objectData.template getViewerForBlockConst<0>().getItem(leafHeader.offSet);
     }
 
-    const std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
+    std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<const DataType*, NbDataValuesPerParticle> particleDataPtr;
