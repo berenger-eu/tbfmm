@@ -1,3 +1,6 @@
 [submodule "deps/spetabaru"]
 	path = deps/spetabaru
 	url = https://gitlab.inria.fr/bramas/spetabaru.git
+[submodule "deps/inastemp"]
+	path = deps/inastemp
+	url = https://gitlab.inria.fr/bramas/inastemp.git

@@ -10,6 +10,7 @@
 
 #include "kernels/rotationkernel/FRotationKernel.hpp"
 #include "loader/tbffmaloader.hpp"
+#include "utils/tbfaccuracychecker.hpp"
 
 #include <iostream>
 
@@ -140,8 +141,8 @@ int main(int argc, char** argv){
 
         //////////////////////////////////////////////////////////////////////
 
-        std::array<RealType, 4> partcilesAccuracy;
-        std::array<RealType, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+        std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
+        std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
         tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
                               (auto&& leafHeader, const long int* particleIndexes,
@@ -149,14 +150,12 @@ int main(int argc, char** argv){
                               const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
             for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
-                   partcilesAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleDataPtr[idxValue][idxPart],
-                                                                                   particles[idxValue][particleIndexes[idxPart]]),
-                                                        partcilesAccuracy[idxValue]);
+                   partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                                                        particleDataPtr[idxValue][idxPart]);
                 }
                 for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                   partcilesRhsAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleRhsPtr[idxValue][idxPart],
-                                                                                   particlesRhs[idxValue][particleIndexes[idxPart]]),
-                                                        partcilesRhsAccuracy[idxValue]);
+                   partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
+                                                        particleRhsPtr[idxValue][idxPart]);
                 }
             }
         });

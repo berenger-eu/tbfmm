@@ -13,6 +13,7 @@
 #include "kernels/unifkernel/FUnifKernel.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
 #include "utils/tbftimer.hpp"
+#include "utils/tbfaccuracychecker.hpp"
 
 
 template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
@@ -116,8 +117,8 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
 
             //////////////////////////////////////////////////////////////////////
 
-            std::array<RealType, 4> partcilesAccuracy;
-            std::array<RealType, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+            std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
+            std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
             tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
                                   (auto&& leafHeader, const long int* particleIndexes,
@@ -125,14 +126,12 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
                                   const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
                 for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
                     for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
-                       partcilesAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleDataPtr[idxValue][idxPart],
-                                                                                       particles[idxValue][particleIndexes[idxPart]]),
-                                                            partcilesAccuracy[idxValue]);
+                       partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                                                            particleDataPtr[idxValue][idxPart]);
                     }
                     for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                       partcilesRhsAccuracy[idxValue] = std::max(TbfUtils::RelativeAccuracy(particleRhsPtr[idxValue][idxPart],
-                                                                                       particlesRhs[idxValue][particleIndexes[idxPart]]),
-                                                            partcilesRhsAccuracy[idxValue]);
+                       partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
+                                                            particleRhsPtr[idxValue][idxPart]);
                     }
                 }
             });
@@ -140,15 +139,15 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
             std::cout << "Relative differences:" << std::endl;
             for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
-               UASSERTETRUE(partcilesAccuracy[idxValue] < 1e-16);
+               UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm()) < 1e-16);
             }
             for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
                if constexpr (std::is_same<float, RealType>::value){
-                   UASSERTETRUE(partcilesRhsAccuracy[idxValue] < 9e-2);
+                   UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
                }
                else{
-                   UASSERTETRUE(partcilesRhsAccuracy[idxValue] < 9e-3);
+                   UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
                }
             }
 

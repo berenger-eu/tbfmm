@@ -39,10 +39,10 @@ set(TBF_USE_LIST_AVAILABLE "")
 
 #################################################
 
-if(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru)
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
     message(STATUS "SPETABARU Found")
     set(SPETABARU_JUST_LIB TRUE)
-    add_subdirectory(deps/spetabaru)
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
     INCLUDE_DIRECTORIES(
              ${SPETABARU_BINARY_DIR}/Src
              ${SPETABARU_SOURCE_DIR}/Src
@@ -58,6 +58,28 @@ else()
 endif()
 
 list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
+
+#################################################
+
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
+    message(STATUS "INASTEMP Found")
+    # Set option() CMP0077 to old for inastemp...
+    #set(CMAKE_POLICY_DEFAULT_CMP0077 OLD)
+    set(INASTEMP_JUST_LIB TRUE)
+    set(INASTEMP_DO_INSTALL TRUE)
+    # Create target
+    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
+    INCLUDE_DIRECTORIES(${INASTEMP_BINARY_DIR}/Src ${INASTEMP_SOURCE_DIR}/Src ${INASTEMP_INCLUDE_DIR})
+    # link_directories("${INASTEMP_DIR}/lib/")
+    # list(APPEND TBFMM_LIBRARIES ${INASTEMP_LIBRARIES} inastemp)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INASTEMP_CXX_FLAGS}")
+        
+    list(APPEND TBF_USE_LIST INASTEMP)
+else()
+    message(STATUS "Inastemp Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp (please use git submodule init && git submodule update")
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE INASTEMP)
 
 #################################################
 
