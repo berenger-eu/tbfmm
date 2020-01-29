@@ -63,15 +63,11 @@ list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
 
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
     message(STATUS "INASTEMP Found")
-    # Set option() CMP0077 to old for inastemp...
-    #set(CMAKE_POLICY_DEFAULT_CMP0077 OLD)
     set(INASTEMP_JUST_LIB TRUE)
     set(INASTEMP_DO_INSTALL TRUE)
     # Create target
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
     INCLUDE_DIRECTORIES(${INASTEMP_BINARY_DIR}/Src ${INASTEMP_SOURCE_DIR}/Src ${INASTEMP_INCLUDE_DIR})
-    # link_directories("${INASTEMP_DIR}/lib/")
-    # list(APPEND TBFMM_LIBRARIES ${INASTEMP_LIBRARIES} inastemp)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INASTEMP_CXX_FLAGS}")
         
     list(APPEND TBF_USE_LIST INASTEMP)
@@ -120,6 +116,7 @@ foreach(tbf_use_key ${TBF_USE_LIST})
     add_definitions(-DTBF_USE_${tbf_use_key})
 endforeach()
 
+message(STATUS "Available compilation keys are: ${TBF_USE_LIST}")
 
 #################################################
 
