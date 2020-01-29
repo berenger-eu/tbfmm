@@ -105,12 +105,14 @@ int main(int argc, char** argv){
     // Here we put the kernel in the heap to make sure not to overflow the stack
     std::unique_ptr<TbfAlgorithmSelecter::type<RealType, KernelClass>> algorithm(new TbfAlgorithmSelecter::type<RealType, KernelClass>(configuration));
 
-    TbfTimer timerExecute;
+    {
+        TbfTimer timerExecute;
 
-    algorithm->execute(tree);
+        algorithm->execute(tree);
 
-    timerExecute.stop();
-    std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
+        timerExecute.stop();
+        std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
+    }
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -175,6 +177,28 @@ int main(int argc, char** argv){
         }
         for(auto& vec : particlesRhs){
             delete[] vec;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////
+
+    for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
+        std::cout << " -- Loop " << idxLoop << std::endl;
+
+        TbfTimer timerRebuildTree;
+
+        tree.rebuild();
+
+        timerRebuildTree.stop();
+        std::cout << "Re-Build the tree in " << timerRebuildTree.getElapsed() << std::endl;
+
+        {
+            TbfTimer timerExecute;
+
+            algorithm->execute(tree);
+
+            timerExecute.stop();
+            std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
         }
     }
 
