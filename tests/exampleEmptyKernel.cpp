@@ -201,6 +201,7 @@ int main(){
     using LocalClass = std::array<RealType,1>; // TODO what is a local part, could be a class, but must be POD
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
+    using KernelClass = KernelExample<RealType>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -213,14 +214,14 @@ int main(){
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
 #ifdef TBF_USE_SPETABARU
-    TbfSmSpetabaruAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+    TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration);
 #elif defined(TBF_USE_OPENMP)
-    TbfOpenmpAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+    TbfOpenmpAlgorithm<RealType, KernelClass> algorithm(configuration);
 #else
-    TbfAlgorithm<RealType, KernelExample<RealType>> algorithm(configuration);
+    TbfAlgorithm<RealType, KernelClass> algorithm(configuration);
 #endif
     // Or use:
-    // TbfAlgorithmSelecter::type<RealType, KernelExample<RealType>> algorithm(configuration);
+    // TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
 
     TbfTimer timerExecute;
 

@@ -165,7 +165,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
     }
 
     void SetTests() {
-        Parent::AddTest(&TestRotationKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the test kernel");
+        Parent::AddTest(&TestRotationKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
     }
 };
 

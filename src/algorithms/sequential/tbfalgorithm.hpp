@@ -219,6 +219,11 @@ public:
             P2P(inTree);
         }
     }
+
+    template <class FuncType>
+    auto applyToAllKernels(FuncType&& inFunc) const {
+        inFunc(kernel);
+    }
 };
 
 #endif
