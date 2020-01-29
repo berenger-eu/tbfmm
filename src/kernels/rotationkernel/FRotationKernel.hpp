@@ -899,6 +899,7 @@ public:
 
     /** Copy Constructor */
     FRotationKernel(const FRotationKernel& other) :
+        spaceIndexSystem(other.spaceIndexSystem),
         boxWidth(other.boxWidth),
         treeHeight(other.treeHeight),
         widthAtLeafLevel(other.widthAtLeafLevel),

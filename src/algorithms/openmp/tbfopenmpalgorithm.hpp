@@ -32,7 +32,7 @@ protected:
     const SpaceIndexType spaceSystem;
 
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
-    KernelClass kernel;
+    std::vector<KernelClass> kernels;
 
     TbfAlgorithmUtils::LFmmOperationsPriorities priorities;
 
@@ -62,7 +62,7 @@ protected:
 
 #pragma omp task depend(in:particleGroupObjGetDataPtr[0]) depend(commute:leafGroupObjGetMultipolePtr[0]) default(shared) firstprivate(particleGroupObj, leafGroupObj) priority(priorities.getP2MPriority())
                 {
-                    kernelWrapper.P2M(kernel, *particleGroupObj, *leafGroupObj);
+                    kernelWrapper.P2M(kernels[omp_get_thread_num()], *particleGroupObj, *leafGroupObj);
                 }
                 ++currentParticleGroup;
                 ++currentLeafGroup;
@@ -94,7 +94,7 @@ protected:
 
 #pragma omp task depend(in:lowerGroupGetMultipolePtr[0]) depend(commute:upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup)  priority(priorities.getM2MPriority(idxLevel))
                 {
-                    kernelWrapper.M2M(idxLevel, kernel, *lowerGroup, *upperGroup);
+                    kernelWrapper.M2M(idxLevel, kernels[omp_get_thread_num()], *lowerGroup, *upperGroup);
                 }
 
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
@@ -133,7 +133,7 @@ protected:
                     const auto groupSrcGetMultipolePtr = groupSrc.getMultipolePtr();
 #pragma omp task depend(in:groupSrcGetMultipolePtr[0]) depend(commute:groupTargetGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesVec, groupSrcPtr, groupTargetPtr)  priority(priorities.getM2LPriority(idxLevel))
                     {
-                        kernelWrapper.M2LBetweenGroups(idxLevel, kernel, *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
+                        kernelWrapper.M2LBetweenGroups(idxLevel, kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                         delete indexesVec;
                     }
                 });
@@ -146,7 +146,7 @@ protected:
 
 #pragma omp task depend(in:currentGroupGetMultipolePtr[0]) depend(commute:currentGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesForGroup_first, currentGroup)  priority(priorities.getM2LPriority(idxLevel))
                 {
-                    kernelWrapper.M2LInGroup(idxLevel, kernel, *currentGroup, std::move(*indexesForGroup_first));
+                    kernelWrapper.M2LInGroup(idxLevel, kernels[omp_get_thread_num()], *currentGroup, std::move(*indexesForGroup_first));
                     delete indexesForGroup_first;
                 }
 
@@ -179,7 +179,7 @@ protected:
 
 #pragma omp task depend(in:upperGroupGetLocalPtr[0]) depend(commute:lowerGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup)  priority(priorities.getL2LPriority(idxLevel))
                 {
-                    kernelWrapper.L2L(idxLevel, kernel, *upperGroup, *lowerGroup);
+                    kernelWrapper.L2L(idxLevel, kernels[omp_get_thread_num()], *upperGroup, *lowerGroup);
                 }
 
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
@@ -222,7 +222,7 @@ protected:
 
 #pragma omp task depend(in:leafGroupObjGetLocalPtr[0]) depend(commute:particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
                 {
-                    kernelWrapper.L2P(kernel, *leafGroupObj, *particleGroupObj);
+                    kernelWrapper.L2P(kernels[omp_get_thread_num()], *leafGroupObj, *particleGroupObj);
                 }
 
                 ++currentParticleGroup;
@@ -256,7 +256,7 @@ protected:
                 auto indexesVec = TbfUtils::CreateNew(indexes.toStdVector());
 #pragma omp task depend(commute:groupSrcGetDataPtr[0],groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
-                    kernelWrapper.P2PBetweenGroups(kernel, *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
+                    kernelWrapper.P2PBetweenGroups(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                     delete indexesVec;
                 }
             });
@@ -269,33 +269,45 @@ protected:
             auto indexesForGroup_first = TbfUtils::CreateNew(std::move(indexesForGroup.first));
 #pragma omp task depend(in:currentGroupGetDataPtr[0]) depend(commute:currentGroupGetRhsPtr[0]) default(shared) firstprivate(currentGroup, indexesForGroup_first) priority(priorities.getP2PPriority())
             {
-                kernelWrapper.P2PInGroup(kernel, *currentGroup, std::move(*indexesForGroup_first));
+                kernelWrapper.P2PInGroup(kernels[omp_get_thread_num()], *currentGroup, std::move(*indexesForGroup_first));
                 delete indexesForGroup_first;
 
-                kernelWrapper.P2PInner(kernel, *currentGroup);
+                kernelWrapper.P2PInner(kernels[omp_get_thread_num()], *currentGroup);
             }
 
             ++currentParticleGroup;
         }
     }
 
+    void increaseNumberOfKernels(){
+        for(long int idxThread = kernels.size() ; idxThread < omp_get_max_threads() ; ++idxThread){
+            kernels.emplace_back(kernels[0]);
+        }
+    }
+
 public:
     TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration)
         : configuration(inConfiguration), spaceSystem(configuration),
-          kernelWrapper(configuration), kernel(configuration),
+          kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
+        kernels.emplace_back(configuration);
+        increaseNumberOfKernels();
     }
 
     template <class SourceKernelClass>
     TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
         : configuration(inConfiguration), spaceSystem(configuration),
-          kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)),
+          kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
+        kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
+        increaseNumberOfKernels();
     }
 
     template <class TreeClass>
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::LFmmOperations::LFmmNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
+
+        increaseNumberOfKernels();
 
 #pragma omp parallel
 #pragma omp master
@@ -321,6 +333,13 @@ public:
         }
 #pragma omp taskwait
 }// master
+    }    
+
+    template <class FuncType>
+    auto applyToAllKernels(FuncType&& inFunc) const {
+        for(const auto& kernel : kernels){
+            inFunc(kernel);
+        }
     }
 };
 

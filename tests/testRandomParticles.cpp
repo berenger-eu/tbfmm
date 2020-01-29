@@ -8,6 +8,8 @@
 #include "kernels/testkernel/tbftestkernel.hpp"
 #include "algorithms/tbfalgorithmselecter.hpp"
 #include "utils/tbftimer.hpp"
+#include "kernels/counterkernels/tbfinteractioncounter.hpp"
+#include "kernels/counterkernels/tbfinteractiontimer.hpp"
 
 
 #include <iostream>
@@ -56,14 +58,86 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+    {
+        TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>> algorithm(configuration);
 
-    TbfTimer timerExecute;
+        TbfTimer timerExecute;
 
-    algorithm.execute(tree);
+        algorithm.execute(tree);
 
-    timerExecute.stop();
-    std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+        timerExecute.stop();
+        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+    }
+
+    { // Same as above but with interaction counter
+        using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType>>;
+
+        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+
+        TbfTimer timerExecute;
+
+        algorithm.execute(tree);
+
+        timerExecute.stop();
+        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+        // Print the counter's result
+        auto counters = typename KernelClass::ReduceType();
+
+        algorithm.applyToAllKernels([&](const auto& inKernel){
+            counters = KernelClass::ReduceType::Reduce(counters, inKernel.getReduceData());
+        });
+
+        std::cout << counters << std::endl;
+    }
+
+    { // Same as above but with interaction timer
+        using KernelClass = TbfInteractionTimer<TbfTestKernel<RealType>>;
+
+        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+
+        TbfTimer timerExecute;
+
+        algorithm.execute(tree);
+
+        timerExecute.stop();
+        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+        // Print the counter's result
+        auto timers = typename KernelClass::ReduceType();
+
+        algorithm.applyToAllKernels([&](const auto& inKernel){
+            timers = KernelClass::ReduceType::Reduce(timers, inKernel.getReduceData());
+        });
+
+        std::cout << timers << std::endl;
+    }
+
+
+    { // Same as above but with interaction counter & timer
+        using KernelClass = TbfInteractionCounter<TbfInteractionTimer<TbfTestKernel<RealType>>>;
+
+        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+
+        TbfTimer timerExecute;
+
+        algorithm.execute(tree);
+
+        timerExecute.stop();
+        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+        // Print the counter's result
+        auto counters = typename KernelClass::TbfInteractionCounter::ReduceType();
+        auto timers = typename KernelClass::TbfInteractionTimer::ReduceType();
+
+        algorithm.applyToAllKernels([&](const auto& inKernel){
+            counters = KernelClass::TbfInteractionCounter::ReduceType::Reduce(counters, inKernel.KernelClass::getReduceData());
+            timers = KernelClass::TbfInteractionTimer::ReduceType::Reduce(timers, inKernel.TbfInteractionTimer<TbfTestKernel<RealType>>::getReduceData());
+        });
+
+        std::cout << counters << std::endl;
+        std::cout << timers << std::endl;
+    }
 
     return 0;
 }

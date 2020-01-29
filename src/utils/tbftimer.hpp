@@ -58,6 +58,11 @@ public:
         stop();
         return getElapsed();
     }
+
+    /** Add a timer to another one */
+    void merge(const TbfTimer& inOther) {
+        cumulateTime = inOther.cumulateTime;
+    }
 };
 
 #endif
