@@ -44,7 +44,10 @@ if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_DIR} )
   set( FFTW_ROOT $ENV{FFTW_DIR} )
 endif()
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_ROOT} )
-  set( FFTW_ROOT $ENV{FFTW_DIR} )
+  set( FFTW_ROOT $ENV{FFTW_ROOT} )
+endif()
+if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_HOME} )
+  set( FFTW_ROOT $ENV{FFTW_HOME} )
 endif()
 
 # Check if we can use PkgConfig

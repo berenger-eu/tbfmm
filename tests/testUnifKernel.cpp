@@ -171,6 +171,7 @@ int main(int argc, char** argv){
                                                         particleRhsPtr[idxValue][idxPart]);
                 }
             }
+        });
 
         std::cout << "Relative differences:" << std::endl;
         for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
