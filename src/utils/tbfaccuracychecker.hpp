@@ -73,7 +73,12 @@ public:
     }
 
     RealType getRMSError() const{
-        return std::sqrt(l2Diff /static_cast<RealType>(nbElements));
+        if(nbElements){
+            return std::sqrt(l2Diff /static_cast<RealType>(nbElements));
+        }
+        else{
+            return 0;
+        }
     }
 
     RealType getInfNorm() const{
@@ -81,7 +86,12 @@ public:
     }
 
     RealType getRelativeL2Norm() const{
-        return std::sqrt(l2Diff / l2Dot);
+        if(l2Dot != 0){
+            return std::sqrt(l2Diff / l2Dot);
+        }
+        else{
+            return l2Diff;
+        }
     }
 
     RealType getRelativeInfNorm() const{
