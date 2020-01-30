@@ -139,7 +139,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
             std::cout << "Relative differences:" << std::endl;
             for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
-               UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm()) < 1e-16);
+               UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
             }
             for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
