@@ -33,22 +33,23 @@
 #   LONGDOUBLE_OPENMP_LIB
 #
 
-# TODO (maybe): extend with ExternalProject download + build option
-# TODO: put on conda-forge
-
+# TODO: Add to put "CACHE PATH "FFTW PATH" FORCE" other
+#       that was working only the first time...
 
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTWDIR} )
-  set( FFTW_ROOT $ENV{FFTWDIR} )
+  set( FFTW_ROOT $ENV{FFTWDIR} CACHE PATH "FFTW PATH" FORCE)
 endif()
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_DIR} )
-  set( FFTW_ROOT $ENV{FFTW_DIR} )
+  set( FFTW_ROOT $ENV{FFTW_DIR} CACHE PATH "FFTW PATH" FORCE)
 endif()
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_ROOT} )
-  set( FFTW_ROOT $ENV{FFTW_ROOT} )
+  set( FFTW_ROOT $ENV{FFTW_ROOT} CACHE PATH "FFTW PATH" FORCE)
 endif()
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTW_HOME} )
-  set( FFTW_ROOT $ENV{FFTW_HOME} )
+  set( FFTW_ROOT $ENV{FFTW_HOME} CACHE PATH "FFTW PATH" FORCE)
 endif()
+
+message(STATUS "Consider FFTW_ROOT = ${FFTW_ROOT}")
 
 # Check if we can use PkgConfig
 find_package(PkgConfig)
@@ -72,7 +73,7 @@ if( FFTW_ROOT )
 
   find_library(
     FFTW_DOUBLE_LIB
-    NAMES "fftw3" libfftw3-3
+    NAMES "fftw3" "libfftw3-3"
     PATHS ${FFTW_ROOT}
     PATH_SUFFIXES "lib" "lib64"
     NO_DEFAULT_PATH
