@@ -9,9 +9,10 @@
 
 namespace TbfAlgorithmUtils{
 
-template <class IndexContainerClass, class GroupContainerClass, class FuncType>
-inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainerClass& inGroups, const long int idxWorkingGroup,
-                                  FuncType&& inFunc){
+
+template <class IndexContainerClass, class GroupContainerClassSource, class GroupContainerClassTarget, class FuncType>
+inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainerClassSource& inGroups, const long int idxWorkingGroup,
+                                    GroupContainerClassTarget& inGroupsTarget, FuncType&& inFunc){
     if(std::size(inIndexes) == 0 || std::size(inGroups) == 0){
         return;
     }
@@ -62,6 +63,14 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainer
         }
     }
 }
+
+template <class IndexContainerClass, class GroupContainerClass, class FuncType>
+inline void TbfMapIndexesAndBlocks(IndexContainerClass&& inIndexes, GroupContainerClass& inGroups, const long int idxWorkingGroup,
+                                  FuncType&& inFunc){
+    TbfMapIndexesAndBlocks(std::forward<IndexContainerClass>(inIndexes), inGroups, idxWorkingGroup, inGroups,
+                           std::forward<FuncType>(inFunc));
+}
+
 
 enum LFmmOperations {
     LFmmP2P  = (1 << 0),

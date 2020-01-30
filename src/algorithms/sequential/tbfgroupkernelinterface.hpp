@@ -298,6 +298,33 @@ public:
             }
         }
     }
+
+    template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
+    void P2PBetweenGroupsTsm(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
+                          ParticleGroupClassSource& inOtherParticleGroup, const IndexClass& inIndexes) const {
+        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+            const auto interaction = inIndexes[idxInteraction];
+
+            auto foundSrc = inOtherParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
+            if(foundSrc){
+                assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
+                       && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
+
+                assert(inOtherParticleGroup.getLeafSymbData(*foundSrc).spaceIndex == interaction.indexSrc);
+                assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
+
+                const auto& srcData = TbfUtils::make_const(inOtherParticleGroup).getParticleData(*foundSrc);
+                auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
+                const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
+
+                inKernel.P2PTsm(inOtherParticleGroup.getLeafSymbData(*foundSrc),
+                             srcData,
+                             inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
+                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos), targetData,
+                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
+            }
+        }
+    }
 };
 
 #endif
