@@ -86,7 +86,7 @@ public:
     }
 
     RealType getRelativeL2Norm() const{
-        if(l2Dot != 0){
+        if(l2Dot != 0 && l2Diff != 0){
             return std::sqrt(l2Diff / l2Dot);
         }
         else{
