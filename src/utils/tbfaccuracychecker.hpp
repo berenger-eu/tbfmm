@@ -16,7 +16,7 @@ private:
     RealType l2Dot = 0;
     RealType maxRelativeDiff = 0;
 
-    long int nbElements;
+    long int nbElements = 0;
 
 public:
     TbfAccuracyChecker() = default;
