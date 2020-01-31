@@ -73,11 +73,11 @@ public:
         }
     }
 
-    template <class LeafSymbolicData, class ParticlesClassValuesSource, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsm(const LeafSymbolicData& /*inNeighborIndex*/,
+    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
+    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/,
              const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inParticlesIndex*/, const ParticlesClassValuesTarget& /*inOutParticles*/,
+             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const ParticlesClassValuesTarget& /*inOutParticles*/,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;

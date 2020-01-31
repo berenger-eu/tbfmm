@@ -81,29 +81,32 @@ protected:
 
     template <class TreeClass>
     void M2L(TreeClass& inTree){
-//        const auto& spacialSystem = inTree.getSpacialSystem();
+        const auto& spacialSystem = inTree.getSpacialSystem();
 
-//        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
-//            auto& cellGroups = inTree.getCellGroupsAtLevel(idxLevel);
+        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
+            auto& cellGroupsTarget = inTree.getCellGroupsAtLevelTarget(idxLevel);
+            auto& cellGroupsSource = inTree.getCellGroupsAtLevelSource(idxLevel);
 
-//            auto currentCellGroup = cellGroups.begin();
-//            const auto endCellGroup = cellGroups.end();
+            auto currentCellGroup = cellGroupsTarget.begin();
+            const auto endCellGroup = cellGroupsTarget.end();
 
-//            while(currentCellGroup != endCellGroup){
+            while(currentCellGroup != endCellGroup){
 
-//                auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel);
-//                TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroups, std::distance(cellGroups.begin(),currentCellGroup),
-//                                               [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
-//                    assert(&groupTarget == &*currentCellGroup);
-//                    kernelWrapper.M2LBetweenGroups(idxLevel, kernel, groupTarget, groupSrc, indexes);
-//                });
+                auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel, false);
 
-//                kernelWrapper.M2LInGroup(idxLevel, kernel, *currentCellGroup, indexesForGroup.first);
+                indexesForGroup.second.reserve(std::size(indexesForGroup.first) + std::size(indexesForGroup.first));
+                indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForGroup.first.begin(), indexesForGroup.first.end());
 
+                TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroupsSource,
+                                                          std::distance(cellGroupsTarget.begin(),currentCellGroup), cellGroupsTarget,
+                                               [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
+                    assert(&groupTarget == &*currentCellGroup);
+                    kernelWrapper.M2LBetweenGroups(idxLevel, kernel, groupTarget, groupSrc, indexes);
+                });
 
-//                ++currentCellGroup;
-//            }
-//        }
+                ++currentCellGroup;
+            }
+        }
     }
 
     template <class TreeClass>
@@ -172,12 +175,22 @@ protected:
 
         while(currentParticleGroupTarget != endParticleGroupTarget){
 
-            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroupTarget, configuration.getTreeHeight()-1, true);
-            TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroupsSource, std::distance(particleGroupsTarget.begin(), currentParticleGroupTarget),
+            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroupTarget, configuration.getTreeHeight()-1, false, false);
+
+            indexesForGroup.second.reserve(std::size(indexesForGroup.first) + std::size(indexesForGroup.first));
+            indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForGroup.first.begin(), indexesForGroup.first.end());
+
+            auto indexesForSelfGroup = spacialSystem.getSelfListForBlock(*currentParticleGroupTarget);
+            indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForSelfGroup.begin(), indexesForSelfGroup.end());
+
+            TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroupsSource,
+                                                      std::distance(particleGroupsTarget.begin(), currentParticleGroupTarget), particleGroupsTarget,
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroupTarget);
                 kernelWrapper.P2PBetweenGroupsTsm(kernel, groupTarget, groupSrc, indexes);
             });
+
+
 
             ++currentParticleGroupTarget;
         }

@@ -122,9 +122,9 @@ public:
         }
     }
 
-    template <class KernelClass, class CellGroupClass, class IndexClass>
-    void M2LBetweenGroups(const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup,
-                          const CellGroupClass& inOtherCellGroup, const IndexClass& inIndexes) const {
+    template <class KernelClass, class CellGroupClassTarget, class CellGroupClassSource, class IndexClass>
+    void M2LBetweenGroups(const long int inLevel, KernelClass& inKernel, CellGroupClassTarget& inCellGroup,
+                          const CellGroupClassSource& inOtherCellGroup, const IndexClass& inIndexes) const {
         using CellMultipoleType = typename std::remove_reference<decltype(inOtherCellGroup.getCellMultipole(0))>::type;
         //using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
 

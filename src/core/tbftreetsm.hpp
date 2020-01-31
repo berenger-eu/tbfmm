@@ -140,11 +140,11 @@ public:
         return treeTarget.findGroupWithCell(inLevel, inMIndex);
     }
 
-    auto findGroupWithLeafSource(const long int inLevel, const IndexType inMIndex){
+    auto findGroupWithLeafSource(const IndexType inMIndex){
         return treeSource.findGroupWithLeaf(inMIndex);
     }
 
-    auto findGroupWithLeafTarget(const long int inLevel, const IndexType inMIndex){
+    auto findGroupWithLeafTarget(const IndexType inMIndex){
         return treeTarget.findGroupWithLeaf(inMIndex);
     }
 
@@ -157,8 +157,28 @@ public:
     }
 
     template <class FuncClass>
+    void applyToAllCellsSource(FuncClass&& inFunc){
+        treeSource.applyToAllCells(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllCellsTarget(FuncClass&& inFunc){
+        treeTarget.applyToAllCells(inFunc);
+    }
+
+    template <class FuncClass>
     void applyToAllLeaves(FuncClass&& inFunc){
         treeSource.applyToAllLeaves(inFunc);
+        treeTarget.applyToAllLeaves(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllLeavesSource(FuncClass&& inFunc){
+        treeSource.applyToAllLeaves(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllLeavesTarget(FuncClass&& inFunc){
         treeTarget.applyToAllLeaves(inFunc);
     }
 
@@ -169,8 +189,28 @@ public:
     }
 
     template <class FuncClass>
+    void applyToAllCellsSource(FuncClass&& inFunc) const {
+        treeSource.applyToAllCells(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllCellsTarget(FuncClass&& inFunc) const {
+        treeTarget.applyToAllCells(inFunc);
+    }
+
+    template <class FuncClass>
     void applyToAllLeaves(FuncClass&& inFunc) const {
         treeSource.applyToAllLeaves(inFunc);
+        treeTarget.applyToAllLeaves(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllLeavesSource(FuncClass&& inFunc) const {
+        treeSource.applyToAllLeaves(inFunc);
+    }
+
+    template <class FuncClass>
+    void applyToAllLeavesTarget(FuncClass&& inFunc) const {
         treeTarget.applyToAllLeaves(inFunc);
     }
 

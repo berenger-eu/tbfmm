@@ -20,7 +20,7 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainer
     std::sort(std::begin(inIndexes), std::end(inIndexes), TbfXtoXInteraction<decltype (inIndexes[0].indexSrc)>::SrcFirst);
 
     long int idxCurrentIndex = 0;
-    long int idxCurrentGroup = (idxWorkingGroup == 0 ? 1 : 0);
+    long int idxCurrentGroup = 0;// TODO (idxWorkingGroup == 0 ? 1 : 0);
 
     while(idxCurrentIndex != static_cast<long int>(std::size(inIndexes))
           && idxCurrentGroup != static_cast<long int>(std::size(inGroups))){
@@ -55,7 +55,7 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainer
             assert(inGroups[idxCurrentGroup].getStartingSpacialIndex() <= (*(lastItem-1)).indexSrc
                    && (*(lastItem-1)).indexSrc <= inGroups[idxCurrentGroup].getEndingSpacialIndex());
 
-            inFunc(inGroups[idxWorkingGroup], inGroups[idxCurrentGroup],
+            inFunc(inGroupsTarget[idxWorkingGroup], inGroups[idxCurrentGroup],
                    TbfMakeVectorView(inIndexes,std::distance(inIndexes.begin(),firstItem),
                                   std::distance(inIndexes.begin(),lastItem)-std::distance(inIndexes.begin(),firstItem)));
 
