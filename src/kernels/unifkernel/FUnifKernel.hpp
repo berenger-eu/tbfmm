@@ -179,10 +179,7 @@ public:
              const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int inNbParticlesNeighbors,
              const LeafSymbolicData& /*inTargetIndex*/, const ParticlesClassValues& inTargets,
              ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template FullMutual<RealType> (/*std::forward<const ParticlesClassValues>*/(inNeighbors),
-                                                                                       /*std::forward<ParticlesClassRhs>*/(inNeighborsRhs), inNbParticlesNeighbors,
-                                                                                       /*std::forward<const ParticlesClassValues>*/(inTargets),
-                                                                                       /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
+        FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,(inTargets),(inTargetsRhs), inNbOutParticles);
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
@@ -199,8 +196,7 @@ public:
     void P2PInner(const LeafSymbolicData& /*inIndex*/,
                   const ParticlesClassValues& inTargets,
                   ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template GenericInner<RealType>(/*std::forward<const ParticlesClassValues>*/(inTargets),
-                                                                                        /*std::forward<ParticlesClassRhs>*/(inTargetsRhs), inNbOutParticles);
+        FP2PR::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);
     }
 };
 
