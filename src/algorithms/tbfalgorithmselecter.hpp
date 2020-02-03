@@ -4,6 +4,7 @@
 #include "tbfglobal.hpp"
 
 #include "algorithms/sequential/tbfalgorithm.hpp"
+#include "algorithms/sequential/tbfalgorithmtsm.hpp"
 #ifdef TBF_USE_SPETABARU
 #include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
 #endif
@@ -22,6 +23,10 @@ struct TbfAlgorithmSelecter{
 #endif
 };
 
+struct TbfAlgorithmSelecterTsm{
+    template<typename RealType, class KernelClass>
+    using type = TbfAlgorithmTsm<RealType, KernelClass>;
+};
 
 #endif
 

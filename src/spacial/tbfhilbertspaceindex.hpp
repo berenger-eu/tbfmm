@@ -318,7 +318,7 @@ public:
     }
 
     template <class GroupClass>
-    auto getInteractionListForBlock(const GroupClass& inGroup, const long int inLevel) const{
+    auto getInteractionListForBlock(const GroupClass& inGroup, const long int inLevel, const bool testSelfInclusion = true) const{
         const long int boxLimite = (1 << (inLevel-1));
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesInternal;
@@ -402,7 +402,7 @@ public:
 
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
-                            if(inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
+                            if(testSelfInclusion == false || inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
                                 indexesInternal.push_back(interaction);
                             }
                         }
@@ -495,7 +495,7 @@ public:
     }
 
     template <class GroupClass>
-    auto getNeighborListForBlock(const GroupClass& inGroup, const long int inLevel, const bool upperExclusion = false) const{
+    auto getNeighborListForBlock(const GroupClass& inGroup, const long int inLevel, const bool upperExclusion = false, const bool testSelfInclusion = true) const{
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesInternal;
@@ -573,7 +573,7 @@ public:
 
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
-                            if(inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
+                            if(testSelfInclusion == false || inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
                                 indexesInternal.push_back(interaction);
                             }
                         }
@@ -590,6 +590,33 @@ public:
         return std::make_pair(std::move(indexesInternal), std::move(indexesExternal));
     }
 
+
+    template <class GroupClass>
+    auto getSelfListForBlock(const GroupClass& inGroup) const{
+        std::vector<TbfXtoXInteraction<IndexType>> indexesSelf;
+        indexesSelf.reserve(inGroup.getNbLeaves());
+
+        long int arrayPos = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            arrayPos *= 3;
+            arrayPos += (1);
+        }
+        assert(arrayPos < TbfUtils::lipow(3, Dim));
+
+        for(long int idxCell = 0 ; idxCell < inGroup.getNbLeaves() ; ++idxCell){
+            const IndexType cellIndex = inGroup.getLeafSpacialIndex(idxCell);
+
+            TbfXtoXInteraction<IndexType> interaction;
+            interaction.indexTarget = cellIndex;
+            interaction.indexSrc = cellIndex;
+            interaction.globalTargetPos = idxCell;
+            interaction.arrayIndexSrc = arrayPos;
+
+            indexesSelf.emplace_back(interaction);
+        }
+
+        return indexesSelf;
+    }
 
     static long int constexpr getNbChildrenPerCell() {
         return 1L << Dim;

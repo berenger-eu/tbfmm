@@ -9,7 +9,7 @@
 #include "core/tbfcellscontainer.hpp"
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
-#include "core/tbftree.hpp"
+#include "core/tbftreetsm.hpp"
 #include "kernels/rotationkernel/FRotationKernel.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
 #include "utils/tbftimer.hpp"
@@ -17,8 +17,8 @@
 
 
 template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestRotationKernel : public UTester< TestRotationKernel<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestRotationKernel<RealType, AlgorithmClass> >;
+class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, AlgorithmClass> > {
+    using Parent = UTester< TestRotationKernelTsm<RealType, AlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -35,14 +35,24 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
 
         TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
-        std::vector<std::array<RealType, Dim+1>> particlePositions(NbParticles);
+        std::vector<std::array<RealType, Dim+1>> particlePositionsSource(NbParticles);
+        std::vector<std::array<RealType, Dim+1>> particlePositionsTarget(NbParticles);
 
         for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-            auto pos = randomGenerator.getNewItem();
-            particlePositions[idxPart][0] = pos[0];
-            particlePositions[idxPart][1] = pos[1];
-            particlePositions[idxPart][2] = pos[2];
-            particlePositions[idxPart][3] = RealType(0.01);
+            {
+                auto pos = randomGenerator.getNewItem();
+                particlePositionsSource[idxPart][0] = pos[0];
+                particlePositionsSource[idxPart][1] = pos[1];
+                particlePositionsSource[idxPart][2] = pos[2];
+                particlePositionsSource[idxPart][3] = RealType(0.01);
+            }
+            {
+                auto pos = randomGenerator.getNewItem();
+                particlePositionsTarget[idxPart][0] = pos[0];
+                particlePositionsTarget[idxPart][1] = pos[1];
+                particlePositionsTarget[idxPart][2] = pos[2];
+                particlePositionsTarget[idxPart][3] = RealType(0.01);
+            }
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -62,8 +72,8 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
 
         TbfTimer timerBuildTree;
 
-        TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+        TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
+                                                                                    TbfUtils::make_const(particlePositionsSource), TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
@@ -80,8 +90,12 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
         /////////////////////////////////////////////////////////////////////////////////////////
 
         {
-            std::array<RealType*, 4> particles;
-            for(auto& vec : particles){
+            std::array<RealType*, 4> particlesSource;
+            for(auto& vec : particlesSource){
+                vec = new RealType[NbParticles]();
+            }
+            std::array<RealType*, 4> particlesTarget;
+            for(auto& vec : particlesTarget){
                 vec = new RealType[NbParticles]();
             }
             std::array<RealType*, NbRhsValuesPerParticle> particlesRhs;
@@ -90,15 +104,20 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
             }
 
             for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-                particles[0][idxPart] = particlePositions[idxPart][0];
-                particles[1][idxPart] = particlePositions[idxPart][1];
-                particles[2][idxPart] = particlePositions[idxPart][2];
-                particles[3][idxPart] = particlePositions[idxPart][3];
+                particlesSource[0][idxPart] = particlePositionsSource[idxPart][0];
+                particlesSource[1][idxPart] = particlePositionsSource[idxPart][1];
+                particlesSource[2][idxPart] = particlePositionsSource[idxPart][2];
+                particlesSource[3][idxPart] = particlePositionsSource[idxPart][3];
+
+                particlesTarget[0][idxPart] = particlePositionsTarget[idxPart][0];
+                particlesTarget[1][idxPart] = particlePositionsTarget[idxPart][1];
+                particlesTarget[2][idxPart] = particlePositionsTarget[idxPart][2];
+                particlesTarget[3][idxPart] = particlePositionsTarget[idxPart][3];
             }
 
             TbfTimer timerDirect;
 
-            FP2PR::template GenericInner<RealType>( particles, particlesRhs, NbParticles);
+            FP2PR::template GenericFullRemote<RealType>(particlesSource, NbParticles, particlesTarget, particlesRhs, NbParticles);
 
             timerDirect.stop();
 
@@ -109,13 +128,13 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
             std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
             std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
-            tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
+            tree.applyToAllLeavesTarget([&particlesTarget,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
                                   (auto&& leafHeader, const long int* particleIndexes,
                                   const std::array<RealType*, 4> particleDataPtr,
                                   const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
                 for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
                     for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
-                       partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                       partcilesAccuracy[idxValue].addValues(particlesTarget[idxValue][particleIndexes[idxPart]],
                                                             particleDataPtr[idxValue][idxPart]);
                     }
                     for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
@@ -142,7 +161,10 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
 
             //////////////////////////////////////////////////////////////////////
 
-            for(auto& vec : particles){
+            for(auto& vec : particlesSource){
+                delete[] vec;
+            }
+            for(auto& vec : particlesTarget){
                 delete[] vec;
             }
             for(auto& vec : particlesRhs){
@@ -165,7 +187,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
     }
 
     void SetTests() {
-        Parent::AddTest(&TestRotationKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
+        Parent::AddTest(&TestRotationKernelTsm<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
     }
 };
 
