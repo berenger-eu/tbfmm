@@ -22,7 +22,7 @@ public:
             const auto& symbData = TbfUtils::make_const(inLeafGroup).getCellSymbData(idxLeaf);
             const auto& particlesData = inParticleGroup.getParticleData(idxLeaf);
             auto&& leafData = inLeafGroup.getCellMultipole(idxLeaf);
-            inKernel.P2M(symbData, particlesData, inParticleGroup.getNbParticlesInLeaf(idxLeaf),
+            inKernel.P2M(symbData, inParticleGroup.getParticleIndexes(idxLeaf), particlesData, inParticleGroup.getNbParticlesInLeaf(idxLeaf),
                          leafData);
         }
     }
@@ -230,6 +230,7 @@ public:
             const auto& particlesData = TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf);
             auto&& particlesRhs = inParticleGroup.getParticleRhs(idxLeaf);
             inKernel.L2P(inLeafGroup.getCellSymbData(idxLeaf), inLeafGroup.getCellLocal(idxLeaf),
+                         inParticleGroup.getParticleIndexes(idxLeaf),
                          particlesData, particlesRhs,
                          inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
@@ -254,9 +255,11 @@ public:
             const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
 
             inKernel.P2P(inParticleGroup.getLeafSymbData(*foundSrc),
+                         inParticleGroup.getParticleIndexes(*foundSrc),
                          srcData, srcRhs,
                          inParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos), targetData,
+                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
+                         inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
                          targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
         }
     }
@@ -267,6 +270,7 @@ public:
             const auto& particlesData = TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf);
             auto&& particlesRhs = inParticleGroup.getParticleRhs(idxLeaf);
             inKernel.P2PInner(inParticleGroup.getLeafSymbData(idxLeaf),
+                              inParticleGroup.getParticleIndexes(idxLeaf),
                               particlesData, particlesRhs, inParticleGroup.getNbParticlesInLeaf(idxLeaf));
         }
     }
@@ -291,9 +295,11 @@ public:
                 const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
 
                 inKernel.P2P(inOtherParticleGroup.getLeafSymbData(*foundSrc),
+                             inOtherParticleGroup.getParticleIndexes(*foundSrc),
                              srcData, srcRhs,
                              inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos), targetData,
+                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
+                             inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
                              targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
             }
         }
@@ -318,9 +324,11 @@ public:
                 const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
 
                 inKernel.P2PTsm(inOtherParticleGroup.getLeafSymbData(*foundSrc),
+                                inOtherParticleGroup.getParticleIndexes(*foundSrc),
                              srcData,
                              inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
-                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos), targetData,
+                             inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
+                             inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
                              targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
             }
         }

@@ -51,9 +51,9 @@ public:
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& inLeafIndex,
-             const ParticlesClass& inParticles, const long int inNbParticles, LeafClass& inOutLeaf) {
+             const long int particlesIndexes[], const ParticlesClass& inParticles, const long int inNbParticles, LeafClass& inOutLeaf) {
         counters.P2M += 1;
-        RealKernel::P2M(inLeafIndex, inParticles, inNbParticles, inOutLeaf);
+        RealKernel::P2M(inLeafIndex, particlesIndexes, inParticles, inNbParticles, inOutLeaf);
     }
 
     template <class CellSymbolicData,class CellClassContainer, class CellClass>
@@ -82,30 +82,43 @@ public:
 
     template <class CellSymbolicData,class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& inLeafIndex,
-             const LeafClass& inLeaf,
+             const LeafClass& inLeaf, const long int particlesIndexes[],
              const ParticlesClassValues& inOutParticles, ParticlesClassRhs& inOutParticlesRhs,
              const long int inNbParticles) {
         counters.L2P += 1;
-        RealKernel::L2P(inLeafIndex, inLeaf, inOutParticles, inOutParticlesRhs, inNbParticles);
+        RealKernel::L2P(inLeafIndex, inLeaf, particlesIndexes, inOutParticles, inOutParticlesRhs, inNbParticles);
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const LeafSymbolicData& inNeighborIndex,
+    void P2P(const LeafSymbolicData& inNeighborIndex, const long int neighborsIndexes[],
              const ParticlesClassValues& inParticlesNeighbors, ParticlesClassRhs& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& inParticlesIndex, const ParticlesClassValues& inOutParticles,
+             const LeafSymbolicData& inParticlesIndex, const long int targetIndexes[],
+             const ParticlesClassValues& inOutParticles,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) {
         counters.P2P += inNbParticlesNeighbors * inNbOutParticles;
-        RealKernel::P2P(inNeighborIndex, inParticlesNeighbors, inParticlesNeighborsRhs, inNbParticlesNeighbors, inParticlesIndex,
-                        inOutParticles, inOutParticlesRhs, inNbOutParticles);
+        RealKernel::P2P(inNeighborIndex,neighborsIndexes, inParticlesNeighbors, inParticlesNeighborsRhs, inNbParticlesNeighbors, inParticlesIndex,
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+    }
+
+    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
+    void P2PTsm(const LeafSymbolicDataSource& inNeighborIndex, const long int neighborsIndexes[],
+             const ParticlesClassValuesSource& inParticlesNeighbors,
+             const long int inNbParticlesNeighbors,
+             const LeafSymbolicDataTarget& inParticlesIndex, const long int targetIndexes[],
+                const ParticlesClassValuesTarget& inOutParticles,
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
+        counters.P2P += inNbParticlesNeighbors * inNbOutParticles;
+        RealKernel::P2P(inNeighborIndex, inParticlesNeighbors, neighborsIndexes, inNbParticlesNeighbors, inParticlesIndex,
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const LeafSymbolicData& inLeafIndex,
+    void P2PInner(const LeafSymbolicData& inLeafIndex, const long int targetIndexes[],
                   const ParticlesClassValues& inOutParticles,
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) {
         counters.P2PInner += inNbOutParticles * inNbOutParticles - inNbOutParticles;
-        RealKernel::P2PInner(inLeafIndex, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+        RealKernel::P2PInner(inLeafIndex, targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
     }
 
     void reset(){

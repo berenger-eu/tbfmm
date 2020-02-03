@@ -87,7 +87,7 @@ public:
 
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
-    void P2M(const CellSymbolicData& LeafIndex,
+    void P2M(const CellSymbolicData& LeafIndex,  const long int /*particlesIndexes*/[],
              const ParticlesClass& SourceParticles, const long int inNbParticles, LeafClass& LeafCell) const {
         const auto LeafCellCenter = AbstractBaseClass::getLeafCellCenter(LeafIndex.boxCoord);
         // 1) apply Sy
@@ -151,7 +151,7 @@ public:
 
     template <class CellSymbolicData, class LeafClass, class ParticlesClass, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& LeafIndex,
-             const LeafClass& LeafCell,
+             const LeafClass& LeafCell,  const long int /*particlesIndexes*/[],
              const ParticlesClass& inOutParticles, ParticlesClassRhs& inOutParticlesRhs,
              const long int inNbParticles) {
         const std::array<RealType, Dim> LeafCellCenter(AbstractBaseClass::getLeafCellCenter(LeafIndex.boxCoord));
@@ -175,25 +175,27 @@ public:
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const LeafSymbolicData& /*inNeighIndex*/,
+    void P2P(const LeafSymbolicData& /*inNeighIndex*/,  const long int /*neighborsIndexes*/[],
              const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inTargetIndex*/, const ParticlesClassValues& inTargets,
+             const LeafSymbolicData& /*inTargetIndex*/,   const long int /*targetIndexes*/[],
+             const ParticlesClassValues& inTargets,
              ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,(inTargets),(inTargetsRhs), inNbOutParticles);
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/,
+    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
              const ParticlesClassValuesSource& inNeighbors,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const ParticlesClassValuesTarget& inTargets,
+             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
+                const ParticlesClassValuesTarget& inTargets,
              ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
                                                                                        (inTargets), (inTargetsRhs), inNbOutParticles);
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const LeafSymbolicData& /*inIndex*/,
+    void P2PInner(const LeafSymbolicData& /*inIndex*/, const long int /*targetIndexes*/[],
                   const ParticlesClassValues& inTargets,
                   ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);

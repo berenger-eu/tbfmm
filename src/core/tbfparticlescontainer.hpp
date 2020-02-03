@@ -176,13 +176,13 @@ public:
     const long int* getParticleIndexes(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
-        return &objectData.template getViewerForBlockConst<0>().getItem(leafHeader.offSet);
+        return &objectData.template getViewerForBlockConst<2>().getItem(leafHeader.offSet);
     }
 
     long int* getParticleIndexes(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
-        return &objectData.template getViewerForBlockConst<0>().getItem(leafHeader.offSet);
+        return &objectData.template getViewerForBlock<2>().getItem(leafHeader.offSet);
     }
 
     std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {

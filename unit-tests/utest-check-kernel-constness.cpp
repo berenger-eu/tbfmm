@@ -58,7 +58,7 @@ public:
     explicit KernelCheckConstness(const KernelCheckConstness&){}
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
-    void P2M(CellSymbolicData&& /*inLeafIndex*/,
+    void P2M(CellSymbolicData&& /*inLeafIndex*/,  const long int [],
              ParticlesClass&& /*inParticles*/, const long int /*inNbParticles*/, LeafClass&& /*inOutLeaf*/) const {
         should_be_const_ref<CellSymbolicData>();
         should_be_const_ref<ParticlesClass>();
@@ -97,7 +97,7 @@ public:
 
     template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(CellSymbolicData&& /*inCellIndex*/,
-             LeafClass&& /*inLeaf*/,
+             LeafClass&& /*inLeaf*/,  const long int [],
              ParticlesClassValues&& /*inOutParticles*/, ParticlesClassRhs&& /*inOutParticlesRhs*/,
              long int /*inNbParticles*/) const {
         should_be_const_ref<CellSymbolicData>();
@@ -107,18 +107,33 @@ public:
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(LeafSymbolicData&& /*inNeighborIndex*/,
+    void P2P(LeafSymbolicData&& /*inNeighborIndex*/,  const long int /*neighborIndexes*/[],
              ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
-             LeafSymbolicData&& /*inTargetIndex*/, ParticlesClassValues&& /*inOutParticles*/,
+             LeafSymbolicData&& /*inTargetIndex*/,   const long int /*targetIndexes*/[], ParticlesClassValues&& /*inOutParticles*/,
              ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         should_be_const_ref<LeafSymbolicData>();
         should_be_const_ref<ParticlesClassValues>();
         should_be_non_const_ref<ParticlesClassRhs>();
     }
 
+
+    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
+    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
+             const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
+             const long int /*inNbParticlesNeighbors*/,
+             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
+                const ParticlesClassValuesTarget& /*inOutParticles*/,
+             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+        should_be_const_ref<LeafSymbolicDataSource>();
+        should_be_const_ref<ParticlesClassValuesSource>();
+        should_be_const_ref<LeafSymbolicDataTarget>();
+        should_be_const_ref<ParticlesClassValuesTarget>();
+        should_be_non_const_ref<ParticlesClassRhs>();
+    }
+
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(LeafSymbolicData&& /*inSpacialIndex*/,
+    void P2PInner(LeafSymbolicData&& /*inSpacialIndex*/,   const long int /*targetIndexes*/[],
                   ParticlesClassValues&& /*inOutParticles*/,
                   ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
         should_be_const_ref<LeafSymbolicData>();

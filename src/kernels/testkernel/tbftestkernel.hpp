@@ -14,7 +14,7 @@ public:
     explicit TbfTestKernel(const TbfTestKernel&){}
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
-    void P2M(const CellSymbolicData& /*inLeafIndex*/,
+    void P2M(const CellSymbolicData& /*inLeafIndex*/,  const long int /*particlesIndexes*/[],
              const ParticlesClass& /*inParticles*/, const long int inNbParticles, LeafClass& inOutLeaf) const {
         inOutLeaf[0] += inNbParticles;
     }
@@ -51,7 +51,7 @@ public:
 
     template <class CellSymbolicData,class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& /*inLeafIndex*/,
-             const LeafClass& inLeaf,
+             const LeafClass& inLeaf,  const long int /*particlesIndexes*/[],
              const ParticlesClassValues& /*inOutParticles*/, ParticlesClassRhs& inOutParticlesRhs,
              const long int inNbParticles) const {
         for(int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
@@ -60,10 +60,11 @@ public:
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
+    void P2P(const LeafSymbolicData& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
              const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inParticlesIndex*/, const ParticlesClassValues& /*inOutParticles*/,
+             const LeafSymbolicData& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
+             const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
@@ -74,10 +75,11 @@ public:
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/,
+    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
              const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const ParticlesClassValuesTarget& /*inOutParticles*/,
+             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
+                const ParticlesClassValuesTarget& /*inOutParticles*/,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
@@ -85,7 +87,7 @@ public:
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const LeafSymbolicData& /*inLeafIndex*/,
+    void P2PInner(const LeafSymbolicData& /*inLeafIndex*/, const long int /*targetIndexes*/[],
                   const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
