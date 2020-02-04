@@ -54,7 +54,6 @@ class TbfMemoryBlock{
     std::array<unsigned char*,NbBlocks> blockRawPtrs;
 
     void constructAllItems(){
-        // TODO optim if constructor exist | POD
         applyToAllElements([](auto& inItem){
             static_assert (std::is_reference<decltype(inItem)>::value, "Should be a ref here");
             using ItemType = typename std::decay<decltype(inItem)>::type;
@@ -63,7 +62,6 @@ class TbfMemoryBlock{
     }
 
     void freeAllItems(){
-        // TODO optim if destructor exist | POD
         applyToAllElements([](auto& inItem){
             static_assert (std::is_reference<decltype(inItem)>::value, "Should be a ref here");
             using ItemType = typename std::decay<decltype(inItem)>::type;

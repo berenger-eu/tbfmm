@@ -9,7 +9,6 @@
 
 /** The memory utils class proposes some methods
   * to copy/set memory with an size bigger than size_t
-  * @todo manage the file to remove it if needed
   */
 namespace FMemUtils {
     using FSize = unsigned long;
