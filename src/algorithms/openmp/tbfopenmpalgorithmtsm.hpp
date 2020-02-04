@@ -1,5 +1,5 @@
-#ifndef TBFOPENMPALGORITHM_HPP
-#define TBFOPENMPALGORITHM_HPP
+#ifndef TBFOPENMPALGORITHMTSM_HPP
+#define TBFOPENMPALGORITHMTSM_HPP
 
 #include "tbfglobal.hpp"
 
@@ -22,7 +22,7 @@
 #endif
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfOpenmpAlgorithm {
+class TbfOpenmpAlgorithmTsm {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -41,8 +41,8 @@ protected:
     template <class TreeClass>
     void P2M(TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
-            auto& leafGroups = inTree.getLeafGroups();
-            const auto& particleGroups = inTree.getParticleGroups();
+            auto& leafGroups = inTree.getLeafGroupsSource();
+            const auto& particleGroups = inTree.getParticleGroupsSource();
 
             assert(std::size(leafGroups) == std::size(particleGroups));
 
@@ -75,8 +75,8 @@ protected:
     template <class TreeClass>
     void M2M(TreeClass& inTree){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
-            auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
-            const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
+            auto& upperCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel);
+            const auto& lowerCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel+1);
 
             auto currentUpperGroup = upperCellGroup.begin();
             auto currentLowerGroup = lowerCellGroup.cbegin();
@@ -117,14 +117,20 @@ protected:
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
-            auto& cellGroups = inTree.getCellGroupsAtLevel(idxLevel);
+            auto& cellGroupsTarget = inTree.getCellGroupsAtLevelTarget(idxLevel);
+            auto& cellGroupsSource = inTree.getCellGroupsAtLevelSource(idxLevel);
 
-            auto currentCellGroup = cellGroups.begin();
-            const auto endCellGroup = cellGroups.end();
+            auto currentCellGroup = cellGroupsTarget.begin();
+            const auto endCellGroup = cellGroupsTarget.end();
 
             while(currentCellGroup != endCellGroup){
-                auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel);
-                TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroups, std::distance(cellGroups.begin(),currentCellGroup),
+                auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel, false);
+
+                indexesForGroup.second.reserve(std::size(indexesForGroup.first) + std::size(indexesForGroup.first));
+                indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForGroup.first.begin(), indexesForGroup.first.end());
+
+                TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroupsSource,
+                                                          std::distance(cellGroupsTarget.begin(),currentCellGroup), cellGroupsTarget,
                                                [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                     const auto groupSrcPtr = &groupSrc;
                     auto groupTargetPtr = &groupTarget;
@@ -140,18 +146,6 @@ protected:
                     }
                 });
 
-                auto currentGroup = &(*currentCellGroup);
-                auto indexesForGroup_first = TbfUtils::CreateNew(std::move(indexesForGroup.first));
-
-                const auto currentGroupGetMultipolePtr = currentGroup->getMultipolePtr();
-                auto currentGroupGetLocalPtr = currentGroup->getLocalPtr();
-
-#pragma omp task depend(in:currentGroupGetMultipolePtr[0]) depend(commute:currentGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesForGroup_first, currentGroup)  priority(priorities.getM2LPriority(idxLevel))
-                {
-                    kernelWrapper.M2LInGroup(idxLevel, kernels[omp_get_thread_num()], *currentGroup, std::move(*indexesForGroup_first));
-                    delete indexesForGroup_first;
-                }
-
                 ++currentCellGroup;
             }
         }
@@ -160,8 +154,8 @@ protected:
     template <class TreeClass>
     void L2L(TreeClass& inTree){
         for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
-            const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
-            auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
+            const auto& upperCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel);
+            auto& lowerCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel+1);
 
             auto currentUpperGroup = upperCellGroup.cbegin();
             auto currentLowerGroup = lowerCellGroup.begin();
@@ -200,8 +194,8 @@ protected:
     template <class TreeClass>
     void L2P(TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
-            const auto& leafGroups = inTree.getLeafGroups();
-            auto& particleGroups = inTree.getParticleGroups();
+            const auto& leafGroups = inTree.getLeafGroupsTarget();
+            auto& particleGroups = inTree.getParticleGroupsTarget();
 
             assert(std::size(leafGroups) == std::size(particleGroups));
 
@@ -237,17 +231,25 @@ protected:
     void P2P(TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
-        auto& particleGroups = inTree.getParticleGroups();
+        auto& particleGroupsTarget = inTree.getParticleGroupsTarget();
+        auto& particleGroupsSource = inTree.getParticleGroupsSource();
 
-        auto currentParticleGroup = particleGroups.begin();
-        const auto endParticleGroup = particleGroups.end();
+        auto currentParticleGroupTarget = particleGroupsTarget.begin();
+        const auto endParticleGroupTarget = particleGroupsTarget.end();
 
-        while(currentParticleGroup != endParticleGroup){
+        while(currentParticleGroupTarget != endParticleGroupTarget){
+            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroupTarget, configuration.getTreeHeight()-1, false, false);
 
-            auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroup, configuration.getTreeHeight()-1, true);
-            TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
+            indexesForGroup.second.reserve(std::size(indexesForGroup.first) + std::size(indexesForGroup.first));
+            indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForGroup.first.begin(), indexesForGroup.first.end());
+
+            auto indexesForSelfGroup = spacialSystem.getSelfListForBlock(*currentParticleGroupTarget);
+            indexesForGroup.second.insert(indexesForGroup.second.end(), indexesForSelfGroup.begin(), indexesForSelfGroup.end());
+
+            TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroupsSource,
+                                                      std::distance(particleGroupsTarget.begin(), currentParticleGroupTarget), particleGroupsTarget,
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
-                assert(&groupTarget == &*currentParticleGroup);
+                assert(&groupTarget == &*currentParticleGroupTarget);
 
                 auto groupSrcPtr = &groupSrc;
                 auto groupTargetPtr = &groupTarget;
@@ -258,26 +260,12 @@ protected:
                 auto indexesVec = TbfUtils::CreateNew(indexes.toStdVector());
 #pragma omp task depend(commute:groupSrcGetDataPtr[0],groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
-                    kernelWrapper.P2PBetweenGroups(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
+                    kernelWrapper.P2PBetweenGroupsTsm(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                     delete indexesVec;
                 }
             });
 
-            auto currentGroup = &(*currentParticleGroup);
-
-            const auto currentGroupGetDataPtr = currentGroup->getDataPtr();
-            auto currentGroupGetRhsPtr = currentGroup->getRhsPtr();
-
-            auto indexesForGroup_first = TbfUtils::CreateNew(std::move(indexesForGroup.first));
-#pragma omp task depend(in:currentGroupGetDataPtr[0]) depend(commute:currentGroupGetRhsPtr[0]) default(shared) firstprivate(currentGroup, indexesForGroup_first) priority(priorities.getP2PPriority())
-            {
-                kernelWrapper.P2PInGroup(kernels[omp_get_thread_num()], *currentGroup, std::move(*indexesForGroup_first));
-                delete indexesForGroup_first;
-
-                kernelWrapper.P2PInner(kernels[omp_get_thread_num()], *currentGroup);
-            }
-
-            ++currentParticleGroup;
+            ++currentParticleGroupTarget;
         }
     }
 
@@ -288,7 +276,7 @@ protected:
     }
 
 public:
-    TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration)
+    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration)
         : configuration(inConfiguration), spaceSystem(configuration),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -297,7 +285,7 @@ public:
     }
 
     template <class SourceKernelClass>
-    TbfOpenmpAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
+    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
         : configuration(inConfiguration), spaceSystem(configuration),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -335,7 +323,7 @@ public:
         }
 #pragma omp taskwait
 }// master
-    }    
+    }
 
     template <class FuncType>
     auto applyToAllKernels(FuncType&& inFunc) const {
