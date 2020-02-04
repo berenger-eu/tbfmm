@@ -161,30 +161,56 @@ public:
     ///////////////////////////////////////////////////////////////////////////
 
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
+        //        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
+        //            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        //            if(cellHeader.spaceIndex == inIndex){
+        //                return std::optional<long int>(idxCell);
+        //            }
+        //        }
         const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
 
-        // TODO use binary search
-        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
-            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
-            if(cellHeader.spaceIndex == inIndex){
-                return std::optional<long int>(idxCell);
-            }
+        const long int idxCell = TbfUtils::lower_bound_indexes( 0, header.nbCells, inIndex, [this](const auto& idxCellIterate, const auto& index){
+            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
+            return cellHeader.spaceIndex < index;
+        });
+
+        if(idxCell == header.nbCells){
+            return std::nullopt;
         }
-        return std::nullopt;
+
+        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        if(cellHeader.spaceIndex != inIndex){
+            return std::nullopt;
+        }
+
+        return std::optional<long int>(idxCell);
     }
 
 
-    std::optional<long int> getElementFromParentIndex(const SpaceIndexType& spaceSystem, const IndexType inParentIndex) const {
+    std::optional<long int> getElementFromParentIndex(const SpaceIndexType& spaceSystem, const IndexType inParentIndex) const {        
+        //        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
+        //            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        //            if(spaceSystem.getParentIndex(cellHeader.spaceIndex) == inParentIndex){
+        //                return std::optional<long int>(idxCell);
+        //            }
+        //        }
         const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
 
-        // TODO use binary search
-        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
-            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
-            if(spaceSystem.getParentIndex(cellHeader.spaceIndex) == inParentIndex){
-                return std::optional<long int>(idxCell);
-            }
+        const long int idxCell = TbfUtils::lower_bound_indexes( 0, header.nbCells, inParentIndex, [this, &spaceSystem](const auto& idxCellIterate, const auto& parentIndex){
+            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
+            return (spaceSystem.getParentIndex(cellHeader.spaceIndex) < parentIndex);
+        });
+
+        if(idxCell == header.nbCells){
+            return std::nullopt;
         }
-        return std::nullopt;
+
+        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        if(spaceSystem.getParentIndex(cellHeader.spaceIndex) != inParentIndex){
+            return std::nullopt;
+        }
+
+        return std::optional<long int>(idxCell);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////

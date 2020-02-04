@@ -160,6 +160,26 @@ struct marray_core<Type, Size>
 template <class Type, size_t... AllSizes>
 using marray = typename marray_core<Type, AllSizes...>::type;
 
+
+template<class T, class Compare>
+long int lower_bound_indexes(long int first, const long int last, const T& value, Compare comp)
+{
+    long int count = (last - first);
+
+    while (count > 0) {
+        long int it = first;
+        long int step = count / 2;
+        it += step;
+        if (comp(it, value)) {
+            first = ++it;
+            count -= step + 1;
+        }
+        else
+            count = step;
+    }
+    return first;
+}
+
 }
 
 #endif

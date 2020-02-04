@@ -182,29 +182,44 @@ public:
     //////////////////////////////////////////////////////////////////////////////
 
     auto findGroupWithCell(const long int inLevel, const IndexType inMIndex){
-        // TODO binary search
-        for(auto& cellGroup : cellBlocks[inLevel]){
+        auto iterCells = cellBlocks[inLevel].begin();
+        auto endCells = cellBlocks[inLevel].end();
+
+        // for(auto& cellGroup : cellBlocks[inLevel]){
+        const auto cellGroupIter = std::lower_bound( iterCells, endCells, inMIndex, [](const auto& cellsToTest, const auto& mindex){
+            return cellsToTest.getEndingSpacialIndex() < mindex;
+        });
+
+        if(cellGroupIter != endCells){
+            auto& cellGroup = (*cellGroupIter);
             if(cellGroup.getStartingSpacialIndex() <= inMIndex && inMIndex <= cellGroup.getEndingSpacialIndex()){
                 auto foundCell = cellGroup.getElementFromSpacialIndex(inMIndex);
                 if(foundCell){
                     return std::optional<std::pair<std::reference_wrapper<CellGroupClass>,long int>>(std::make_pair(std::ref(cellGroup), *foundCell));
                 }
-                return std::optional<std::pair<std::reference_wrapper<CellGroupClass>,long int>>();
             }
         }
+
         return std::optional<std::pair<std::reference_wrapper<CellGroupClass>,long int>>();
     }
 
 
     auto findGroupWithLeaf(const IndexType inMIndex){
-        // TODO binary search
-        for(auto& leafGroup : particleGroups){
+        auto iterLeaves = particleGroups.begin();
+        auto endLeaves = particleGroups.end();
+
+        //for(auto& leafGroup : particleGroups){
+        const auto leafGroupIter = std::lower_bound( iterLeaves, endLeaves, inMIndex, [](const auto& leavesToTest, const auto& mindex){
+            return  leavesToTest.getEndingSpacialIndex() < mindex;
+        });
+
+        if(leafGroupIter != endLeaves){
+            auto& leafGroup = *leafGroupIter;
             if(leafGroup.getStartingSpacialIndex() <= inMIndex && inMIndex <= leafGroup.getEndingSpacialIndex()){
                 auto foundLeaf = leafGroup.getElementFromSpacialIndex(inMIndex);
                 if(foundLeaf){
                     return std::optional<std::pair<std::reference_wrapper<LeafGroupClass>,long int>>(std::make_pair(std::ref(leafGroup), *foundLeaf));
                 }
-                return std::optional<std::pair<std::reference_wrapper<LeafGroupClass>,long int>>();
             }
         }
         return std::optional<std::pair<std::reference_wrapper<LeafGroupClass>,long int>>();
