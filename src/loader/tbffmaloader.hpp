@@ -7,6 +7,8 @@
 #include <array>
 #include <cassert>
 #include <string>
+#include <istream>
+#include <fstream>
 
 template <class RealType, const long int Dim = 3, const long int DimArray = Dim>
 class TbfFmaLoader {

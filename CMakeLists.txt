@@ -43,7 +43,7 @@ set(TBF_USE_LIST_AVAILABLE "")
 
 #################################################
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru/CMakeLists.txt")
     message(STATUS "SPETABARU Found")
     set(SPETABARU_JUST_LIB TRUE)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
@@ -58,14 +58,14 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
 
     list(APPEND TBF_USE_LIST SPETABARU)
 else()
-    message(STATUS "SPETABARU Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru (please use git submodule init && git submodule update")
+    message(STATUS "SPETABARU Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru (please use git submodule init && git submodule update)")
 endif()
 
 list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
 
 #################################################
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp/CMakeLists.txt")
     message(STATUS "INASTEMP Found")
     set(INASTEMP_JUST_LIB TRUE)
     set(INASTEMP_DO_INSTALL TRUE)
@@ -76,7 +76,7 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp")
         
     list(APPEND TBF_USE_LIST INASTEMP)
 else()
-    message(STATUS "Inastemp Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp (please use git submodule init && git submodule update")
+    message(STATUS "Inastemp Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp (please use git submodule init && git submodule update)")
 endif()
 
 list(APPEND TBF_USE_LIST_AVAILABLE INASTEMP)
