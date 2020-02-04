@@ -242,15 +242,22 @@ public:
     ///////////////////////////////////////////////////////////////////////////
 
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
+        //        for(long int idxLeaf = 0 ; idxLeaf < header.nbLeaves ; ++idxLeaf){
+        //            const auto& leafHeader = leavesViewer.getItem(idxLeaf);
+        //            if(leafHeader.spaceIndex == inIndex){
+        //                return std::optional<long int>(idxLeaf);
+        //            }
+        //        }
         const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
 
-        // TODO use binary search
-        for(long int idxLeaf = 0 ; idxLeaf < header.nbLeaves ; ++idxLeaf){
-            const auto& leafHeader = leavesViewer.getItem(idxLeaf);
-            if(leafHeader.spaceIndex == inIndex){
-                return std::optional<std::reference_wrapper<long int>>(idxLeaf);
-            }
+        const long int idxLeaf = TbfUtils::lower_bound_indexes( 0, header.nbLeaves, inIndex, [&leavesViewer](const auto& idxLeafIterate, const auto& index){
+            const auto& leafHeader = leavesViewer.getItem(idxLeafIterate);
+            return (leafHeader.spaceIndex <= index);
+        });
+
+        if(idxLeaf != header.nbLeaves){
+            return std::optional<long int>(idxLeaf);
         }
         return std::nullopt;
     }
