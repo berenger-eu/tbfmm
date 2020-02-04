@@ -6,7 +6,7 @@ tbfmm:
   script:
     - g++ --version
     - cmake --version
-    - git submodule init
+    - git submodule init deps/inastemp
     - git submodule update
     - mkdir build
     - cd build
@@ -20,7 +20,7 @@ tbfmm-full-coverage:
   script:
     - g++ --version
     - cmake --version
-    - git submodule init
+    - git submodule init deps/inastemp
     - git submodule update
     - mkdir build
     - cd build
