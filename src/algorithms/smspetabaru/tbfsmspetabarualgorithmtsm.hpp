@@ -242,7 +242,7 @@ protected:
 
 public:
     explicit TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = 2)
-        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(inStopUpperLevel),
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(configuration);
@@ -250,7 +250,7 @@ public:
 
     template <class SourceKernelClass>
     TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = 2)
-        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(inStopUpperLevel),
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
