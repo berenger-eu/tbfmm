@@ -139,8 +139,10 @@ inline ArrayPrinterCore<ArrayType> ArrayPrinter(const ArrayType& inArray){
 
 
 template <class Type>
-inline Type* CreateNew(Type&& inObject){
-    return new Type(std::forward<Type>(inObject));
+inline auto CreateNew(Type&& inObject){
+    using RawType = typename std::decay<Type>::type;
+    RawType* ptr = new RawType(std::forward<Type>(inObject));
+    return ptr;
 }
 
 
