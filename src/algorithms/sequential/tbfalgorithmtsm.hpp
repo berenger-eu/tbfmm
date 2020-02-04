@@ -52,7 +52,7 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree){
-        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){// TODO parent
+        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel+1);
 

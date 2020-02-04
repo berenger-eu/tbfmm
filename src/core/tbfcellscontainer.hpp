@@ -174,11 +174,16 @@ public:
             return cellHeader.spaceIndex < index;
         });
 
-        if(idxCell != header.nbCells){
-            return std::optional<long int>(idxCell);
+        if(idxCell == header.nbCells){
+            return std::nullopt;
         }
 
-        return std::nullopt;
+        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        if(cellHeader.spaceIndex != inIndex){
+            return std::nullopt;
+        }
+
+        return std::optional<long int>(idxCell);
     }
 
 
@@ -196,11 +201,16 @@ public:
             return (spaceSystem.getParentIndex(cellHeader.spaceIndex) < parentIndex);
         });
 
-        if(idxCell != header.nbCells){
-            return std::optional<long int>(idxCell);
+        if(idxCell == header.nbCells){
+            return std::nullopt;
         }
 
-        return std::nullopt;
+        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        if(spaceSystem.getParentIndex(cellHeader.spaceIndex) != inParentIndex){
+            return std::nullopt;
+        }
+
+        return std::optional<long int>(idxCell);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////

@@ -253,13 +253,19 @@ public:
 
         const long int idxLeaf = TbfUtils::lower_bound_indexes( 0, header.nbLeaves, inIndex, [&leavesViewer](const auto& idxLeafIterate, const auto& index){
             const auto& leafHeader = leavesViewer.getItem(idxLeafIterate);
-            return (leafHeader.spaceIndex <= index);
+            return (leafHeader.spaceIndex < index);
         });
 
-        if(idxLeaf != header.nbLeaves){
-            return std::optional<long int>(idxLeaf);
+        if(idxLeaf == header.nbLeaves){
+            return std::nullopt;
         }
-        return std::nullopt;
+
+        const auto& leafHeader = leavesViewer.getItem(idxLeaf);
+        if(leafHeader.spaceIndex != inIndex){
+            return std::nullopt;
+        }
+
+        return std::optional<long int>(idxLeaf);
     }
 
     ///////////////////////////////////////////////////////////////////////////
