@@ -1,4 +1,14 @@
-MIT License
+
+=============================================================================
+
+TB-FMM is under MIT License at the excpetion of two directories
+"/src/kernels/unifkernel/" and "/src/kernels/rotationkernel/",
+which are under the CeCILL-C license.
+Using TB-FMM without these kernels is thus under MIT License.
+
+=============================================================================
+
+TB-FMM
 
 Copyright (c) 2019 BRAMAS Berenger
 
