@@ -33,6 +33,8 @@ protected:
     const SpacialConfiguration configuration;
     const SpaceIndexType spaceSystem;
 
+    const long int stopUpperLevel;
+
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
     std::vector<KernelClass> kernels;
 
@@ -40,7 +42,7 @@ protected:
 
     template <class TreeClass>
     void P2M(TreeClass& inTree){
-        if(configuration.getTreeHeight() > 2){
+        if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroupsSource();
             const auto& particleGroups = inTree.getParticleGroupsSource();
 
@@ -74,7 +76,7 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree){
-        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
+        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel+1);
 
@@ -116,7 +118,7 @@ protected:
     void M2L(TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
-        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
+        for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
             auto& cellGroupsTarget = inTree.getCellGroupsAtLevelTarget(idxLevel);
             auto& cellGroupsSource = inTree.getCellGroupsAtLevelSource(idxLevel);
 
@@ -153,7 +155,7 @@ protected:
 
     template <class TreeClass>
     void L2L(TreeClass& inTree){
-        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
+        for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel+1);
 
@@ -193,7 +195,7 @@ protected:
 
     template <class TreeClass>
     void L2P(TreeClass& inTree){
-        if(configuration.getTreeHeight() > 2){
+        if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroupsTarget();
             auto& particleGroups = inTree.getParticleGroupsTarget();
 
@@ -276,8 +278,8 @@ protected:
     }
 
 public:
-    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration)
-        : configuration(inConfiguration), spaceSystem(configuration),
+    explicit TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = 2)
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(inStopUpperLevel),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(configuration);
@@ -285,8 +287,8 @@ public:
     }
 
     template <class SourceKernelClass>
-    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
-        : configuration(inConfiguration), spaceSystem(configuration),
+    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = 2)
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(inStopUpperLevel),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
