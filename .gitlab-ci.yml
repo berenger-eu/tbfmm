@@ -4,6 +4,8 @@ tbfmm:
   tags:
     - medium
   script:
+    - g++ --version
+    - cmake --version
     - git submodule init
     - git submodule update
     - mkdir build
@@ -16,6 +18,8 @@ tbfmm-full-coverage:
   tags:
     - medium
   script:
+    - g++ --version
+    - cmake --version
     - git submodule init
     - git submodule update
     - mkdir build
