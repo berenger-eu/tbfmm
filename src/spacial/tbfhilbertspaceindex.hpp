@@ -237,9 +237,21 @@ public:
     }
 
     auto getInteractionListForIndex(const IndexType inMIndex, const long int inLevel) const{
-        const long int boxLimite = (1 << (inLevel-1));
-
         std::vector<IndexType> indexes;
+
+        if constexpr(IsPeriodic == false){
+            if(inLevel < 2){
+                return indexes;
+            }
+        }
+        else{
+            if(inLevel < 1){
+                return indexes;
+            }
+        }
+
+        const long int boxLimite = (1 << (inLevel));
+        const long int boxLimiteParent = (1 << (inLevel-1));
 
         const IndexType cellIndex = inMIndex;
         const auto cellPos = getBoxPosFromIndex(cellIndex);
@@ -253,16 +265,22 @@ public:
         std::array<long int, Dim> currentParentTest;
 
         for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-            if(parentCellPos[idxDim] == 0){
-                minLimits[idxDim] = 0;
+            if constexpr(IsPeriodic == false){
+                if(parentCellPos[idxDim] == 0){
+                    minLimits[idxDim] = 0;
+                }
+                else{
+                    minLimits[idxDim] = -1;
+                }
+                if(parentCellPos[idxDim]+1 == boxLimiteParent){
+                    maxLimits[idxDim] = 0;
+                }
+                else{
+                    maxLimits[idxDim] = 1;
+                }
             }
             else{
                 minLimits[idxDim] = -1;
-            }
-            if(parentCellPos[idxDim]+1 == boxLimite){
-                maxLimits[idxDim] = 0;
-            }
-            else{
                 maxLimits[idxDim] = 1;
             }
             currentParentTest[idxDim] = minLimits[idxDim];
@@ -286,6 +304,20 @@ public:
             }
 
             auto otherParentPos = TbfUtils::AddVecToVec(parentCellPos, currentParentTest);
+            auto periodicShift = TbfUtils::make_array<long int, Dim>(0);
+
+            if constexpr(IsPeriodic){
+                for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                    if(otherParentPos[idxDim] < 0){
+                        periodicShift[idxDim] = -boxLimite;
+                        otherParentPos[idxDim] += boxLimiteParent;
+                    }
+                    else if(boxLimite <= otherParentPos[idxDim]){
+                        periodicShift[idxDim] = boxLimite;
+                        otherParentPos[idxDim] -= boxLimiteParent;
+                    }
+                }
+            }
             const IndexType otherParentIndex = getIndexFromBoxPos(otherParentPos);
 
             for(long int idxChild = 0 ; idxChild < (1<<Dim) ; ++idxChild){
@@ -294,7 +326,7 @@ public:
 
                 bool isTooClose = true;
                 for(int idxDim = 0 ; isTooClose && idxDim < Dim ; ++idxDim){
-                    if(std::abs(childPos[idxDim] - cellPos[idxDim]) > 1){
+                    if(std::abs(childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) > 1){
                         isTooClose = false;
                     }
                 }
@@ -303,7 +335,7 @@ public:
                     long int arrayPos = 0;
                     for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         arrayPos *= 7;
-                        arrayPos += (childPos[idxDim] - cellPos[idxDim] + 3);
+                        arrayPos += (childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim] + 3);
                     }
                     assert(arrayPos < TbfUtils::lipow(7,Dim));
 
@@ -319,13 +351,27 @@ public:
 
     template <class GroupClass>
     auto getInteractionListForBlock(const GroupClass& inGroup, const long int inLevel, const bool testSelfInclusion = true) const{
-        const long int boxLimite = (1 << (inLevel-1));
+        assert(inLevel >= 0);
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesInternal;
         indexesInternal.reserve(inGroup.getNbCells());
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesExternal;
         indexesExternal.reserve(inGroup.getNbCells());
+
+        if constexpr(IsPeriodic == false){
+            if(inLevel < 2){
+                return std::make_pair(std::move(indexesInternal), std::move(indexesExternal));
+            }
+        }
+        else{
+            if(inLevel < 1){
+                return std::make_pair(std::move(indexesInternal), std::move(indexesExternal));
+            }
+        }
+
+        const long int boxLimite = (1 << (inLevel));
+        const long int boxLimiteParent = (1 << (inLevel-1));
 
         for(long int idxCell = 0 ; idxCell < inGroup.getNbCells() ; ++idxCell){
             const IndexType cellIndex = inGroup.getCellSpacialIndex(idxCell);
@@ -340,16 +386,22 @@ public:
             std::array<long int, Dim> currentParentTest;
 
             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                if(parentCellPos[idxDim] == 0){
-                    minLimits[idxDim] = 0;
+                if constexpr(IsPeriodic == false){
+                    if(parentCellPos[idxDim] == 0){
+                        minLimits[idxDim] = 0;
+                    }
+                    else{
+                        minLimits[idxDim] = -1;
+                    }
+                    if(parentCellPos[idxDim]+1 == boxLimiteParent){
+                        maxLimits[idxDim] = 0;
+                    }
+                    else{
+                        maxLimits[idxDim] = 1;
+                    }
                 }
                 else{
                     minLimits[idxDim] = -1;
-                }
-                if(parentCellPos[idxDim]+1 == boxLimite){
-                    maxLimits[idxDim] = 0;
-                }
-                else{
                     maxLimits[idxDim] = 1;
                 }
                 currentParentTest[idxDim] = minLimits[idxDim];
@@ -373,7 +425,22 @@ public:
                 }
 
                 auto otherParentPos = TbfUtils::AddVecToVec(parentCellPos, currentParentTest);
+                auto periodicShift = TbfUtils::make_array<long int, Dim>(0);
+
+                if constexpr(IsPeriodic){
+                    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                        if(otherParentPos[idxDim] < 0){
+                            periodicShift[idxDim] = -boxLimite;
+                            otherParentPos[idxDim] += boxLimiteParent;
+                        }
+                        else if(boxLimite <= otherParentPos[idxDim]){
+                            periodicShift[idxDim] = boxLimite;
+                            otherParentPos[idxDim] -= boxLimiteParent;
+                        }
+                    }
+                }
                 const IndexType otherParentIndex = getIndexFromBoxPos(otherParentPos);
+
 
                 for(long int idxChild = 0 ; idxChild < (1<<Dim) ; ++idxChild){
                     const IndexType childIndex = getChildIndexFromParent(otherParentIndex, idxChild);
@@ -381,7 +448,7 @@ public:
 
                     bool isTooClose = true;
                     for(int idxDim = 0 ; isTooClose && idxDim < Dim ; ++idxDim){
-                        if(std::abs(childPos[idxDim] - cellPos[idxDim]) > 1){
+                        if(std::abs(childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) > 1){
                             isTooClose = false;
                         }
                     }
@@ -390,7 +457,7 @@ public:
                         long int arrayPos = 0;
                         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                             arrayPos *= 7;
-                            arrayPos += (childPos[idxDim] - cellPos[idxDim] + 3);
+                            arrayPos += (childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim] + 3);
                         }
                         assert(arrayPos < TbfUtils::lipow(7,Dim));
 
@@ -421,6 +488,7 @@ public:
 
 
     auto getNeighborListForIndex(const IndexType cellIndex, const long int inLevel, const bool upperExclusion = false) const{
+        assert(inLevel >= 0);
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<IndexType> indexes;
@@ -433,16 +501,22 @@ public:
         std::array<long int, Dim> currentTest;
 
         for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-            if(cellPos[idxDim] == 0){
-                minLimits[idxDim] = 0;
+            if constexpr(IsPeriodic == false){
+                if(cellPos[idxDim] == 0){
+                    minLimits[idxDim] = 0;
+                }
+                else{
+                    minLimits[idxDim] = -1;
+                }
+                if(cellPos[idxDim]+1 == boxLimite){
+                    maxLimits[idxDim] = 0;
+                }
+                else{
+                    maxLimits[idxDim] = 1;
+                }
             }
             else{
                 minLimits[idxDim] = -1;
-            }
-            if(cellPos[idxDim]+1 == boxLimite){
-                maxLimits[idxDim] = 0;
-            }
-            else{
                 maxLimits[idxDim] = 1;
             }
             currentTest[idxDim] = minLimits[idxDim];
@@ -464,22 +538,28 @@ public:
                 }
             }
 
-            auto otherPos = TbfUtils::AddVecToVec(cellPos, currentTest);
-
             bool isSelfCell = true;
             for(int idxDim = 0 ; isSelfCell && idxDim < Dim ; ++idxDim){
-                if(std::abs(otherPos[idxDim] - cellPos[idxDim]) > 0){
+                if(currentTest[idxDim] != 0){
                     isSelfCell = false;
                 }
             }
 
             if(isSelfCell == false){
+                auto otherPos = TbfUtils::AddVecToVec(cellPos, currentTest);
+
                 long int arrayPos = 0;
                 for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                     arrayPos *= 3;
                     arrayPos += (otherPos[idxDim] - cellPos[idxDim] + 1);
                 }
                 assert(arrayPos < TbfUtils::lipow(3, Dim));
+
+                if constexpr(IsPeriodic){
+                    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                        otherPos[idxDim] = ((otherPos[idxDim]+boxLimite)%boxLimite);
+                    }
+                }
 
                 const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
@@ -496,6 +576,7 @@ public:
 
     template <class GroupClass>
     auto getNeighborListForBlock(const GroupClass& inGroup, const long int inLevel, const bool upperExclusion = false, const bool testSelfInclusion = true) const{
+        assert(inLevel >= 0);
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<TbfXtoXInteraction<IndexType>> indexesInternal;
@@ -513,16 +594,22 @@ public:
             std::array<long int, Dim> currentTest;
 
             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                if(cellPos[idxDim] == 0){
-                    minLimits[idxDim] = 0;
+                if constexpr(IsPeriodic == false){
+                    if(cellPos[idxDim] == 0){
+                        minLimits[idxDim] = 0;
+                    }
+                    else{
+                        minLimits[idxDim] = -1;
+                    }
+                    if(cellPos[idxDim]+1 == boxLimite){
+                        maxLimits[idxDim] = 0;
+                    }
+                    else{
+                        maxLimits[idxDim] = 1;
+                    }
                 }
                 else{
                     minLimits[idxDim] = -1;
-                }
-                if(cellPos[idxDim]+1 == boxLimite){
-                    maxLimits[idxDim] = 0;
-                }
-                else{
                     maxLimits[idxDim] = 1;
                 }
                 currentTest[idxDim] = minLimits[idxDim];
@@ -545,22 +632,28 @@ public:
                     }
                 }
 
-                auto otherPos = TbfUtils::AddVecToVec(cellPos, currentTest);
-
                 bool isSelfCell = true;
                 for(int idxDim = 0 ; isSelfCell && idxDim < Dim ; ++idxDim){
-                    if(std::abs(otherPos[idxDim] - cellPos[idxDim]) > 0){
+                    if(currentTest[idxDim] != 0){
                         isSelfCell = false;
                     }
                 }
 
                 if(isSelfCell == false){
+                    auto otherPos = TbfUtils::AddVecToVec(cellPos, currentTest);
+
                     long int arrayPos = 0;
                     for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         arrayPos *= 3;
                         arrayPos += (otherPos[idxDim] - cellPos[idxDim] + 1);
                     }
                     assert(arrayPos < TbfUtils::lipow(3, Dim));
+
+                    if constexpr(IsPeriodic){
+                        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                            otherPos[idxDim] = ((otherPos[idxDim]+boxLimite)%boxLimite);
+                        }
+                    }
 
                     const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
@@ -617,6 +710,7 @@ public:
 
         return indexesSelf;
     }
+
 
     static long int constexpr getNbChildrenPerCell() {
         return 1L << Dim;

@@ -180,6 +180,20 @@ long int lower_bound_indexes(long int first, const long int last, const T& value
     return first;
 }
 
+
+template <typename T, std::size_t...Is>
+constexpr std::array<T, sizeof...(Is)>
+make_array_core(const T& value, std::index_sequence<Is...>)
+{
+    return {{(static_cast<void>(Is), value)...}};
+}
+
+template <typename T, std::size_t N>
+constexpr std::array<T, N> make_array(const T& value)
+{
+    return make_array_core(value, std::make_index_sequence<N>());
+}
+
 }
 
 #endif

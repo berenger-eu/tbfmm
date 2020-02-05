@@ -15,24 +15,24 @@
 #endif
 
 struct TbfAlgorithmSelecter{
-    template<typename RealType, class KernelClass>
+    template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_SPETABARU
-    using type = TbfSmSpetabaruAlgorithm<RealType, KernelClass>;
+    using type = TbfSmSpetabaruAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
-    using type = TbfOpenmpAlgorithm<RealType, KernelClass>;
+    using type = TbfOpenmpAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else
-    using type = TbfAlgorithm<RealType, KernelClass>;
+    using type = TbfAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #endif
 };
 
 struct TbfAlgorithmSelecterTsm{
-    template<typename RealType, class KernelClass>
+    template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_SPETABARU
-    using type = TbfSmSpetabaruAlgorithmTsm<RealType, KernelClass>;
+    using type = TbfSmSpetabaruAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
-    using type = TbfOpenmpAlgorithmTsm<RealType, KernelClass>;
+    using type = TbfOpenmpAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #else
-    using type = TbfAlgorithmTsm<RealType, KernelClass>;
+    using type = TbfAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #endif
 };
 
