@@ -131,7 +131,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
 
             tree.applyToAllLeaves([this, &tree, &spacialSystem, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
-                auto indexes = spacialSystem.getNeighborListForBlock(leafHeader.spaceIndex, TreeHeight-1);
+                auto indexes = spacialSystem.getNeighborListForIndex(leafHeader.spaceIndex, TreeHeight-1);
                 long int totalSum = 0;
                 for(auto index : indexes){
                     auto groupForLeaf = tree.findGroupWithLeaf(index);

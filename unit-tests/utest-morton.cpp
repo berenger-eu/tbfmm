@@ -83,7 +83,7 @@ class TestMorton : public UTester< TestMorton > {
                 }
 
                 {
-                    const auto interactionList = morton.getNeighborListForBlock(idx, idxLevel);
+                    const auto interactionList = morton.getNeighborListForIndex(idx, idxLevel);
                     for(auto interaction : interactionList){
                         const auto posInteraction = morton.getBoxPosFromIndex(interaction);
 

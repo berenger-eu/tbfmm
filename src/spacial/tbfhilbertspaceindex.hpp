@@ -420,7 +420,7 @@ public:
     }
 
 
-    auto getNeighborListForBlock(const IndexType cellIndex, const long int inLevel, const bool upperExclusion = false) const{
+    auto getNeighborListForIndex(const IndexType cellIndex, const long int inLevel, const bool upperExclusion = false) const{
         const long int boxLimite = (1 << (inLevel));
 
         std::vector<IndexType> indexes;

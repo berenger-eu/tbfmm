@@ -83,7 +83,7 @@ class TestHilbert : public UTester< TestHilbert > {
                 }
 
                 {
-                    const auto interactionList = hilbert.getNeighborListForBlock(idx, idxLevel);
+                    const auto interactionList = hilbert.getNeighborListForIndex(idx, idxLevel);
                     for(auto interaction : interactionList){
                         const auto posInteraction = hilbert.getBoxPosFromIndex(interaction);
 
