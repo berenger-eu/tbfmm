@@ -72,21 +72,21 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass&& inIndexes, GroupContain
 }
 
 
-enum LFmmOperations {
-    LFmmP2P  = (1 << 0),
-    LFmmP2M  = (1 << 1),
-    LFmmM2M  = (1 << 2),
-    LFmmM2L  = (1 << 3),
-    LFmmL2L  = (1 << 4),
-    LFmmL2P  = (1 << 5),
+enum TbfOperations {
+    TbfP2P  = (1 << 0),
+    TbfP2M  = (1 << 1),
+    TbfM2M  = (1 << 2),
+    TbfM2L  = (1 << 3),
+    TbfL2L  = (1 << 4),
+    TbfL2P  = (1 << 5),
 
-    LFmmNearField = LFmmP2P,
-    LFmmFarField  = (LFmmP2M|LFmmM2M|LFmmM2L|LFmmL2L|LFmmL2P),
+    TbfNearField = TbfP2P,
+    TbfFarField  = (TbfP2M|TbfM2M|TbfM2L|TbfL2L|TbfL2P),
 
-    LFmmNearAndFarFields = (LFmmNearField|LFmmFarField)
+    TbfNearAndFarFields = (TbfNearField|TbfFarField)
 };
 
-class LFmmOperationsPriorities {
+class TbfOperationsPriorities {
     const int treeHeight;
 
     const int prioP2P;
@@ -97,7 +97,7 @@ class LFmmOperationsPriorities {
     const int prioP2M;
 
 public:
-    LFmmOperationsPriorities(const long int inTreeHeight)
+    TbfOperationsPriorities(const long int inTreeHeight)
         : treeHeight(int(inTreeHeight)),
           prioP2P(0),
           prioL2P(1),

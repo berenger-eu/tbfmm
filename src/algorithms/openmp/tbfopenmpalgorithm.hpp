@@ -38,7 +38,7 @@ protected:
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
     std::vector<KernelClass> kernels;
 
-    TbfAlgorithmUtils::LFmmOperationsPriorities priorities;
+    TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
     template <class TreeClass>
     void P2M(TreeClass& inTree){
@@ -308,7 +308,7 @@ public:
     }
 
     template <class TreeClass>
-    void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::LFmmOperations::LFmmNearAndFarFields){
+    void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
         increaseNumberOfKernels();
@@ -317,22 +317,22 @@ public:
 #pragma omp master
 {
 
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2M){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
             P2M(inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2M){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){
             M2M(inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2L){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfM2L){
             M2L(inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2L){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
             L2L(inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2P){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
             L2P(inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2P){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
             P2P(inTree);
         }
 #pragma omp taskwait

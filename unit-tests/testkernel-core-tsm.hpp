@@ -71,7 +71,7 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
                                                                                         particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
-            algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2M | TbfAlgorithmUtils::LFmmM2M | TbfAlgorithmUtils::LFmmM2L);
+            algorithm.execute(tree, TbfAlgorithmUtils::TbfP2M | TbfAlgorithmUtils::TbfM2M | TbfAlgorithmUtils::TbfM2L);
 
             tree.applyToAllLeavesSource([this, &tree, NbParticles, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, auto&& /*particleRhsPtr*/){
@@ -128,7 +128,7 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
                                                                                         particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
-            algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2P);
+            algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
             tree.applyToAllLeavesTarget([this, &tree, &spacialSystem, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
