@@ -16,5 +16,8 @@ using TbfDefaultSpaceIndexTypePeriodic = TbfMortonSpaceIndex<3, TbfSpacialConfig
 
 constexpr static long int TbfDefaultMemoryAlignement = 64;
 
+constexpr static long int TbfDefaultLastLevel = 2;
+constexpr static long int TbfDefaultLastLevelPeriodic = 1;
+
 #endif
 

@@ -10,7 +10,7 @@
 #include <array>
 #include <cassert>
 
-template <long int Dim_T, class ConfigurationClass_T>
+template <long int Dim_T, class ConfigurationClass_T, const bool IsPeriodic_v = false>
 class TbfHilbertSpaceIndex{
 public:
     static_assert (Dim_T > 0, "Dimension must be greater than 0" );
@@ -21,6 +21,7 @@ public:
     using RealType = typename ConfigurationClass::RealType;
 
     static constexpr long int Dim = Dim_T;
+    static constexpr bool IsPeriodic = IsPeriodic_v;
 
 protected:
     const ConfigurationClass configuration;

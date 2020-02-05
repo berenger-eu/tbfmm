@@ -189,12 +189,12 @@ protected:
     }
 
 public:
-    explicit TbfAlgorithm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = 2)
+    explicit TbfAlgorithm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)), kernelWrapper(configuration), kernel(configuration){
     }
 
     template <class SourceKernelClass>
-    TbfAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = 2)
+    TbfAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)), kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)){
     }
 

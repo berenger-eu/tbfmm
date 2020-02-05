@@ -48,7 +48,7 @@ int main(){
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
     using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
-    const long int LastWorkingLevel = 1;
+    const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 

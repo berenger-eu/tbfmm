@@ -278,7 +278,7 @@ protected:
     }
 
 public:
-    explicit TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = 2)
+    explicit TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -287,7 +287,7 @@ public:
     }
 
     template <class SourceKernelClass>
-    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = 2)
+    TbfOpenmpAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
