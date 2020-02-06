@@ -83,7 +83,11 @@ enum TbfOperations {
     TbfNearField = TbfP2P,
     TbfFarField  = (TbfP2M|TbfM2M|TbfM2L|TbfL2L|TbfL2P),
 
-    TbfNearAndFarFields = (TbfNearField|TbfFarField)
+    TbfNearAndFarFields = (TbfNearField|TbfFarField),
+
+    TbfBottomToTopStages = (TbfL2L|TbfL2P),
+    TbfTopToBottomStages = (TbfP2M|TbfM2M),
+    TbfTransferStages = (TbfM2L|TbfP2P)
 };
 
 class TbfOperationsPriorities {

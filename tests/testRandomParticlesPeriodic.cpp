@@ -10,6 +10,7 @@
 #include "utils/tbftimer.hpp"
 #include "kernels/counterkernels/tbfinteractioncounter.hpp"
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
+#include "algorithms/tbfalgorithmperiodictoptree.hpp"
 
 
 #include <iostream>
@@ -60,21 +61,33 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    {
+    for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
+        std::cout << "Perform the periodic FMM with parameters:" << std::endl;
+
+
         TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
+        TbfAlgorithmPeriodicTopTree<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, MultipoleClass, LocalClass, SpacialSystemPeriodic> topAlgorithm(configuration, idxExtraLevels);
 
         TbfTimer timerExecute;
 
-        algorithm.execute(tree);
+        // Bottom to top
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfBottomToTopStages);
+        // Periodic at the top (could be done in parallel with TbfTransferStages)
+        topAlgorithm.execute(tree);
+        // Transfer (could be done in parallel with topAlgorithm.execute)
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfTransferStages);
+        // Top to bottom
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfTopToBottomStages);
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
     }
 
-    { // Same as above but with interaction counter
+    for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){ // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType, SpacialSystemPeriodic>>;
 
         TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
+        TbfAlgorithmPeriodicTopTree<RealType, KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic> topAlgorithm(configuration, idxExtraLevel);
 
         TbfTimer timerExecute;
 
@@ -84,61 +97,22 @@ int main(){
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
 
         // Print the counter's result
-        auto counters = typename KernelClass::ReduceType();
-
-        algorithm.applyToAllKernels([&](const auto& inKernel){
-            counters = KernelClass::ReduceType::Reduce(counters, inKernel.getReduceData());
-        });
-
-        std::cout << counters << std::endl;
-    }
-
-    { // Same as above but with interaction timer
-        using KernelClass = TbfInteractionTimer<TbfTestKernel<RealType, SpacialSystemPeriodic>>;
-
-        TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
-
-        TbfTimer timerExecute;
-
-        algorithm.execute(tree);
-
-        timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
-
-        // Print the counter's result
-        auto timers = typename KernelClass::ReduceType();
-
-        algorithm.applyToAllKernels([&](const auto& inKernel){
-            timers = KernelClass::ReduceType::Reduce(timers, inKernel.getReduceData());
-        });
-
-        std::cout << timers << std::endl;
-    }
-
-
-    { // Same as above but with interaction counter & timer
-        using KernelClass = TbfInteractionCounter<TbfInteractionTimer<TbfTestKernel<RealType, SpacialSystemPeriodic>>>;
-
-        TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
-
-        TbfTimer timerExecute;
-
-        algorithm.execute(tree);
-
-        timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
-
-        // Print the counter's result
-        auto counters = typename KernelClass::TbfInteractionCounter::ReduceType();
-        auto timers = typename KernelClass::TbfInteractionTimer::ReduceType();
-
-        algorithm.applyToAllKernels([&](const auto& inKernel){
-            counters = KernelClass::TbfInteractionCounter::ReduceType::Reduce(counters, inKernel.KernelClass::getReduceData());
-            timers = KernelClass::TbfInteractionTimer::ReduceType::Reduce(timers, inKernel.TbfInteractionTimer<TbfTestKernel<RealType, SpacialSystemPeriodic>>::getReduceData());
-        });
-
-        std::cout << counters << std::endl;
-        std::cout << timers << std::endl;
+        {
+            std::cout << "Counter for the regular FMM (periodic):" << std::endl;
+            auto counters = typename KernelClass::ReduceType();
+            algorithm.applyToAllKernels([&](const auto& inKernel){
+                counters = KernelClass::ReduceType::Reduce(counters, inKernel.getReduceData());
+            });
+            std::cout << counters << std::endl;
+        }
+        {
+            std::cout << "Counter for the extra FMM at the top:" << std::endl;
+            auto counters = typename KernelClass::ReduceType();
+            topAlgorithm.applyToAllKernels([&](const auto& inKernel){
+                counters = KernelClass::ReduceType::Reduce(counters, inKernel.getReduceData());
+            });
+            std::cout << counters << std::endl;
+        }
     }
 
     return 0;
