@@ -18,9 +18,9 @@
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestRotationKernelInteraction : public UTester< TestRotationKernelInteraction<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestRotationKernelInteraction<RealType, AlgorithmClass> >;
+template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+class TestRotationKernelInteraction : public UTester< TestRotationKernelInteraction<RealType, TestAlgorithmClass> > {
+    using Parent = UTester< TestRotationKernelInteraction<RealType, TestAlgorithmClass> >;
 
     template <template <typename T3> class KernelInteractionCounter>
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
@@ -61,17 +61,26 @@ class TestRotationKernelInteraction : public UTester< TestRotationKernelInteract
 
         using KernelClass = KernelInteractionCounter<FRotationKernel<RealType, P>>;
 
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+
+        using TreeClass = TbfTree<RealType,
+                                  RealType,
+                                  NbDataValuesPerParticle,
+                                  RealType,
+                                  NbRhsValuesPerParticle,
+                                  MultipoleClass,
+                                  LocalClass>;
+
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-        std::unique_ptr<AlgorithmClass<RealType, KernelClass>> algorithm(new AlgorithmClass<RealType, KernelClass>(configuration));
+        std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));
 
         TbfTimer timerExecute;
 
@@ -176,7 +185,7 @@ class TestRotationKernelInteraction : public UTester< TestRotationKernelInteract
     }
 
     void SetTests() {
-        Parent::AddTest(&TestRotationKernelInteraction<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
+        Parent::AddTest(&TestRotationKernelInteraction<RealType, TestAlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
     }
 };
 

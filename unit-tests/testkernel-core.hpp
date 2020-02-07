@@ -47,6 +47,16 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         using MultipoleClass = std::array<long int,1>;
         using LocalClass = std::array<long int,1>;
 
+        using TreeClass = TbfTree<RealType,
+                                  RealType,
+                                  NbDataValuesPerParticle,
+                                  long int,
+                                  NbRhsValuesPerParticle,
+                                  MultipoleClass,
+                                  LocalClass>;
+
+        /////////////////////////////////////////////////////////////////////////////////////////
+
         TbfDefaultSpaceIndexType<RealType> spacialSystem(configuration);
 
         {
@@ -64,8 +74,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         /////////////////////////////////////////////////////////////////////////////////////////
 
         if(TreeHeight > 2){
-            TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositions, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2M | TbfAlgorithmUtils::TbfM2M | TbfAlgorithmUtils::TbfM2L);
@@ -123,8 +132,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         }
 
         {
-            TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositions, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
@@ -150,8 +158,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         }
 
         {
-            TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositions, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree);

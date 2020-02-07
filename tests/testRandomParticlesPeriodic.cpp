@@ -50,23 +50,30 @@ int main(){
     const bool inOneGroupPerParent = false;
     using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
     const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
+    using TreeClass = TbfTree<RealType,
+                              RealType,
+                              NbDataValuesPerParticle,
+                              long int,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass,
+                              SpacialSystemPeriodic>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass, SpacialSystemPeriodic> tree(configuration, inNbElementsPerBlock,
-                                                                                particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-        std::cout << "Perform the periodic FMM with parameters:" << std::endl;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, SpacialSystemPeriodic>;
+        using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
 
-
-        TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
-        TbfAlgorithmPeriodicTopTree<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, MultipoleClass, LocalClass, SpacialSystemPeriodic> topAlgorithm(configuration, idxExtraLevels);
+        AlgorithmClass algorithm(configuration, LastWorkingLevel);
+        TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
 
         TbfTimer timerExecute;
 
@@ -81,13 +88,24 @@ int main(){
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+        std::cout << "Perform the periodic FMM with parameters:" << std::endl;
+        std::cout << " - idxExtraLevel: " << idxExtraLevel << std::endl;
+        std::cout << " - Nb repeat per dim: " << topAlgorithm.getNbRepetitionsPerDim() << std::endl;
+        std::cout << " - Number of times the real box is duplicated: " << topAlgorithm.getNbTotalRepetitions() << std::endl;
+        std::cout << " - Repeatition interves: " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().first)
+                  << " " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().second) << std::endl;
+        std::cout << " - original configuration: " << configuration << std::endl;
+        std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
     }
 
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){ // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType, SpacialSystemPeriodic>>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic>;
+        using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
 
-        TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic> algorithm(configuration, LastWorkingLevel);
-        TbfAlgorithmPeriodicTopTree<RealType, KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic> topAlgorithm(configuration, idxExtraLevel);
+        AlgorithmClass algorithm(configuration, LastWorkingLevel);
+        TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
 
         TbfTimer timerExecute;
 
@@ -95,6 +113,15 @@ int main(){
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+
+        std::cout << "Perform the periodic FMM with parameters:" << std::endl;
+        std::cout << " - idxExtraLevel: " << idxExtraLevel << std::endl;
+        std::cout << " - Nb repeat per dim: " << topAlgorithm.getNbRepetitionsPerDim() << std::endl;
+        std::cout << " - Number of times the real box is duplicated: " << topAlgorithm.getNbTotalRepetitions() << std::endl;
+        std::cout << " - Repeatition interves: " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().first)
+                  << " " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().second) << std::endl;
+        std::cout << " - original configuration: " << configuration << std::endl;
+        std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
 
         // Print the counter's result
         {

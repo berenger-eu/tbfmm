@@ -16,9 +16,9 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestRotationKernel : public UTester< TestRotationKernel<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestRotationKernel<RealType, AlgorithmClass> >;
+template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgorithmClass> > {
+    using Parent = UTester< TestRotationKernel<RealType, TestAlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -58,17 +58,25 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
 
         using KernelClass = FRotationKernel<RealType, P>;
 
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using TreeClass = TbfTree<RealType,
+                                  RealType,
+                                  NbDataValuesPerParticle,
+                                  RealType,
+                                  NbRhsValuesPerParticle,
+                                  MultipoleClass,
+                                  LocalClass>;
+
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-        std::unique_ptr<AlgorithmClass<RealType, KernelClass>> algorithm(new AlgorithmClass<RealType, KernelClass>(configuration));
+        std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));
 
         TbfTimer timerExecute;
 
@@ -165,7 +173,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, Algorith
     }
 
     void SetTests() {
-        Parent::AddTest(&TestRotationKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
+        Parent::AddTest(&TestRotationKernel<RealType, TestAlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
     }
 };
 

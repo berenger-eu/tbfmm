@@ -72,7 +72,7 @@ protected:
                          configuration.getTreeHeight()-1, TbfUtils::make_const(children), multipoles[configuration.getTreeHeight()-1],
                          positionsOfChildren, nbChildren);
         }
-        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel <= 2 ; --idxLevel){
+        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;

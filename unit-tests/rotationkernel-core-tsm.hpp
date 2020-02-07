@@ -16,9 +16,9 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestRotationKernelTsm<RealType, AlgorithmClass> >;
+template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> > {
+    using Parent = UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -67,18 +67,26 @@ class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, Al
         using LocalClass = std::array<std::complex<RealType>, VectorSize>;
 
         using KernelClass = FRotationKernel<RealType, P>;
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using TreeClass = TbfTreeTsm<RealType,
+                                     RealType,
+                                     NbDataValuesPerParticle,
+                                     RealType,
+                                     NbRhsValuesPerParticle,
+                                     MultipoleClass,
+                                     LocalClass>;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositionsSource), TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositionsSource),
+                       TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-        std::unique_ptr<AlgorithmClass<RealType, KernelClass>> algorithm(new AlgorithmClass<RealType, KernelClass>(configuration));
+        std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));
 
         TbfTimer timerExecute;
 
@@ -187,7 +195,7 @@ class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, Al
     }
 
     void SetTests() {
-        Parent::AddTest(&TestRotationKernelTsm<RealType, AlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
+        Parent::AddTest(&TestRotationKernelTsm<RealType, TestAlgorithmClass>::TestBasic, "Basic test based on the rotation kernel");
     }
 };
 

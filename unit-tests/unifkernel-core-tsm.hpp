@@ -16,9 +16,9 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestUnifKernelTsm<RealType, AlgorithmClass> >;
+template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, TestAlgorithmClass> > {
+    using Parent = UTester< TestUnifKernelTsm<RealType, TestAlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -77,19 +77,26 @@ class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, AlgorithmC
         using MultipoleClass = MultipoleData;
         using LocalClass = LocalData;
         using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using TreeClass = TbfTreeTsm<RealType,
+                                     RealType,
+                                     NbDataValuesPerParticle,
+                                     RealType,
+                                     NbRhsValuesPerParticle,
+                                     MultipoleClass,
+                                     LocalClass>;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositionsSource), TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositionsSource), TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
         FInterpMatrixKernelR<RealType> interpolator;
-        AlgorithmClass<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+        TestAlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
 
         TbfTimer timerExecute;
 
@@ -198,7 +205,7 @@ class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, AlgorithmC
     }
 
     void SetTests() {
-        Parent::AddTest(&TestUnifKernelTsm<RealType, AlgorithmClass>::TestBasic, "Basic test based on the uniform kernel");
+        Parent::AddTest(&TestUnifKernelTsm<RealType, TestAlgorithmClass>::TestBasic, "Basic test based on the uniform kernel");
     }
 };
 
