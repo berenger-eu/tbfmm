@@ -67,6 +67,7 @@ protected:
             }
 
             assert(std::size(inTree.getCellGroupsAtLevel(idxLevel)));
+            assert(std::size(inTree.getCellGroupsAtLevel(0)));
 
             kernel.M2M(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          configuration.getTreeHeight()-1, TbfUtils::make_const(children), multipoles[configuration.getTreeHeight()-1],
@@ -84,6 +85,7 @@ protected:
                 nbChildren += 1;
             }
 
+            assert(std::size(inTree.getCellGroupsAtLevel(0)));
             kernel.M2M(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          idxLevel, TbfUtils::make_const(children), multipoles[idxLevel],
                          positionsOfChildren, nbChildren);
@@ -92,11 +94,11 @@ protected:
 
     template <class TreeClass>
     void M2L(TreeClass& inTree){
-        if(nbLevelsAbove0 == -1){
+        if(nbLevelsAbove0 == 0){
             const auto cellPos = TbfUtils::make_array<long int, Dim>(3);
             const long int idxLevel = 2;
             std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-            long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+            long int positionsOfNeighbors[316 /*TODO*/];
             long int nbNeighbors = 0;
 
             std::array<long int, Dim> minLimits = TbfUtils::make_array<long int, Dim>(-3);
@@ -129,7 +131,7 @@ protected:
                     auto childPos = TbfUtils::AddVecToVec(cellPos, currentCellTest);
                     const IndexType childIndex = spaceSystem.getIndexFromBoxPos(childPos);
 
-                    assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                    assert(nbNeighbors < 316 /*TODO*/);
                     neighbors.emplace_back(multipoles[idxLevel]);
                     positionsOfNeighbors[nbNeighbors] = (childIndex);
                     nbNeighbors += 1;
@@ -137,6 +139,9 @@ protected:
 
                 currentCellTest[Dim-1] += 1;
             }
+
+
+            assert(std::size(inTree.getCellGroupsAtLevel(0)));
 
             kernel.M2L(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          idxLevel, TbfUtils::make_const(neighbors), positionsOfNeighbors, nbNeighbors, locals[idxLevel]);
@@ -198,6 +203,7 @@ protected:
                     currentCellTest[Dim-1] += 1;
                 }
 
+                assert(std::size(inTree.getCellGroupsAtLevel(0)));
                 kernel.M2L(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                              idxLevel, TbfUtils::make_const(neighbors), positionsOfNeighbors, nbNeighbors, locals[idxLevel]);
             }
@@ -355,7 +361,7 @@ public:
 
     explicit TbfAlgorithmPeriodicTopTree(const SpacialConfiguration& inConfiguration, const long int inNbLevelsAbove0)
         : originalConfiguration(inConfiguration), configuration(GenerateAboveTreeConfiguration(inConfiguration, inNbLevelsAbove0)),
-          originalSpaceSystem(originalConfiguration), spaceSystem(configuration), nbLevelsAbove0(std::max(0L, inNbLevelsAbove0)), kernel(configuration){
+          originalSpaceSystem(originalConfiguration), spaceSystem(configuration), nbLevelsAbove0(inNbLevelsAbove0), kernel(configuration){
 
         multipoles.resize(configuration.getTreeHeight());
         locals.resize(configuration.getTreeHeight());
@@ -364,7 +370,7 @@ public:
     template <class SourceKernelClass>
     TbfAlgorithmPeriodicTopTree(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inNbLevelsAbove0)
         : originalConfiguration(inConfiguration), configuration(GenerateAboveTreeConfiguration(inConfiguration, inNbLevelsAbove0)),
-          originalSpaceSystem(originalConfiguration), spaceSystem(configuration), nbLevelsAbove0(std::max(0L, inNbLevelsAbove0)), kernel(std::forward<SourceKernelClass>(inKernel)){
+          originalSpaceSystem(originalConfiguration), spaceSystem(configuration), nbLevelsAbove0(inNbLevelsAbove0), kernel(std::forward<SourceKernelClass>(inKernel)){
 
         multipoles.resize(configuration.getTreeHeight());
         locals.resize(configuration.getTreeHeight());
@@ -372,6 +378,11 @@ public:
 
     template <class TreeClass>
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
+        // This has been done already by the real periodic FMM
+        if(nbLevelsAbove0 < 0){
+            return;
+        }
+
         assert(originalConfiguration == inTree.getSpacialConfiguration());
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){

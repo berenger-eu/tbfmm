@@ -109,7 +109,14 @@ int main(){
 
         TbfTimer timerExecute;
 
-        algorithm.execute(tree);
+        // Bottom to top
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfBottomToTopStages);
+        // Periodic at the top (could be done in parallel with TbfTransferStages)
+        topAlgorithm.execute(tree);
+        // Transfer (could be done in parallel with topAlgorithm.execute)
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfTransferStages);
+        // Top to bottom
+        algorithm.execute(tree, TbfAlgorithmUtils::TbfTopToBottomStages);
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
