@@ -38,7 +38,7 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree){
-        {
+        if(inTree.getHeight() > 1){
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
@@ -72,6 +72,18 @@ protected:
             kernel.M2M(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          configuration.getTreeHeight()-1, TbfUtils::make_const(children), multipoles[configuration.getTreeHeight()-1],
                          positionsOfChildren, nbChildren);
+        }
+        else{
+            const auto& particleGroups = inTree.getParticleGroups();
+            assert(std::size(particleGroups) == 1);
+            auto currentParticleGroup = particleGroups.cbegin();
+            assert(currentParticleGroup->getNbLeaves() == 1);
+            const long int idxLeaf = 1;
+            assert(currentParticleGroup->getLeafSpacialIndex(idxLeaf) == 0);
+            const auto& symbData = currentParticleGroup->getLeafSymbData(idxLeaf);
+            const auto& particlesData = currentParticleGroup->getParticleData(idxLeaf);
+            kernel.P2M(symbData, currentParticleGroup->getParticleIndexes(idxLeaf), particlesData, currentParticleGroup->getNbParticlesInLeaf(idxLeaf),
+                         multipoles[configuration.getTreeHeight()-1]);
         }
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
@@ -228,7 +240,7 @@ protected:
                          idxLevel, TbfUtils::make_const(locals[idxLevel]), children,
                          positionsOfChildren, nbChildren);
         }
-        {
+        if(inTree.getHeight() > 1){
             std::vector<std::reference_wrapper<CellLocalType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
@@ -260,6 +272,20 @@ protected:
             kernel.L2L(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          configuration.getTreeHeight()-1, TbfUtils::make_const(locals[configuration.getTreeHeight()-1]), children,
                          positionsOfChildren, nbChildren);
+        }
+        else{
+            auto& particleGroups = inTree.getParticleGroups();
+            assert(std::size(particleGroups) == 1);
+            auto currentParticleGroup = particleGroups.begin();
+            assert(currentParticleGroup->getNbLeaves() == 1);
+            const long int idxLeaf = 1;
+            assert(currentParticleGroup->getLeafSpacialIndex(idxLeaf) == 0);
+            const auto& symbData = currentParticleGroup->getLeafSymbData(idxLeaf);
+            const auto& particlesData = currentParticleGroup->getParticleData(idxLeaf);
+            auto&& particlesRhs = currentParticleGroup->getParticleRhs(idxLeaf);
+            kernel.L2P(symbData, locals[configuration.getTreeHeight()-1],
+                       currentParticleGroup->getParticleIndexes(idxLeaf), particlesData,
+                       particlesRhs, currentParticleGroup->getNbParticlesInLeaf(idxLeaf));
         }
     }
 
@@ -379,7 +405,7 @@ public:
     template <class TreeClass>
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         // This has been done already by the real periodic FMM
-        if(nbLevelsAbove0 < 0){
+        if(nbLevelsAbove0 < 0 || inTree.getHeight() == 0){
             return;
         }
 
