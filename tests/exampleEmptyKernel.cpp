@@ -261,6 +261,8 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     AlgorithmClass algorithm(configuration);
 
     TbfTimer timerExecute;

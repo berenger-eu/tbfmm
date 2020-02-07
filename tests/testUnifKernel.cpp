@@ -122,6 +122,8 @@ int main(int argc, char** argv){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     FInterpMatrixKernelR<RealType> interpolator;
     AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
 

@@ -68,6 +68,10 @@ int main(){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+    //////////////////////////////////////////////////////////////////////////
+    /// Compute the FMM with the test kernel with different idxExtraLevel
+    //////////////////////////////////////////////////////////////////////////
+
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, SpacialSystemPeriodic>;
         using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, TbfTestKernel<RealType, SpacialSystemPeriodic>, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
@@ -98,6 +102,11 @@ int main(){
         std::cout << " - original configuration: " << configuration << std::endl;
         std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
     }
+
+    //////////////////////////////////////////////////////////////////////////
+    /// Do the same but with a TbfInteractionCounter, such that
+    /// we can print the number of interactions at each iteration.
+    //////////////////////////////////////////////////////////////////////////
 
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){ // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType, SpacialSystemPeriodic>>;

@@ -75,7 +75,7 @@ int main(){
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
     }
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType>>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
@@ -98,7 +98,7 @@ int main(){
 
         std::cout << counters << std::endl;
     }
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction timer
         using KernelClass = TbfInteractionTimer<TbfTestKernel<RealType>>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
@@ -121,8 +121,7 @@ int main(){
 
         std::cout << timers << std::endl;
     }
-
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter & timer
         using KernelClass = TbfInteractionCounter<TbfInteractionTimer<TbfTestKernel<RealType>>>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
