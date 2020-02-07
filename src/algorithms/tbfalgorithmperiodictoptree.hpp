@@ -163,7 +163,7 @@ protected:
 
             for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
                 std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-                long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+                long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
                 long int nbNeighbors = 0;
 
                 std::array<long int, Dim> minLimits;
@@ -206,7 +206,7 @@ protected:
                         auto childPos = TbfUtils::AddVecToVec(cellPos, currentCellTest);
                         const IndexType childIndex = spaceSystem.getIndexFromBoxPos(childPos);
 
-                        assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                        assert(nbNeighbors < spaceSystem.getNbInteractionsPerCell());
                         neighbors.emplace_back(multipoles[idxLevel]);
                         positionsOfNeighbors[nbNeighbors] = (childIndex);
                         nbNeighbors += 1;
@@ -311,7 +311,12 @@ protected:
             // we know it is 3 times 3 box (-1;+1)
             return 3;
         }
-        return 6 * (1 << inNbLevelsAbove0);
+        else if( inNbLevelsAbove0 == 0 ){
+            // We compute until the usual level 1
+            // we know it is 3 times 3 box (-1;+1)
+            return 7;
+        }
+        return 6 * (1 << (inNbLevelsAbove0));
     }
 
     static auto GetExtendedBoxCenter(const SpacialConfiguration& inConfiguration, const long int inNbLevelsAbove0) {
@@ -449,6 +454,12 @@ public:
             return std::pair<std::array<long int, Dim>,std::array<long int, Dim>>(
                         TbfUtils::make_array<long int, Dim>(-1),
                         TbfUtils::make_array<long int, Dim>(1));
+        }
+        else if( nbLevelsAbove0 == 0 ){
+            // We know it is (-1;1)
+            return std::pair<std::array<long int, Dim>,std::array<long int, Dim>>(
+                        TbfUtils::make_array<long int, Dim>(3),
+                        TbfUtils::make_array<long int, Dim>(3));
         }
         else{
             const long int halfRepeated = int(getNbRepetitionsPerDim()/2);

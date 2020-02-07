@@ -24,8 +24,8 @@ class TestMorton : public UTester< TestMorton > {
         using IndexType = typename TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
 
         UASSERTEEQUAL(morton.getUpperBound(0), IndexType(1));
-        UASSERTEEQUAL(morton.getUpperBound(1), IndexType(8));
-        UASSERTEEQUAL(morton.getUpperBound(2), IndexType(8*8));
+        UASSERTEEQUAL(morton.getUpperBound(1), IndexType(morton.getNbChildrenPerCell()));
+        UASSERTEEQUAL(morton.getUpperBound(2), IndexType(morton.getNbChildrenPerCell()*morton.getNbChildrenPerCell()));
 
         for(long int idxLevel = 0 ; idxLevel < TreeHeight-1 ; ++idxLevel){
             std::set<std::array<long int,Dim>> generatedPositions;
@@ -38,7 +38,7 @@ class TestMorton : public UTester< TestMorton > {
 
                 UASSERTETRUE(idx == morton.getIndexFromBoxPos(pos));
 
-                for(long int idxChild = 0 ; idxChild < 8 ; ++idxChild){
+                for(long int idxChild = 0 ; idxChild < morton.getNbChildrenPerCell() ; ++idxChild){
                     auto childIndex = morton.getChildIndexFromParent(idx, idxChild);
                     UASSERTETRUE(idxChild == morton.childPositionFromParent(childIndex));
                     UASSERTETRUE(idx == morton.getParentIndex(childIndex));
@@ -103,9 +103,61 @@ class TestMorton : public UTester< TestMorton > {
             }
         }
     }
+
+    void TestBasicPeriodic() {
+        const int Dim = 3;
+        const long int TreeHeight = 5;
+
+        using RealType = double;
+
+        const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
+        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> , true> morton(configuration);
+
+        using IndexType = typename TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim>, true>::IndexType;
+
+        UASSERTEEQUAL(morton.getUpperBound(0), IndexType(1));
+        UASSERTEEQUAL(morton.getUpperBound(1), IndexType(morton.getNbChildrenPerCell()));
+        UASSERTEEQUAL(morton.getUpperBound(2), IndexType(morton.getNbChildrenPerCell()*morton.getNbChildrenPerCell()));
+
+        for(long int idxLevel = 3 ; idxLevel < TreeHeight-1 ; ++idxLevel){
+            std::set<std::array<long int,Dim>> generatedPositions;
+            std::set<IndexType> generatedChildIndexes;
+
+            for(IndexType idx = 0 ; idx < morton.getUpperBound(idxLevel) ; ++idx){
+                auto pos = morton.getBoxPosFromIndex(idx);
+                UASSERTETRUE(generatedPositions.find(pos) == generatedPositions.end());
+                generatedPositions.insert(pos);
+
+                UASSERTETRUE(idx == morton.getIndexFromBoxPos(pos));
+
+                for(long int idxChild = 0 ; idxChild < morton.getNbChildrenPerCell() ; ++idxChild){
+                    auto childIndex = morton.getChildIndexFromParent(idx, idxChild);
+                    UASSERTETRUE(idxChild == morton.childPositionFromParent(childIndex));
+                    UASSERTETRUE(idx == morton.getParentIndex(childIndex));
+                    UASSERTETRUE(childIndex < morton.getUpperBound(idxLevel+1));
+                    UASSERTETRUE(generatedChildIndexes.find(childIndex) == generatedChildIndexes.end());
+                    generatedChildIndexes.insert(childIndex);
+                }
+
+                {
+                    const auto interactionList = morton.getInteractionListForIndex(idx, idxLevel);
+                    UASSERTEEQUAL(static_cast<long int>(std::size(interactionList)), morton.getNbInteractionsPerCell());
+                }
+
+                {
+                    const auto interactionList = morton.getNeighborListForIndex(idx, idxLevel);
+                    UASSERTEEQUAL(static_cast<long int>(std::size(interactionList)), morton.getNbNeighborsPerLeaf());
+                }
+            }
+        }
+    }
     
     void SetTests() {
         Parent::AddTest(&TestMorton::TestBasic, "Basic test for Morton");
+        Parent::AddTest(&TestMorton::TestBasicPeriodic, "Basic test for Morton (periodic)");
     }
 };
 

@@ -24,8 +24,8 @@ class TestHilbert : public UTester< TestHilbert > {
         using IndexType = typename TbfHilbertSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
 
         UASSERTEEQUAL(hilbert.getUpperBound(0), IndexType(1));
-        UASSERTEEQUAL(hilbert.getUpperBound(1), IndexType(8));
-        UASSERTEEQUAL(hilbert.getUpperBound(2), IndexType(8*8));
+        UASSERTEEQUAL(hilbert.getUpperBound(1), IndexType(hilbert.getNbChildrenPerCell()));
+        UASSERTEEQUAL(hilbert.getUpperBound(2), IndexType(hilbert.getNbChildrenPerCell()*hilbert.getNbChildrenPerCell()));
 
         for(long int idxLevel = 0 ; idxLevel < TreeHeight-1 ; ++idxLevel){
             std::set<std::array<long int,Dim>> generatedPositions;
@@ -38,7 +38,7 @@ class TestHilbert : public UTester< TestHilbert > {
 
                 UASSERTETRUE(idx == hilbert.getIndexFromBoxPos(pos));
 
-                for(long int idxChild = 0 ; idxChild < 8 ; ++idxChild){
+                for(long int idxChild = 0 ; idxChild < hilbert.getNbChildrenPerCell() ; ++idxChild){
                     auto childIndex = hilbert.getChildIndexFromParent(idx, idxChild);
                     UASSERTETRUE(idxChild == hilbert.childPositionFromParent(childIndex));
                     UASSERTETRUE(idx == hilbert.getParentIndex(childIndex));
@@ -83,7 +83,7 @@ class TestHilbert : public UTester< TestHilbert > {
                 }
 
                 {
-                    const auto interactionList = hilbert.getNeighborListForIndex(idx, idxLevel);
+                    const auto interactionList = hilbert.getInteractionListForIndex(idx, idxLevel);
                     for(auto interaction : interactionList){
                         const auto posInteraction = hilbert.getBoxPosFromIndex(interaction);
 

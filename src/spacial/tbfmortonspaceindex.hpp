@@ -201,7 +201,7 @@ public:
                         periodicShift[idxDim] = -boxLimite;
                         otherParentPos[idxDim] += boxLimiteParent;
                     }
-                    else if(boxLimite <= otherParentPos[idxDim]){
+                    else if(boxLimiteParent <= otherParentPos[idxDim]){
                         periodicShift[idxDim] = boxLimite;
                         otherParentPos[idxDim] -= boxLimiteParent;
                     }
@@ -233,6 +233,11 @@ public:
             }
 
             currentParentTest[Dim-1] += 1;
+        }
+
+
+        if constexpr(IsPeriodic){
+            assert(std::size(indexes) == getNbInteractionsPerCell());
         }
 
         return indexes;
@@ -322,7 +327,7 @@ public:
                             periodicShift[idxDim] = -boxLimite;
                             otherParentPos[idxDim] += boxLimiteParent;
                         }
-                        else if(boxLimite <= otherParentPos[idxDim]){
+                        else if(boxLimiteParent <= otherParentPos[idxDim]){
                             periodicShift[idxDim] = boxLimite;
                             otherParentPos[idxDim] -= boxLimiteParent;
                         }
@@ -458,6 +463,10 @@ public:
             }
 
             currentTest[Dim-1] += 1;
+        }
+
+        if constexpr(IsPeriodic){
+            assert(std::size(indexes) == getNbNeighborsPerLeaf());
         }
 
         return indexes;
@@ -605,7 +614,7 @@ public:
         return 1L << Dim;
     }
 
-    static long int constexpr getNbNeighborsPerCell() {
+    static long int constexpr getNbInteractionsPerCell() {
         long int nbNeighbors = 1;
         long int nbNeighborsTooClose = 1;
         for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
@@ -613,6 +622,14 @@ public:
             nbNeighborsTooClose *= 3;
         }
         return nbNeighbors - nbNeighborsTooClose;
+    }
+
+    static long int constexpr getNbNeighborsPerLeaf() {
+        long int nbNeighbors = 1;
+        for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
+            nbNeighbors *= 3;
+        }
+        return nbNeighbors - 1;
     }
 };
 

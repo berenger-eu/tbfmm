@@ -85,8 +85,8 @@ enum TbfOperations {
 
     TbfNearAndFarFields = (TbfNearField|TbfFarField),
 
-    TbfBottomToTopStages = (TbfL2L|TbfL2P),
-    TbfTopToBottomStages = (TbfP2M|TbfM2M),
+    TbfBottomToTopStages = (TbfP2M|TbfM2M),
+    TbfTopToBottomStages = (TbfL2L|TbfL2P),
     TbfTransferStages = (TbfM2L|TbfP2P)
 };
 

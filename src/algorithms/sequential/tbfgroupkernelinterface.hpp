@@ -86,7 +86,7 @@ public:
         //using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
 
         std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-        long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+        long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
         long int nbNeighbors = 0;
 
         long int idxInteraction = 0;
@@ -102,7 +102,7 @@ public:
                 assert(inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget)
                        && *inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget) == inIndexes[idxInteraction].globalTargetPos);
 
-                assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                assert(nbNeighbors < spaceSystem.getNbInteractionsPerCell());
                 neighbors.emplace_back(inCellGroup.getCellMultipole(*foundSrc));
                 positionsOfNeighbors[nbNeighbors] = inIndexes[idxInteraction].arrayIndexSrc;
                 nbNeighbors += 1;
@@ -129,7 +129,7 @@ public:
         //using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
 
         std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-        long int positionsOfNeighbors[spaceSystem.getNbNeighborsPerCell()];
+        long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
         long int nbNeighbors = 0;
 
         long int idxInteraction = 0;
@@ -145,7 +145,7 @@ public:
                     assert(inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget)
                           && *inCellGroup.getElementFromSpacialIndex(inIndexes[idxInteraction].indexTarget) == inIndexes[idxInteraction].globalTargetPos);
 
-                    assert(nbNeighbors < spaceSystem.getNbNeighborsPerCell());
+                    assert(nbNeighbors < spaceSystem.getNbInteractionsPerCell());
                     neighbors.emplace_back(inOtherCellGroup.getCellMultipole(*foundSrc));
                     positionsOfNeighbors[nbNeighbors] = inIndexes[idxInteraction].arrayIndexSrc;
                     nbNeighbors += 1;
