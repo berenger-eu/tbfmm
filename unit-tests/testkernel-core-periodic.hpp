@@ -58,13 +58,17 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
                                   MultipoleClass,
                                   LocalClass,
                                   SpacialSystemPeriodic>;
+        using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType,
+                                                                      typename AlgorithmClass::KernelClass,
+                                                                      MultipoleClass,
+                                                                      LocalClass,
+                                                                      SpacialSystemPeriodic>;
 
-        TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-            using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, typename AlgorithmClass::KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration, LastWorkingLevel);
             TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
@@ -91,6 +95,15 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
                     UASSERTEEQUAL(particleRhsPtr[0][idxPart], (nbRepeatitionInTotal*NbParticles)-1);
                 }
             });
+
+            std::cout << "Perform the periodic FMM with parameters:" << std::endl;
+            std::cout << " - idxExtraLevel: " << idxExtraLevel << std::endl;
+            std::cout << " - Nb repeat per dim: " << topAlgorithm.getNbRepetitionsPerDim() << std::endl;
+            std::cout << " - Number of times the real box is duplicated: " << topAlgorithm.getNbTotalRepetitions() << std::endl;
+            std::cout << " - Repeatition interves: " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().first)
+                      << " " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().second) << std::endl;
+            std::cout << " - original configuration: " << configuration << std::endl;
+            std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -101,7 +114,7 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
         for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
             for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
-                    for(long int idxTreeHeight = 1 ; idxTreeHeight < 5 ; ++idxTreeHeight){
+                    for(long int idxTreeHeight = 2 ; idxTreeHeight < 5 ; ++idxTreeHeight){
                         CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                     }
                 }
