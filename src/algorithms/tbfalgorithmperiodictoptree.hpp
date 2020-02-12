@@ -38,13 +38,14 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree){
-        if(inTree.getHeight() > 1){
+        {
+            assert(inTree.getHeight() > 1);
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
 
-            const long int idxLevel = 0;
-            const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
+            const long int idxLevelBase = 0;
+            const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevelBase+1);
 
             auto currentLowerGroup = lowerCellGroup.cbegin();
             const auto endLowerGroup = lowerCellGroup.cend();
@@ -66,26 +67,15 @@ protected:
                 ++currentLowerGroup;
             }
 
-            assert(std::size(inTree.getCellGroupsAtLevel(idxLevel)));
+            assert(std::size(inTree.getCellGroupsAtLevel(idxLevelBase)));
             assert(std::size(inTree.getCellGroupsAtLevel(0)));
 
             kernel.M2M(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
-                         configuration.getTreeHeight()-1, TbfUtils::make_const(children), multipoles[configuration.getTreeHeight()-1],
+                         configuration.getTreeHeight()-2, TbfUtils::make_const(children), multipoles[configuration.getTreeHeight()-2],
                          positionsOfChildren, nbChildren);
         }
-        else{
-            const auto& particleGroups = inTree.getParticleGroups();
-            assert(std::size(particleGroups) == 1);
-            auto currentParticleGroup = particleGroups.cbegin();
-            assert(currentParticleGroup->getNbLeaves() == 1);
-            const long int idxLeaf = 1;
-            assert(currentParticleGroup->getLeafSpacialIndex(idxLeaf) == 0);
-            const auto& symbData = currentParticleGroup->getLeafSymbData(idxLeaf);
-            const auto& particlesData = currentParticleGroup->getParticleData(idxLeaf);
-            kernel.P2M(symbData, currentParticleGroup->getParticleIndexes(idxLeaf), particlesData, currentParticleGroup->getNbParticlesInLeaf(idxLeaf),
-                         multipoles[configuration.getTreeHeight()-1]);
-        }
-        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
+
+        for(long int idxLevel = configuration.getTreeHeight()-3 ; idxLevel >= 3 ; --idxLevel){
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
@@ -108,7 +98,8 @@ protected:
     void M2L(TreeClass& inTree){
         if(nbLevelsAbove0 == 0){
             const auto cellPos = TbfUtils::make_array<long int, Dim>(3);
-            const long int idxLevel = 2;
+            const long int idxLevel = configuration.getTreeHeight()-2;
+            assert(idxLevel == 3);
             std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
             long int positionsOfNeighbors[316 /*TODO*/];
             long int nbNeighbors = 0;
@@ -161,7 +152,7 @@ protected:
         else{
             const auto cellPos = TbfUtils::make_array<long int, Dim>(3);
 
-            for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
+            for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
                 std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
                 long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
                 long int nbNeighbors = 0;
@@ -224,7 +215,7 @@ protected:
 
     template <class TreeClass>
     void L2L(TreeClass& inTree){        
-        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
+        for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-3 ; ++idxLevel){
             std::vector<std::reference_wrapper<CellLocalType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 1;
@@ -236,13 +227,14 @@ protected:
                          idxLevel, TbfUtils::make_const(locals[idxLevel]), children,
                          positionsOfChildren, nbChildren);
         }
-        if(inTree.getHeight() > 1){
+        {
+            assert(inTree.getHeight() > 1);
             std::vector<std::reference_wrapper<CellLocalType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
 
-            const long int idxLevel = 0;
-            auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
+            const long int idxLevelBase = 0;
+            auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevelBase+1);
 
             auto currentLowerGroup = lowerCellGroup.begin();
             const auto endLowerGroup = lowerCellGroup.end();
@@ -263,25 +255,11 @@ protected:
                 ++currentLowerGroup;
             }
 
-            assert(std::size(inTree.getCellGroupsAtLevel(idxLevel)));
+            assert(std::size(inTree.getCellGroupsAtLevel(idxLevelBase)));
 
             kernel.L2L(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
-                         configuration.getTreeHeight()-1, TbfUtils::make_const(locals[configuration.getTreeHeight()-1]), children,
+                         configuration.getTreeHeight()-2, TbfUtils::make_const(locals[configuration.getTreeHeight()-2]), children,
                          positionsOfChildren, nbChildren);
-        }
-        else{
-            auto& particleGroups = inTree.getParticleGroups();
-            assert(std::size(particleGroups) == 1);
-            auto currentParticleGroup = particleGroups.begin();
-            assert(currentParticleGroup->getNbLeaves() == 1);
-            const long int idxLeaf = 1;
-            assert(currentParticleGroup->getLeafSpacialIndex(idxLeaf) == 0);
-            const auto& symbData = currentParticleGroup->getLeafSymbData(idxLeaf);
-            const auto& particlesData = currentParticleGroup->getParticleData(idxLeaf);
-            auto&& particlesRhs = currentParticleGroup->getParticleRhs(idxLeaf);
-            kernel.L2P(symbData, locals[configuration.getTreeHeight()-1],
-                       currentParticleGroup->getParticleIndexes(idxLeaf), particlesData,
-                       particlesRhs, currentParticleGroup->getNbParticlesInLeaf(idxLeaf));
         }
     }
 
@@ -291,13 +269,13 @@ protected:
     static long int getExtendedTreeHeight(const SpacialConfiguration& /*inConfiguration*/, const long int inNbLevelsAbove0) {
         assert(-1 <= inNbLevelsAbove0);
         // return inConfiguration.getTreeHeight() + inNbLevelsAbove0;
-        return 3 + inNbLevelsAbove0;
+        return inNbLevelsAbove0 + 4;
     }
 
     static long int  getExtendedTreeHeightBoundary(const SpacialConfiguration& /*inConfiguration*/, const long int inNbLevelsAbove0) {
         assert(-1 <= inNbLevelsAbove0);
         // return inConfiguration.getTreeHeight() + inNbLevelsAbove0 + 1;
-        return 3 + inNbLevelsAbove0 + 1;
+        return inNbLevelsAbove0 + 5;
     }
 
     static long int GetNbRepetitionsPerDim(const long int inNbLevelsAbove0) {
@@ -372,17 +350,16 @@ protected:
 public:
     static SpacialConfiguration GenerateAboveTreeConfiguration(const SpacialConfiguration& inConfiguration, const long int inNbLevelsAbove0){
         assert(-1 <= inNbLevelsAbove0);
-        const auto boxWidths = GetExtendedBoxWidth(inConfiguration, inNbLevelsAbove0);
-        [[maybe_unused]] const auto boxWidthBoundary = GetExtendedBoxWidthBoundary(inConfiguration, inNbLevelsAbove0);
+        [[maybe_unused]] const auto boxWidths = GetExtendedBoxWidth(inConfiguration, inNbLevelsAbove0);
+        [[maybe_unused]] const auto boxWidthsBoundary = GetExtendedBoxWidthBoundary(inConfiguration, inNbLevelsAbove0);
 
-        // TODO does not have to be that long
-        const long int treeHeight = getExtendedTreeHeight(inConfiguration, inNbLevelsAbove0);
+        [[maybe_unused]] const long int treeHeight = getExtendedTreeHeight(inConfiguration, inNbLevelsAbove0);
         [[maybe_unused]] const long int treeHeightBoundary = getExtendedTreeHeightBoundary(inConfiguration, inNbLevelsAbove0);
 
-        const auto boxCenter = GetExtendedBoxCenter(inConfiguration, inNbLevelsAbove0);
+        [[maybe_unused]] const auto boxCenter = GetExtendedBoxCenter(inConfiguration, inNbLevelsAbove0);
         [[maybe_unused]] const auto boxCenterBoundary = GetExtendedBoxCenterBoundary(inConfiguration, inNbLevelsAbove0);
 
-        return SpacialConfiguration(treeHeight, boxWidths, boxCenter);
+        return SpacialConfiguration(treeHeightBoundary, boxWidthsBoundary, boxCenterBoundary);
     }
 
 
