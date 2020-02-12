@@ -89,7 +89,7 @@ inline typename std::decay<VecClass>::type MulToVec(VecClass&& inVec, ScalarClas
     return dest;
 }
 
-inline long int lipow(long int val, const long int power){
+inline constexpr long int lipow(long int val, const long int power){
     long int res = 1;
 
     long incPower = val;

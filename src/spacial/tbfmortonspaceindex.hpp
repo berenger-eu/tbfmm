@@ -457,7 +457,8 @@ public:
 
                 const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
-                if(upperExclusion == false || otherIndex < cellIndex){
+                // We cannot compare with otherIndex < cellIndex due to periodicity
+                if(upperExclusion == false || TbfUtils::lipow(3, Dim)/2 < arrayPos){
                     indexes.push_back(otherIndex);
                 }
             }
@@ -555,7 +556,8 @@ public:
 
                     const IndexType otherIndex = getIndexFromBoxPos(otherPos);
 
-                    if(upperExclusion == false || otherIndex < cellIndex){
+                    // We cannot compare with otherIndex < cellIndex due to periodicity
+                    if(upperExclusion == false || TbfUtils::lipow(3, Dim)/2 < arrayPos){
                         TbfXtoXInteraction<IndexType> interaction;
                         interaction.indexTarget = cellIndex;
                         interaction.indexSrc = otherIndex;
