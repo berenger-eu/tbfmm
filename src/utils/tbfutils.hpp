@@ -162,7 +162,7 @@ using marray = typename marray_core<Type, AllSizes...>::type;
 
 
 template<class T, class Compare>
-long int lower_bound_indexes(long int first, const long int last, const T& value, Compare comp)
+constexpr long int lower_bound_indexes(long int first, const long int last, const T& value, Compare comp)
 {
     long int count = (last - first);
 

@@ -101,7 +101,8 @@ protected:
             const long int idxLevel = configuration.getTreeHeight()-2;
             assert(idxLevel == 3);
             std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-            long int positionsOfNeighbors[316 /*TODO*/];
+            static_assert (Dim != 3 || 316 == (TbfUtils::lipow(7, Dim) - TbfUtils::lipow(3, Dim)), "Simple check");
+            long int positionsOfNeighbors[TbfUtils::lipow(7, Dim) - TbfUtils::lipow(3, Dim)];
             long int nbNeighbors = 0;
 
             std::array<long int, Dim> minLimits = TbfUtils::make_array<long int, Dim>(-3);
@@ -134,7 +135,7 @@ protected:
                     auto childPos = TbfUtils::AddVecToVec(cellPos, currentCellTest);
                     const IndexType childIndex = spaceSystem.getIndexFromBoxPos(childPos);
 
-                    assert(nbNeighbors < 316 /*TODO*/);
+                    assert(nbNeighbors < TbfUtils::lipow(7, Dim) - TbfUtils::lipow(3, Dim));
                     neighbors.emplace_back(multipoles[idxLevel]);
                     positionsOfNeighbors[nbNeighbors] = (childIndex);
                     nbNeighbors += 1;
