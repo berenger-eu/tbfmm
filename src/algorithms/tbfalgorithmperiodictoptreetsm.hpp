@@ -444,6 +444,26 @@ public:
     }
 
 
+    auto getExtendedIndex(const IndexType inIndexToFound, const long int inLevel) const{
+        auto minBoxCorner = getRepetitionsIntervals().first;
+
+        std::array<long int, Dim> margin;
+
+        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            margin[idxDim] = std::abs(minBoxCorner[idxDim]) * (1 << inLevel);
+        }
+
+        auto coordToFound = spaceSystem.getBoxPosFromIndex(inIndexToFound);
+
+        std::array<long int, Dim> extendedCoord;
+        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            extendedCoord[idxDim] = margin[idxDim] + coordToFound[idxDim];
+        }
+
+        return spaceSystem.getIndexFromBoxPos(extendedCoord);
+    }
+
+
 };
 
 #endif
