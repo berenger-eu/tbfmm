@@ -204,7 +204,9 @@ public:
           kernelWrapper(configuration), kernel(configuration){
     }
 
-    template <class SourceKernelClass>
+    template <class SourceKernelClass,
+              typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
+                                                 && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
     TbfAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration), kernel(std::forward<SourceKernelClass>(inKernel)){

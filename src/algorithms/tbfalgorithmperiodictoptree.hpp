@@ -432,7 +432,7 @@ public:
         else if( nbLevelsAbove0 == 0 ){
             // We know it is (-1;1)
             return std::pair<std::array<long int, Dim>,std::array<long int, Dim>>(
-                        TbfUtils::make_array<long int, Dim>(3),
+                        TbfUtils::make_array<long int, Dim>(-3),
                         TbfUtils::make_array<long int, Dim>(3));
         }
         else{
@@ -444,6 +444,24 @@ public:
     }
 
 
+    auto getExtendedIndex(const IndexType inIndexToFound, const long int inLevel) const{
+        auto minBoxCorner = getRepetitionsIntervals().first;
+
+        std::array<long int, Dim> margin;
+
+        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            margin[idxDim] = std::abs(minBoxCorner[idxDim]) * (1 << inLevel);
+        }
+
+        auto coordToFound = spaceSystem.getBoxPosFromIndex(inIndexToFound);
+
+        std::array<long int, Dim> extendedCoord;
+        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            extendedCoord[idxDim] = margin[idxDim] + coordToFound[idxDim];
+        }
+
+        return spaceSystem.getIndexFromBoxPos(extendedCoord);
+    }
 };
 
 #endif

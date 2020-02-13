@@ -432,7 +432,7 @@ public:
         else if( nbLevelsAbove0 == 0 ){
             // We know it is (-1;1)
             return std::pair<std::array<long int, Dim>,std::array<long int, Dim>>(
-                        TbfUtils::make_array<long int, Dim>(3),
+                        TbfUtils::make_array<long int, Dim>(-3),
                         TbfUtils::make_array<long int, Dim>(3));
         }
         else{
