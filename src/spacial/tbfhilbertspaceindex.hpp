@@ -749,6 +749,24 @@ public:
         }
         return nbNeighbors - 1;
     }
+
+    static auto getPosFromInteractionIndex(long int inArrayPos){
+        std::array<long int, Dim> pos;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            pos[idxDim] = (inArrayPos%7) - 3;
+            inArrayPos /= 7;
+        }
+        return pos;
+    }
+
+    static auto getPosFromNeighborIndex(long int inArrayPos){
+        std::array<long int, Dim> pos;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            pos[Dim-1-idxDim] = (inArrayPos%3) - 1;
+            inArrayPos /= 3;
+        }
+        return pos;
+    }
 };
 
 #endif
