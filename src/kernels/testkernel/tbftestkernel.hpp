@@ -65,7 +65,8 @@ public:
              const long int inNbParticlesNeighbors,
              const LeafSymbolicData& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
              const ParticlesClassValues& /*inOutParticles*/,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long /*arrayIndexSrc*/) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
         }
@@ -79,8 +80,9 @@ public:
              const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
              const long int inNbParticlesNeighbors,
              const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-                const ParticlesClassValuesTarget& /*inOutParticles*/,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
+             const ParticlesClassValuesTarget& /*inOutParticles*/,
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long /*arrayIndexSrc*/) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
             inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
         }

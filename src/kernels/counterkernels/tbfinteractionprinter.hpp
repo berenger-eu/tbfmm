@@ -3,15 +3,20 @@
 
 #include "tbfglobal.hpp"
 #include "utils/tbfutils.hpp"
+#include "utils/tbfperiodicshifter.hpp"
 
 #include <iostream>
 
 template <class RealKernel>
 class TbfInteractionPrinter : public RealKernel {
+    typename RealKernel::SpaceIndexType spaceSystem;
+
 public:
     using ReduceType = void;
 
-    using RealKernel::RealKernel;
+    template <class ... Params>
+    explicit TbfInteractionPrinter(const typename RealKernel::SpacialConfiguration& inConfiguration, Params ... params)
+        : RealKernel(inConfiguration, std::forward<Params>(params)...), spaceSystem(inConfiguration) {}
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& inLeafIndex,
@@ -74,14 +79,27 @@ public:
              const long int inNbParticlesNeighbors,
              const LeafSymbolicData& inParticlesIndex, const long int targetIndexes[],
              const ParticlesClassValues& inOutParticles,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) {
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long arrayIndexSrc) {
         std::cout << "[INTERACTION] P2P:" << std::endl;
         std::cout << "[INTERACTION]  - Neighbor index: " << inNeighborIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Neighbor pos: " << TbfUtils::ArrayPrinter(inNeighborIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Nb particles in neighbors: " << inNbParticlesNeighbors << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inParticlesIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
+
+        if constexpr(RealKernel::SpaceIndexType::IsPeriodic){
+            using PeriodicShifter = typename TbfPeriodicShifter<typename RealKernel::RealType, typename RealKernel::SpaceIndexType>::Neighbor;
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inParticlesIndex, spaceSystem, arrayIndexSrc)){
+                std::cout << "[INTERACTION]  - This is a periodic interaction" << std::endl;
+                std::cout << "[INTERACTION]  - Periodic shift coef to apply to source: " << TbfUtils::ArrayPrinter(PeriodicShifter::GetShiftCoef(inNeighborIndex, inParticlesIndex, spaceSystem, arrayIndexSrc)) << std::endl;
+            }
+        }
+
         RealKernel::P2P(inNeighborIndex,neighborsIndexes, inParticlesNeighbors, inParticlesNeighborsRhs, inNbParticlesNeighbors, inParticlesIndex,
-                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles, arrayIndexSrc);
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
@@ -89,15 +107,28 @@ public:
              const ParticlesClassValuesSource& inParticlesNeighbors,
              const long int inNbParticlesNeighbors,
              const LeafSymbolicDataTarget& inParticlesIndex, const long int targetIndexes[],
-                const ParticlesClassValuesTarget& inOutParticles,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
+             const ParticlesClassValuesTarget& inOutParticles,
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long arrayIndexSrc) const {
         std::cout << "[INTERACTION] P2PTsm:" << std::endl;
-        std::cout << "[INTERACTION]  - Neighbor index: " << inNeighborIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Neighbor indboxLimitex: " << inNeighborIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Neighbor pos: " << TbfUtils::ArrayPrinter(inNeighborIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Nb particles in neighbors: " << inNbParticlesNeighbors << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inParticlesIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
+
+        if constexpr(RealKernel::SpaceIndexType::IsPeriodic){
+            using PeriodicShifter = typename TbfPeriodicShifter<typename RealKernel::RealType, typename RealKernel::SpaceIndexType>::Neighbor;
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inParticlesIndex, spaceSystem, arrayIndexSrc)){
+                std::cout << "[INTERACTION]  - This is a periodic interaction" << std::endl;
+                std::cout << "[INTERACTION]  - Periodic shift coef to apply to source: " << TbfUtils::ArrayPrinter(PeriodicShifter::GetShiftCoef(inNeighborIndex, inParticlesIndex, spaceSystem, arrayIndexSrc)) << std::endl;
+            }
+        }
+
         RealKernel::P2P(inNeighborIndex, inParticlesNeighbors, neighborsIndexes, inNbParticlesNeighbors, inParticlesIndex,
-                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles, arrayIndexSrc);
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
@@ -106,6 +137,7 @@ public:
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) {
         std::cout << "[INTERACTION] P2PInner:" << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inLeafIndex.spaceIndex << std::endl;
+        std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inLeafIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
         RealKernel::P2PInner(inLeafIndex, targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
     }

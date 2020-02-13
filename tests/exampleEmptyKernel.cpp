@@ -152,7 +152,8 @@ public:
              const long int /*targetIndexes*/[],
              const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs& /*inOutParticlesRhs*/,
-             const long int /*inNbOutParticles*/) const {
+             const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         /// To compute the interations between a leaf and a neighbor (should be done in both way).
         /// inNeighborIndex: is the spacial index (Morton index for example) of the neighbor
         /// inParticlesNeighbors: is an array of pointers on the particles' data (not on the RHS)
@@ -178,7 +179,8 @@ public:
                 const LeafSymbolicDataTarget& /*inParticlesIndex*/,
                 const ParticlesClassValuesTarget& /*inOutParticles*/,
                 ParticlesClassRhs& /*inOutParticlesRhs*/,
-                const long int /*inNbOutParticles*/) const {
+                const long int /*inNbOutParticles*/,
+                const long /*arrayIndexSrc*/) const {
         // TODO
     }
 

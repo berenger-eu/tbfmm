@@ -104,7 +104,8 @@ public:
              ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
              LeafSymbolicData&& /*inTargetIndex*/,   const long int /*targetIndexes*/[], ParticlesClassValues&& /*inOutParticles*/,
-             ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+             ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         should_be_const_ref<LeafSymbolicData>();
         should_be_const_ref<ParticlesClassValues>();
         should_be_non_const_ref<ParticlesClassRhs>();
@@ -116,8 +117,9 @@ public:
              const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
              const long int /*inNbParticlesNeighbors*/,
              const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-                const ParticlesClassValuesTarget& /*inOutParticles*/,
-             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+             const ParticlesClassValuesTarget& /*inOutParticles*/,
+             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         should_be_const_ref<LeafSymbolicDataSource>();
         should_be_const_ref<ParticlesClassValuesSource>();
         should_be_const_ref<LeafSymbolicDataTarget>();

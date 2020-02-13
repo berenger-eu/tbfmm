@@ -208,6 +208,10 @@ public:
         return inIndexChild & static_cast<long int>(~(((~0UL)>>Dim)<<Dim));
     }
 
+    const auto& getConfiguration() const{
+        return configuration;
+    }
+
     IndexType getIndexFromBoxPos(const std::array<long int,Dim>& inBoxPos) const{
         IndexType index = 0x0LL;
         IndexType mask = 0x1LL;

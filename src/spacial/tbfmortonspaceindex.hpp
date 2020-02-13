@@ -43,6 +43,18 @@ public:
         return (IndexType(1) << (inLevel * Dim));
     }
 
+    IndexType getUpperBoundAtLeafLevel() const{
+        return getUpperBound(configuration.getTreeHeight()-1);
+    }
+
+    IndexType getBoxLimit(const long int inLevel) const{
+        return (IndexType(1) << (inLevel));
+    }
+
+    IndexType getBoxLimitAtLeafLevel() const{
+        return getBoxLimit(configuration.getTreeHeight()-1);
+    }
+
     template <class PositionType>
     IndexType getIndexFromPosition(const PositionType& inPos) const {
         std::array<long int,Dim> host;
@@ -94,6 +106,10 @@ public:
 
     long int childPositionFromParent(const IndexType inIndexChild) const {
         return inIndexChild & static_cast<long int>(~(((~0UL)>>Dim)<<Dim));
+    }
+
+    const auto& getConfiguration() const{
+        return configuration;
     }
 
     IndexType getIndexFromBoxPos(const std::array<long int,Dim>& inBoxPos) const{
@@ -632,6 +648,24 @@ public:
             nbNeighbors *= 3;
         }
         return nbNeighbors - 1;
+    }
+
+    static auto getPosFromInteractionIndex(long int inArrayPos){
+        std::array<long int, Dim> pos;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            pos[idxDim] = (inArrayPos%7) - 3;
+            inArrayPos /= 7;
+        }
+        return pos;
+    }
+
+    static auto getPosFromNeighborIndex(long int inArrayPos){
+        std::array<long int, Dim> pos;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            pos[Dim-1-idxDim] = (inArrayPos%3) - 1;
+            inArrayPos /= 3;
+        }
+        return pos;
     }
 };
 

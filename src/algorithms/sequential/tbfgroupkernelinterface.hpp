@@ -260,7 +260,8 @@ public:
                          inParticleGroup.getNbParticlesInLeaf(*foundSrc),
                          inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
                          inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
+                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
+                         interaction.arrayIndexSrc);
         }
     }
 
@@ -300,7 +301,8 @@ public:
                              inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
                              inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
                              inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
+                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
+                             interaction.arrayIndexSrc);
             }
         }
     }
@@ -329,7 +331,8 @@ public:
                              inOtherParticleGroup.getNbParticlesInLeaf(*foundSrc),
                              inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
                              inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos));
+                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
+                             interaction.arrayIndexSrc);
             }
         }
     }

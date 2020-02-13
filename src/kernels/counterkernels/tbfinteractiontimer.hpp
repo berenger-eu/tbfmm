@@ -101,10 +101,11 @@ public:
              const ParticlesClassValues& inParticlesNeighbors, ParticlesClassRhs& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
              const LeafSymbolicData& inParticlesIndex, const long int targetIndexes[], const ParticlesClassValues& inOutParticles,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) {
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long arrayIndexSrc) {
         counters.P2P.start();
         RealKernel::P2P(inNeighborIndex, neighborsIndexes, inParticlesNeighbors, inParticlesNeighborsRhs, inNbParticlesNeighbors, inParticlesIndex,
-                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles, arrayIndexSrc);
         counters.P2P.stop();
     }
 
@@ -113,11 +114,12 @@ public:
              const ParticlesClassValuesSource& inParticlesNeighbors,
              const long int inNbParticlesNeighbors,
              const LeafSymbolicDataTarget& inParticlesIndex, const long int targetIndexes[],
-                const ParticlesClassValuesTarget& inOutParticles,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
+             const ParticlesClassValuesTarget& inOutParticles,
+             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
+             const long arrayIndexSrc) const {
         counters.P2P.start();
         RealKernel::P2P(inNeighborIndex, inParticlesNeighbors, neighborsIndexes, inNbParticlesNeighbors, inParticlesIndex,
-                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
+                        targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles, arrayIndexSrc);
         counters.P2P.stop();
     }
 
