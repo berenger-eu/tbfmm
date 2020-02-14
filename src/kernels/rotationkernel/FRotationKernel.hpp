@@ -125,6 +125,7 @@ private:
             RealType widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
             for( int idxLevel = 0 ; idxLevel < treeHeight - 1 ; ++idxLevel){
+                std::cout << "idxLevel " << idxLevel << " " << widthAtLevel << std::endl;// TODO remove me
                 // b is the parent-child distance = norm( vec(widthAtLevel,widthAtLevel,widthAtLevel))
                 const RealType b = std::sqrt(widthAtLevel*widthAtLevel*3);
                 // we compute b^idx iteratively

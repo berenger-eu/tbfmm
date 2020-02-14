@@ -372,7 +372,9 @@ public:
         locals.resize(configuration.getTreeHeight());
     }
 
-    template <class SourceKernelClass>
+    template <class SourceKernelClass,
+              typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
+                                                 && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
     TbfAlgorithmPeriodicTopTreeTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inNbLevelsAbove0)
         : originalConfiguration(inConfiguration), configuration(GenerateAboveTreeConfiguration(inConfiguration, inNbLevelsAbove0)),
           originalSpaceSystem(originalConfiguration), spaceSystem(configuration), nbLevelsAbove0(inNbLevelsAbove0), kernel(std::forward<SourceKernelClass>(inKernel)){
