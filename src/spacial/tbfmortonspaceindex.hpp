@@ -667,6 +667,14 @@ public:
         }
         return pos;
     }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfMortonSpaceIndex& inSpaceSystem) {
+        inStream << "TbfMortonSpaceIndex @ " << &inSpaceSystem << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inSpaceSystem.configuration << "\n";
+        return inStream;
+    }
 };
 
 #endif

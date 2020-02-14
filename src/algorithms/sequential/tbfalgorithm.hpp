@@ -228,6 +228,16 @@ public:
     auto applyToAllKernels(FuncType&& inFunc) const {
         inFunc(kernel);
     }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfAlgorithm& inAlgo) {
+        inStream << "TbfAlgorithm @ " << &inAlgo << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inAlgo.configuration << "\n";
+        inStream << " - Space system: " << "\n";
+        inStream << inAlgo.spaceSystem << "\n";
+        return inStream;
+    }
 };
 
 #endif

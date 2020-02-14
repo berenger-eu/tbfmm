@@ -19,7 +19,7 @@ class TbfFmaLoader {
 
     long int nbDataPerParticle;
     std::array<RealType, Dim> centerOfBox;
-    std::array<RealType, Dim> boxWidth;
+    std::array<RealType, Dim> boxWidths;
     long int nbParticles;
 
 public:
@@ -33,10 +33,10 @@ public:
             file >> tmp1 >> nbDataPerParticle;
             file >> nbParticles;
 
-            file >> boxWidth[0];
-            boxWidth[0] *= 2;
+            file >> boxWidths[0];
+            boxWidths[0] *= 2;
             for(long int idxDim = 1 ; idxDim < Dim ; ++idxDim){
-                boxWidth[idxDim] = boxWidth[0];
+                boxWidths[idxDim] = boxWidths[0];
             }
 
             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
@@ -54,7 +54,7 @@ public:
     }
 
     const std::array<RealType, Dim>& getBoxWidths() const{
-        return boxWidth;
+        return boxWidths;
     }
 
     long int getNbParticles() const{
@@ -83,6 +83,16 @@ public:
         }
 
         return particlePositions;
+    }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfFmaLoader& inLoader) {
+        inStream << "TbfFmaLoader @ " << &inLoader << "\n";
+        inStream << " - Filename: " << inLoader.filename << "\n";
+        inStream << " - Number of particles: " << inLoader.nbParticles << "\n";
+        inStream << " - Box widths: " << TbfUtils::ArrayPrinter(inLoader.boxWidths) << "\n";
+        inStream << " - Center of box: " << TbfUtils::ArrayPrinter(inLoader.centerOfBox) << "\n";
+        return inStream;
     }
 };
 

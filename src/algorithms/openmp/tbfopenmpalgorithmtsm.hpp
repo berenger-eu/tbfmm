@@ -335,6 +335,16 @@ public:
             inFunc(kernel);
         }
     }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfOpenmpAlgorithmTsm& inAlgo) {
+        inStream << "TbfOpenmpAlgorithmTsm @ " << &inAlgo << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inAlgo.configuration << "\n";
+        inStream << " - Space system: " << "\n";
+        inStream << inAlgo.spaceSystem << "\n";
+        return inStream;
+    }
 };
 
 #endif

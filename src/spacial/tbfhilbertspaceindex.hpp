@@ -767,6 +767,14 @@ public:
         }
         return pos;
     }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfHilbertSpaceIndex& inSpaceSystem) {
+        inStream << "TbfHilbertSpaceIndex @ " << &inSpaceSystem << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inSpaceSystem.configuration << "\n";
+        return inStream;
+    }
 };
 
 #endif

@@ -232,6 +232,33 @@ public:
         treeSource.rebuild();
         treeTarget.rebuild();
     }
+
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfTreeTsm& inAlgo) {
+        inStream << "TbfTreeTsm @ " << &inAlgo << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inAlgo.configuration << "\n";
+        inStream << " - Space system: " << "\n";
+        inStream << inAlgo.spaceSystem << "\n";
+        inStream << " - Number of elements per block: " << inAlgo.nbElementsPerBlock << "\n";
+        inStream << " - One group per element: " << inAlgo.oneGroupPerParent << "\n";
+        inStream << " - Number of particles: " << inAlgo.nbParticles << "\n";
+
+        inStream << " -- Cell groups:" << "\n";
+        for (long int idxLevel = 0 ; idxLevel < inAlgo.configuration.getTreeHeight() ; ++idxLevel) {
+            inStream << " -- level:" << idxLevel << "\n";
+            for(const auto& cellGroup : inAlgo.cellBlocks[idxLevel]){
+                inStream << (*cellGroup) << "\n";
+            }
+        }
+
+        inStream << " -- Leaf groups:" << "\n";
+        for(const auto& leafGroup : inAlgo.particleGroups){
+            inStream << (*leafGroup) << "\n";
+        }
+        return inStream;
+    }
 };
 
 #endif

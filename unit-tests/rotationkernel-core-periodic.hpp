@@ -107,15 +107,15 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
             /////////////////////////////////////////////////////////////////////////////////////////
 
+            std::array<std::unique_ptr<RealType[]>, 4> particles;
+            for(auto& vec : particles){
+                vec.reset(new RealType[NbParticles]());
+            }
+            std::array<std::unique_ptr<RealType[]>, NbRhsValuesPerParticle> particlesRhs;
+            for(auto& vec : particlesRhs){
+                vec.reset(new RealType[NbParticles]());
+            }
             {
-                std::array<RealType*, 4> particles;
-                for(auto& vec : particles){
-                    vec = new RealType[NbParticles]();
-                }
-                std::array<RealType*, NbRhsValuesPerParticle> particlesRhs;
-                for(auto& vec : particlesRhs){
-                    vec = new RealType[NbParticles]();
-                }
 
                 for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
                     particles[0][idxPart] = particlePositions[idxPart][0];
@@ -124,9 +124,9 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                     particles[3][idxPart] = particlePositions[idxPart][3];
                 }
 
-                std::array<RealType*, 4> particlesRepeat;
+                std::array<std::unique_ptr<RealType[]>, 4> particlesRepeat;
                 for(auto& vec : particlesRepeat){
-                    vec = new RealType[NbParticles]();
+                    vec.reset(new RealType[NbParticles]());
                 }
 
                 TbfTimer timerDirect;
@@ -190,7 +190,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 std::cout << " - original configuration: " << configuration << std::endl;
                 std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
 
-                std::cout << "Relative differences:" << std::endl;
+                std::cout << "Relative differences (between periodic FMM and P2P):" << std::endl;
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
                    UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
@@ -203,18 +203,6 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                    else{
                        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
                    }
-                }
-
-                //////////////////////////////////////////////////////////////////////
-
-                for(auto& vec : particles){
-                    delete[] vec;
-                }
-                for(auto& vec : particlesRepeat){
-                    delete[] vec;
-                }
-                for(auto& vec : particlesRhs){
-                    delete[] vec;
                 }
             }
 
@@ -283,7 +271,11 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
                 std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
-                tree.applyToAllLeaves([&extendedTree, &configuration, &topAlgorithm, &partcilesAccuracy,&partcilesRhsAccuracy]
+                std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracyExt;
+                std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracyExt;
+
+                tree.applyToAllLeaves([&particles, &extendedTree, &configuration, &topAlgorithm, &partcilesAccuracy,
+                                        &partcilesRhsAccuracy, &partcilesAccuracyExt, &partcilesRhsAccuracyExt]
                                       (auto&& leafHeader, const long int* particleIndexes,
                                       const std::array<RealType*, 4> particleDataPtr,
                                       const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
@@ -308,10 +300,19 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                            partcilesRhsAccuracy[idxValue].addValues(leafRhs[idxValue][idxPart],
                                                                 particleRhsPtr[idxValue][idxPart]);
                         }
+
+                        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                           partcilesAccuracyExt[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                                                                particleDataPtr[idxValue][idxPart]);
+                        }
+                        for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                           partcilesRhsAccuracyExt[idxValue].addValues(leafData[idxValue][particleIndexes[idxPart]],
+                                                                leafRhs[idxValue][idxPart]);
+                        }
                     }
                 });
 
-                std::cout << "Relative differences:" << std::endl;
+                std::cout << "Relative differences (between periodic FMM and extended FMM):" << std::endl;
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
                    UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
@@ -323,6 +324,21 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                    }
                    else{
                        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-14);
+                   }
+                }
+
+                std::cout << "Relative differences (between extended FMM and P2P):" << std::endl;
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Data " << idxValue << " = " << partcilesAccuracyExt[idxValue] << std::endl;
+                   UASSERTETRUE(partcilesAccuracyExt[idxValue].getRelativeL2Norm() < 1e-16);
+                }
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracyExt[idxValue] << std::endl;
+                   if constexpr (std::is_same<float, RealType>::value){
+                       UASSERTETRUE(partcilesRhsAccuracyExt[idxValue].getRelativeL2Norm() < 9e-2);
+                   }
+                   else{
+                       UASSERTETRUE(partcilesRhsAccuracyExt[idxValue].getRelativeL2Norm() < 9e-3);
                    }
                 }
 
@@ -362,6 +378,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                     }
                 });
 
+                std::cout << "Relative difference (between periodic FMM and extended FMM): " << multipoleAccuracy << std::endl;
                 std::cout << " - Multipole " << multipoleAccuracy << std::endl;
                 if constexpr (std::is_same<float, RealType>::value){
                     UASSERTETRUE(multipoleAccuracy.getRelativeL2Norm() < 9e-5);

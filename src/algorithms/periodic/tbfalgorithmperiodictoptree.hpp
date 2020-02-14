@@ -468,6 +468,19 @@ public:
     long int getExtendedLevel(const long int inLevel) const {
         return (configuration.getTreeHeight() - 2) + inLevel;
     }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfAlgorithmPeriodicTopTree& inAlgo) {
+        inStream << "TbfAlgorithmPeriodicTopTree @ " << &inAlgo << "\n";
+        inStream << " - nbLevelsAbove0: " << inAlgo.nbLevelsAbove0 << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inAlgo.configuration << "\n";
+        inStream << " - Space system: " << "\n";
+        inStream << inAlgo.spaceSystem << "\n";
+        inStream << " - Original configuration: " << "\n";
+        inStream << inAlgo.originalConfiguration << "\n";
+        return inStream;
+    }
 };
 
 #endif

@@ -119,13 +119,12 @@ private:
     void precomputeTranslationCoef(){
         {// M2M & L2L
             // Allocate
-            M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
-            L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
+            M2MTranslationCoef.reset(new RealType[treeHeight][P+1]);
+            L2LTranslationCoef.reset(new RealType[treeHeight][P+1]);
             // widthAtLevel represents half of the size of a box
-            RealType widthAtLevel = boxWidth/4;
+            RealType widthAtLevel = boxWidth/2;
             // we go from the root to the leaf-1
-            for( int idxLevel = 0 ; idxLevel < treeHeight - 1 ; ++idxLevel){
-                std::cout << "idxLevel " << idxLevel << " " << widthAtLevel << std::endl;// TODO remove me
+            for( int idxLevel = 0 ; idxLevel <= treeHeight - 1 ; ++idxLevel){
                 // b is the parent-child distance = norm( vec(widthAtLevel,widthAtLevel,widthAtLevel))
                 const RealType b = std::sqrt(widthAtLevel*widthAtLevel*3);
                 // we compute b^idx iteratively
