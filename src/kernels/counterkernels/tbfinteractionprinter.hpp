@@ -9,6 +9,17 @@
 
 template <class RealKernel>
 class TbfInteractionPrinter : public RealKernel {
+    using RealType = typename RealKernel::RealType;
+    constexpr static long int Dim = RealKernel::SpaceIndexType::Dim;
+
+    auto getBoxWidthsAtLevel(const long int inLevel) const{
+        std::array<RealType, Dim> widths = spaceSystem.getConfiguration().getBoxWidths();
+        for(RealType& width : widths){
+            width /= RealType(1<<inLevel);
+        }
+        return widths;
+    }
+
     typename RealKernel::SpaceIndexType spaceSystem;
 
 public:
@@ -25,6 +36,7 @@ public:
         std::cout << "[INTERACTION]  - Leaf index: " << inLeafIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Leaf coord: " << TbfUtils::ArrayPrinter(inLeafIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Number of particles: " << inNbParticles << std::endl;
+        std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
         RealKernel::P2M(inLeafIndex, particlesIndexes, inParticles, inNbParticles, inOutLeaf);
     }
 
@@ -35,6 +47,7 @@ public:
         std::cout << "[INTERACTION] M2M:" << std::endl;
         std::cout << "[INTERACTION]  - Parent index: " << inCellIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Level: " << inLevel << std::endl;
+        std::cout << "[INTERACTION]  - Cell widths: " << TbfUtils::ArrayPrinter(getBoxWidthsAtLevel(inLevel)) << std::endl;
         std::cout << "[INTERACTION]  - Number of children: " << inNbChildren << std::endl;
         RealKernel::M2M(inCellIndex, inLevel, inLowerCell, inOutUpperCell, childrenPos, inNbChildren);
     }
@@ -46,6 +59,7 @@ public:
         std::cout << "[INTERACTION] M2L:" << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inTargetIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Level: " << inLevel << std::endl;
+        std::cout << "[INTERACTION]  - Cell widths: " << TbfUtils::ArrayPrinter(getBoxWidthsAtLevel(inLevel)) << std::endl;
         std::cout << "[INTERACTION]  - Number of neighbors: " << inNbNeighbors << std::endl;
         RealKernel::M2L(inTargetIndex, inLevel, inInteractingCells, neighPos, inNbNeighbors, inOutCell);
     }
@@ -57,6 +71,7 @@ public:
         std::cout << "[INTERACTION] L2L:" << std::endl;
         std::cout << "[INTERACTION]  - Parent index: " << inParentIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Level: " << inLevel << std::endl;
+        std::cout << "[INTERACTION]  - Cell widths: " << TbfUtils::ArrayPrinter(getBoxWidthsAtLevel(inLevel)) << std::endl;
         std::cout << "[INTERACTION]  - Number of children: " << inNbChildren << std::endl;
         RealKernel::L2L(inParentIndex, inLevel, inUpperCell, inOutLowerCell, childrednPos, inNbChildren);
     }
@@ -70,6 +85,7 @@ public:
         std::cout << "[INTERACTION]  - Leaf index: " << inLeafIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Leaf coord: " << TbfUtils::ArrayPrinter(inLeafIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Number of particles: " << inNbParticles << std::endl;
+        std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
         RealKernel::L2P(inLeafIndex, inLeaf, particlesIndexes, inOutParticles, inOutParticlesRhs, inNbParticles);
     }
 
@@ -89,6 +105,7 @@ public:
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
         std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
+        std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
 
         if constexpr(RealKernel::SpaceIndexType::IsPeriodic){
             using PeriodicShifter = typename TbfPeriodicShifter<typename RealKernel::RealType, typename RealKernel::SpaceIndexType>::Neighbor;
@@ -118,6 +135,7 @@ public:
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
         std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
+        std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
 
         if constexpr(RealKernel::SpaceIndexType::IsPeriodic){
             using PeriodicShifter = typename TbfPeriodicShifter<typename RealKernel::RealType, typename RealKernel::SpaceIndexType>::Neighbor;
@@ -139,6 +157,7 @@ public:
         std::cout << "[INTERACTION]  - Target index: " << inLeafIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inLeafIndex.boxCoord) << std::endl;
         std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
         RealKernel::P2PInner(inLeafIndex, targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
     }
 };
