@@ -278,11 +278,11 @@ public:
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
             L2L(runtime, inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
-            L2P(runtime, inTree);
-        }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
             P2P(runtime, inTree);
+        }
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
+            L2P(runtime, inTree);
         }
 
         runtime.waitAllTasks();
