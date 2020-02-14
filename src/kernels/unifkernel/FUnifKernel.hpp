@@ -58,7 +58,7 @@ private:
     using M2LHandlerClass = FUnifM2LHandler<RealType, ORDER,MatrixKernelClass::Type>;
 
     // using from
-    using AbstractBaseClass = FAbstractUnifKernel< RealType, MatrixKernelClass, ORDER, Dim>;
+    using AbstractBaseClass = FAbstractUnifKernel< RealType, MatrixKernelClass, ORDER, Dim, SpaceIndexType>;
 
     /// Needed for P2P and M2L operators
     const MatrixKernelClass *const MatrixKernel;

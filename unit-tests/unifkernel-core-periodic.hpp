@@ -90,7 +90,8 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
+        /*for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel)*/{
+            const long int idxExtraLevel = -1;
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
@@ -276,7 +277,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
                 TreeClassNonPeriodic extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
 
-                AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClass(configuration, &interpolator), 3);
+                AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClass(extendedConfiguration, &interpolator), 3);
 
                 extentedAlgorithm.execute(extendedTree);
 
