@@ -15,6 +15,7 @@
 #include "utils/tbftimer.hpp"
 #include "utils/tbfaccuracychecker.hpp"
 #include "algorithms/periodic/tbfalgorithmperiodictoptree.hpp"
+#include "kernels/counterkernels/tbfinteractionprinter.hpp"
 
 
 template <class RealType, template <typename T1, typename T2, typename T3> class TestAlgorithmClass>
@@ -67,7 +68,9 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         using MultipoleClass = MultipoleData;
         using LocalClass = LocalData;
-        using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
+
+        using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
+        using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER, Dim, SpacialSystemPeriodic>;
 
         const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
         using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass, SpacialSystemPeriodic>;
@@ -96,8 +99,8 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
             std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
             FInterpMatrixKernelR<RealType> interpolator;
-            TestAlgorithmClass<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator), LastWorkingLevel);
-            TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
+            AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator), LastWorkingLevel);
+            TopPeriodicAlgorithmClass topAlgorithm(configuration, KernelClass(configuration, &interpolator), idxExtraLevel);
 
             TbfTimer timerExecute;
 
@@ -115,15 +118,15 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
             /////////////////////////////////////////////////////////////////////////////////////////
 
+            std::array<std::unique_ptr<RealType[]>, 4> particles;
+            for(auto& vec : particles){
+                vec.reset(new RealType[NbParticles]());
+            }
+            std::array<std::unique_ptr<RealType[]>, NbRhsValuesPerParticle> particlesRhs;
+            for(auto& vec : particlesRhs){
+                vec.reset(new RealType[NbParticles]());
+            }
             {
-                std::array<RealType*, 4> particles;
-                for(auto& vec : particles){
-                    vec = new RealType[NbParticles]();
-                }
-                std::array<RealType*, NbRhsValuesPerParticle> particlesRhs;
-                for(auto& vec : particlesRhs){
-                    vec = new RealType[NbParticles]();
-                }
 
                 for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
                     particles[0][idxPart] = particlePositions[idxPart][0];
@@ -132,7 +135,35 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                     particles[3][idxPart] = particlePositions[idxPart][3];
                 }
 
+                std::array<std::unique_ptr<RealType[]>, 4> particlesRepeat;
+                for(auto& vec : particlesRepeat){
+                    vec.reset(new RealType[NbParticles]());
+                }
+
                 TbfTimer timerDirect;
+
+                const auto startRepeatInterval = topAlgorithm.getRepetitionsIntervals().first;
+                const auto endRepeatInterval = topAlgorithm.getRepetitionsIntervals().second;
+
+                for(long int idxX = startRepeatInterval[0] ; idxX <= endRepeatInterval[0] ; ++idxX){
+                    for(long int idxY = startRepeatInterval[1] ; idxY <= endRepeatInterval[1] ; ++idxY){
+                        for(long int idxZ = startRepeatInterval[2] ; idxZ <= endRepeatInterval[2] ; ++idxZ){
+                            const bool shouldBeDone = ((idxX != 0) || (idxY != 0) || (idxZ != 0));
+
+                            if(shouldBeDone){
+                                for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+                                    particlesRepeat[0][idxPart] = particles[0][idxPart] + RealType(idxX) * BoxWidths[0];
+                                    particlesRepeat[1][idxPart] = particles[1][idxPart] + RealType(idxY) * BoxWidths[1];
+                                    particlesRepeat[2][idxPart] = particles[2][idxPart] + RealType(idxZ) * BoxWidths[2];
+                                    particlesRepeat[3][idxPart] = particles[3][idxPart];
+                                }
+
+                                FP2PR::template GenericFullRemote<RealType>(TbfUtils::make_const(particlesRepeat), NbParticles,
+                                                                            particles, particlesRhs, NbParticles);
+                            }
+                        }
+                    }
+                }
 
                 FP2PR::template GenericInner<RealType>( particles, particlesRhs, NbParticles);
 
@@ -154,7 +185,10 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                            partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
                                                                 particleDataPtr[idxValue][idxPart]);
                         }
+                        std::cout << "particleIndexes[idxPart] = " << particleIndexes[idxPart] << std::endl;// TODO
                         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                            std::cout << "particlesRhs[idxValue][particleIndexes[idxPart]] = " << particlesRhs[idxValue][particleIndexes[idxPart]] << std::endl;// TODO
+                            std::cout << "particleRhsPtr[idxValue][idxPart] = " << particleRhsPtr[idxValue][idxPart] << std::endl;// TODO
                            partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
                                                                 particleRhsPtr[idxValue][idxPart]);
                         }
@@ -170,7 +204,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                 std::cout << " - original configuration: " << configuration << std::endl;
                 std::cout << " - top tree configuration: " << TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel) << std::endl;
 
-                std::cout << "Relative differences:" << std::endl;
+                std::cout << "Relative differences (between periodic FMM and P2P):" << std::endl;
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
                    UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
@@ -184,29 +218,212 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
                    }
                 }
+            }
+
+            /////////////////////////////////////////////////////////////////////////////////////////
+
+            {
+                std::vector<std::array<RealType, Dim+1>> extendedParticlePositions(NbParticles * topAlgorithm.getNbTotalRepetitions());
+
+                const auto startRepeatInterval = topAlgorithm.getRepetitionsIntervals().first;
+                const auto endRepeatInterval = topAlgorithm.getRepetitionsIntervals().second;
+
+                long int idxPartDest = 0;
+
+                for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+                    assert(idxPartDest < NbParticles * topAlgorithm.getNbTotalRepetitions());
+                    extendedParticlePositions[idxPartDest] = particlePositions[idxPart];
+                    idxPartDest += 1;
+                }
+
+                for(long int idxX = startRepeatInterval[0] ; idxX <= endRepeatInterval[0] ; ++idxX){
+                    for(long int idxY = startRepeatInterval[1] ; idxY <= endRepeatInterval[1] ; ++idxY){
+                        for(long int idxZ = startRepeatInterval[2] ; idxZ <= endRepeatInterval[2] ; ++idxZ){
+                            if(idxX != 0 || idxY != 0 || idxZ != 0){
+                                for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+                                    assert(idxPartDest < NbParticles * topAlgorithm.getNbTotalRepetitions());
+                                    extendedParticlePositions[idxPartDest][0] = particlePositions[idxPart][0] + RealType(idxX) * BoxWidths[0];
+                                    extendedParticlePositions[idxPartDest][1] = particlePositions[idxPart][1] + RealType(idxY) * BoxWidths[1];
+                                    extendedParticlePositions[idxPartDest][2] = particlePositions[idxPart][2] + RealType(idxZ) * BoxWidths[2];
+                                    extendedParticlePositions[idxPartDest][3] = particlePositions[idxPart][3];
+                                    idxPartDest += 1;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                const auto upperConfiguration = TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel);
+                const std::array<RealType, Dim> extendedBoxWidths = upperConfiguration.getBoxWidths();
+                const std::array<RealType, Dim> extendedBoxCenter = upperConfiguration.getBoxCenter();
+                const long int extendedTreeHeight = topAlgorithm.getExtendedLevel(configuration.getTreeHeight());
+
+                const TbfSpacialConfiguration<RealType, Dim> extendedConfiguration(extendedTreeHeight, extendedBoxWidths, extendedBoxCenter);
+
+                std::cout << "Extended configuration:" << std::endl;
+                std::cout << extendedConfiguration << std::endl;
+
+                using SpacialSystemNonPeriodic = TbfDefaultSpaceIndexType<RealType>;
+                using AlgorithmClassNonPeriodic = TestAlgorithmClass<RealType, KernelClass, SpacialSystemNonPeriodic>;
+                using TreeClassNonPeriodic = TbfTree<RealType,
+                                          RealType,
+                                          NbDataValuesPerParticle,
+                                          RealType,
+                                          NbRhsValuesPerParticle,
+                                          MultipoleClass,
+                                          LocalClass,
+                                          SpacialSystemNonPeriodic>;
+
+                TreeClassNonPeriodic extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
+
+                AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClass(configuration, &interpolator), 3);
+
+                extentedAlgorithm.execute(extendedTree);
 
                 //////////////////////////////////////////////////////////////////////
 
-                for(auto& vec : particles){
-                    delete[] vec;
+                std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
+                std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+
+                std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracyExt;
+                std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracyExt;
+
+                tree.applyToAllLeaves([&particles, &extendedTree, &configuration, &topAlgorithm, &partcilesAccuracy,
+                                        &partcilesRhsAccuracy, &partcilesAccuracyExt, &partcilesRhsAccuracyExt]
+                                      (auto&& leafHeader, const long int* particleIndexes,
+                                      const std::array<RealType*, 4> particleDataPtr,
+                                      const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
+                    long int sameIndex = topAlgorithm.getExtendedIndex(leafHeader.spaceIndex, configuration.getTreeHeight() - 1);
+                    auto foundLeaf = extendedTree.findGroupWithLeaf(sameIndex);
+                    assert(foundLeaf);
+
+                    auto particlesGoupr = foundLeaf->first;
+                    const long int leafIndex = foundLeaf->second;
+
+                    auto leafData = particlesGoupr.get().getParticleData(leafIndex);
+                    auto leafRhs = particlesGoupr.get().getParticleRhs(leafIndex);
+                    const long int* leafIndexes = particlesGoupr.get().getParticleIndexes(leafIndex);
+
+                    for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                        assert(leafIndexes[idxPart] == particleIndexes[idxPart]);
+                        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                           partcilesAccuracy[idxValue].addValues(leafData[idxValue][idxPart],
+                                                                particleDataPtr[idxValue][idxPart]);
+                        }
+                        for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                           partcilesRhsAccuracy[idxValue].addValues(leafRhs[idxValue][idxPart],
+                                                                particleRhsPtr[idxValue][idxPart]);
+                        }
+
+                        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                           partcilesAccuracyExt[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                                                                particleDataPtr[idxValue][idxPart]);
+                        }
+                        for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                           partcilesRhsAccuracyExt[idxValue].addValues(leafData[idxValue][particleIndexes[idxPart]],
+                                                                leafRhs[idxValue][idxPart]);
+                        }
+                    }
+                });
+
+                std::cout << "Relative differences (between periodic FMM and extended FMM):" << std::endl;
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
+                   UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
                 }
-                for(auto& vec : particlesRhs){
-                    delete[] vec;
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
+                   if constexpr (std::is_same<float, RealType>::value){
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-5);
+                   }
+                   else{
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-14);
+                   }
+                }
+
+                std::cout << "Relative differences (between extended FMM and P2P):" << std::endl;
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Data " << idxValue << " = " << partcilesAccuracyExt[idxValue] << std::endl;
+                   UASSERTETRUE(partcilesAccuracyExt[idxValue].getRelativeL2Norm() < 1e-16);
+                }
+                for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+                   std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracyExt[idxValue] << std::endl;
+                   if constexpr (std::is_same<float, RealType>::value){
+                       UASSERTETRUE(partcilesRhsAccuracyExt[idxValue].getRelativeL2Norm() < 9e-2);
+                   }
+                   else{
+                       UASSERTETRUE(partcilesRhsAccuracyExt[idxValue].getRelativeL2Norm() < 9e-3);
+                   }
+                }
+
+                //////////////////////////////////////////////////////////////////////
+
+                TbfAccuracyChecker<RealType> multipoleAccuracy;
+                TbfAccuracyChecker<RealType> localAccuracy;
+
+                tree.applyToAllCells([&extendedTree, &configuration, &topAlgorithm, &multipoleAccuracy,&localAccuracy]
+                                      (const long int idxLevel, auto&& cellHeader,
+                                      const auto& multipoleRef,
+                                      const auto& localRef){
+                    assert(multipoleRef);
+                    assert(localRef);
+
+                    const MultipoleClass& multipole = (*multipoleRef);
+                    const LocalClass& local = (*localRef);
+
+                    long int sameIndex = topAlgorithm.getExtendedIndex(cellHeader.spaceIndex, idxLevel); // TODO
+                    auto foundCell = extendedTree.findGroupWithCell(topAlgorithm.getExtendedLevel(idxLevel), sameIndex);
+                    assert(foundCell);
+
+                    auto cellGoupr = foundCell->first;
+                    const long int cellIndex = foundCell->second;
+
+                    auto multipoleData = cellGoupr.get().getCellMultipole(cellIndex);
+                    auto localData = cellGoupr.get().getCellLocal(cellIndex);
+
+                    for(int idxMultipole = 0 ; idxMultipole < TransformedVectorSize ; ++idxMultipole){
+                        multipoleAccuracy.addValues(multipole.transformed_multipole_exp[idxMultipole].real(), multipoleData.transformed_multipole_exp[idxMultipole].real());
+                        multipoleAccuracy.addValues(multipole.transformed_multipole_exp[idxMultipole].imag(), multipoleData.transformed_multipole_exp[idxMultipole].imag());
+                    }
+
+                    for(int idxLocal = 0 ; idxLocal < TransformedVectorSize ; ++idxLocal){
+                        localAccuracy.addValues(local.transformed_local_exp[idxLocal].real(), localData.transformed_local_exp[idxLocal].real());
+                        localAccuracy.addValues(local.transformed_local_exp[idxLocal].imag(), localData.transformed_local_exp[idxLocal].imag());
+                    }
+                });
+
+                std::cout << "Relative difference (between periodic FMM and extended FMM): " << multipoleAccuracy << std::endl;
+                std::cout << " - Multipole " << multipoleAccuracy << std::endl;
+                if constexpr (std::is_same<float, RealType>::value){
+                    UASSERTETRUE(multipoleAccuracy.getRelativeL2Norm() < 9e-5);
+                }
+                else{
+                    UASSERTETRUE(multipoleAccuracy.getRelativeL2Norm() < 9e-14);
+                }
+
+                std::cout << " - Local " << localAccuracy << std::endl;
+                if constexpr (std::is_same<float, RealType>::value){
+                    UASSERTETRUE(localAccuracy.getRelativeL2Norm() < 9e-5);
+                }
+                else{
+                    UASSERTETRUE(localAccuracy.getRelativeL2Norm() < 9e-14);
                 }
             }
         }
     }
 
     void TestBasic() {
-        for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
-            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
-                for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
-                    for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
-                        CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
-                    }
-                }
-            }
-        }
+//        for(long int idxNbParticles = 1 ; idxNbParticles <= 1000 ; idxNbParticles *= 10){
+//            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+//                for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
+//                    for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
+//                        CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
+//                    }
+//                }
+//            }
+//        }
+        // TODO
+        CorePart(1, 100, true, 2);
     }
 
     void SetTests() {

@@ -1,4 +1,4 @@
-#include "unifkernel-core.hpp"
+#include "unifkernel-core-periodic.hpp"
 #include "algorithms/sequential/tbfalgorithm.hpp"
 #include "kernels/unifkernel/FUnifKernel.hpp"
 

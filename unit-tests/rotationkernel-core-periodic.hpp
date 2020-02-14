@@ -49,7 +49,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        const unsigned int P = 12;
+        const unsigned int P = 8;
         constexpr long int NbDataValuesPerParticle = Dim+1;
         constexpr long int NbRhsValuesPerParticle = 4;
 
@@ -79,8 +79,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        /*for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel)*/{
-            const long int idxExtraLevel = -1; // TODO
+        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
@@ -174,7 +173,10 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                            partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
                                                                 particleDataPtr[idxValue][idxPart]);
                         }
+                        std::cout << "particleIndexes[idxPart] = " << particleIndexes[idxPart] << std::endl;// TODO
                         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                            std::cout << "particlesRhs[idxValue][particleIndexes[idxPart]] = " << particlesRhs[idxValue][particleIndexes[idxPart]] << std::endl;// TODO
+                            std::cout << "particleRhsPtr[idxValue][idxPart] = " << particleRhsPtr[idxValue][idxPart] << std::endl;// TODO
                            partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
                                                                 particleRhsPtr[idxValue][idxPart]);
                         }

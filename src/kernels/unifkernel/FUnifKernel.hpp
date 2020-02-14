@@ -23,6 +23,8 @@
 #include "FAbstractUnifKernel.hpp"
 #include "FP2PR.hpp"
 
+#include "utils/tbfperiodicshifter.hpp"
+
 #include "tbfglobal.hpp"
 
 
@@ -76,7 +78,7 @@ public:
     FUnifKernel(const SpacialConfiguration& inConfiguration,
                 const MatrixKernelClass *const inMatrixKernel,
                 const int inLeafLevelSeparationCriterion = 1)
-    : FAbstractUnifKernel< RealType, MatrixKernelClass, ORDER, Dim>(inConfiguration),
+    : FAbstractUnifKernel< RealType, MatrixKernelClass, ORDER, Dim, SpaceIndexType>(inConfiguration),
       MatrixKernel(inMatrixKernel),
       M2LHandler(MatrixKernel,
                  int(inConfiguration.getTreeHeight()),
@@ -183,9 +185,9 @@ public:
              [[maybe_unused]] const long arrayIndexSrc) const {
         if constexpr(SpaceIndexType::IsPeriodic){
             using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, AbstractBaseClass::spaceIndexSystem, arrayIndexSrc)){
                 auto duplicateSources = PeriodicShifter::DuplicatePositions(inNeighbors, inNbParticlesNeighbors);
-                PeriodicShifter::ApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc, duplicateSources, inNbParticlesNeighbors);
+                PeriodicShifter::ApplyShift(inNeighborIndex, inTargetIndex, AbstractBaseClass::spaceIndexSystem, arrayIndexSrc, duplicateSources, inNbParticlesNeighbors);
                 FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
                                                              (inTargets), (inTargetsRhs), inNbOutParticles);
             }
@@ -210,9 +212,9 @@ public:
              [[maybe_unused]] const long arrayIndexSrc) const {
         if constexpr(SpaceIndexType::IsPeriodic){
             using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, AbstractBaseClass::spaceIndexSystem, arrayIndexSrc)){
                 auto duplicateSources = PeriodicShifter::DuplicatePositions(inNeighbors, inNbParticlesNeighbors);
-                PeriodicShifter::ApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc, duplicateSources, inNbParticlesNeighbors);
+                PeriodicShifter::ApplyShift(inNeighborIndex, inTargetIndex, AbstractBaseClass::spaceIndexSystem, arrayIndexSrc, duplicateSources, inNbParticlesNeighbors);
                 FP2PR::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
                                                              (inTargets), (inTargetsRhs), inNbOutParticles);
             }
