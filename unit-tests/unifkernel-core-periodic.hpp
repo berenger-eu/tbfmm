@@ -163,7 +163,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
                 std::cout << "Perform the periodic FMM with parameters:" << std::endl;
                 std::cout << " - idxExtraLevel: " << idxExtraLevel << std::endl;
-                std::cout << " - Nb repeat per dim: " << topAlgorithm.getNbRepetitionsPerDim() << std::endl;
+                std::cout << " - Number of repeat per dim: " << topAlgorithm.getNbRepetitionsPerDim() << std::endl;
                 std::cout << " - Number of times the real box is duplicated: " << topAlgorithm.getNbTotalRepetitions() << std::endl;
                 std::cout << " - Repeatition interves: " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().first)
                           << " " << TbfUtils::ArrayPrinter(topAlgorithm.getRepetitionsIntervals().second) << std::endl;
