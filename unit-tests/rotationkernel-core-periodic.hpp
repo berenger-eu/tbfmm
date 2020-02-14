@@ -14,7 +14,7 @@
 #include "algorithms/tbfalgorithmutils.hpp"
 #include "utils/tbftimer.hpp"
 #include "utils/tbfaccuracychecker.hpp"
-#include "algorithms/tbfalgorithmperiodictoptree.hpp"
+#include "algorithms/periodic/tbfalgorithmperiodictoptree.hpp"
 #include "kernels/counterkernels/tbfinteractionprinter.hpp"
 
 

@@ -10,7 +10,7 @@
 #include "utils/tbftimer.hpp"
 #include "kernels/counterkernels/tbfinteractioncounter.hpp"
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
-#include "algorithms/tbfalgorithmperiodictoptree.hpp"
+#include "algorithms/periodic/tbfalgorithmperiodictoptree.hpp"
 
 
 #include <iostream>

@@ -12,7 +12,7 @@
 #include "core/tbftree.hpp"
 #include "kernels/testkernel/tbftestkernel.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
-#include "algorithms/tbfalgorithmperiodictoptree.hpp"
+#include "algorithms/periodic/tbfalgorithmperiodictoptree.hpp"
 #include "utils/tbftimer.hpp"
 
 

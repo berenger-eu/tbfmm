@@ -12,7 +12,7 @@
 #include "core/tbftreetsm.hpp"
 #include "kernels/testkernel/tbftestkernel.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
-#include "algorithms/tbfalgorithmperiodictoptreetsm.hpp"
+#include "algorithms/periodic/tbfalgorithmperiodictoptreetsm.hpp"
 #include "utils/tbftimer.hpp"
 
 
