@@ -182,6 +182,7 @@ public:
     //////////////////////////////////////////////////////////////////////////////
 
     auto findGroupWithCell(const long int inLevel, const IndexType inMIndex){
+        assert(inLevel < configuration.getTreeHeight());
         auto iterCells = cellBlocks[inLevel].begin();
         auto endCells = cellBlocks[inLevel].end();
 

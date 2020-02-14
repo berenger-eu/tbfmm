@@ -463,6 +463,9 @@ public:
         return spaceSystem.getIndexFromBoxPos(extendedCoord);
     }
 
+    long int getExtendedLevel(const long int inLevel) const {
+        return (configuration.getTreeHeight() - 2) + inLevel;
+    }
 
 };
 

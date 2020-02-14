@@ -79,7 +79,8 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
+        /*for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel)*/{
+            const long int idxExtraLevel = -1; // TODO
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
@@ -253,17 +254,27 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 const auto upperConfiguration = TopPeriodicAlgorithmClass::GenerateAboveTreeConfiguration(configuration,idxExtraLevel);
                 const std::array<RealType, Dim> extendedBoxWidths = upperConfiguration.getBoxWidths();
                 const std::array<RealType, Dim> extendedBoxCenter = upperConfiguration.getBoxCenter();
-                const long int extendedTreeHeight = upperConfiguration.getTreeHeight()
-                                                    + std::max(0L, configuration.getTreeHeight() - 2);
+                const long int extendedTreeHeight = topAlgorithm->getExtendedLevel(configuration.getTreeHeight());
 
                 const TbfSpacialConfiguration<RealType, Dim> extendedConfiguration(extendedTreeHeight, extendedBoxWidths, extendedBoxCenter);
 
                 std::cout << "Extended configuration:" << std::endl;
                 std::cout << extendedConfiguration << std::endl;
 
-                TreeClass extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
+                using SpacialSystemNonPeriodic = TbfDefaultSpaceIndexType<RealType>;
+                using AlgorithmClassNonPeriodic = TestAlgorithmClass<RealType, KernelClass, SpacialSystemNonPeriodic>;
+                using TreeClassNonPeriodic = TbfTree<RealType,
+                                          RealType,
+                                          NbDataValuesPerParticle,
+                                          RealType,
+                                          NbRhsValuesPerParticle,
+                                          MultipoleClass,
+                                          LocalClass,
+                                          SpacialSystemNonPeriodic>;
 
-                std::unique_ptr<AlgorithmClass> extentedAlgorithm(new AlgorithmClass(extendedConfiguration, 3));
+                TreeClassNonPeriodic extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
+
+                std::unique_ptr<AlgorithmClassNonPeriodic> extentedAlgorithm(new AlgorithmClassNonPeriodic(extendedConfiguration, 3));
 
                 extentedAlgorithm->execute(extendedTree);
 
@@ -276,7 +287,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                                       (auto&& leafHeader, const long int* particleIndexes,
                                       const std::array<RealType*, 4> particleDataPtr,
                                       const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
-                    long int sameIndex = topAlgorithm->getExtendedIndex(leafHeader.spaceIndex, configuration.getTreeHeight() - 1); // TODO
+                    long int sameIndex = topAlgorithm->getExtendedIndex(leafHeader.spaceIndex, configuration.getTreeHeight() - 1);
                     auto foundLeaf = extendedTree.findGroupWithLeaf(sameIndex);
                     assert(foundLeaf);
 
@@ -308,11 +319,63 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
                    if constexpr (std::is_same<float, RealType>::value){
-                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-5);
                    }
                    else{
-                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-14);
                    }
+                }
+
+                //////////////////////////////////////////////////////////////////////
+
+                TbfAccuracyChecker<RealType> multipoleAccuracy;
+                TbfAccuracyChecker<RealType> localAccuracy;
+
+                tree.applyToAllCells([&extendedTree, &configuration, &topAlgorithm, &multipoleAccuracy,&localAccuracy]
+                                      (const long int idxLevel, auto&& cellHeader,
+                                      const auto& multipoleRef,
+                                      const auto& localRef){
+                    assert(multipoleRef);
+                    assert(localRef);
+
+                    const MultipoleClass& multipole = (*multipoleRef);
+                    const LocalClass& local = (*localRef);
+
+                    long int sameIndex = topAlgorithm->getExtendedIndex(cellHeader.spaceIndex, idxLevel); // TODO
+                    auto foundCell = extendedTree.findGroupWithCell(topAlgorithm->getExtendedLevel(idxLevel), sameIndex);
+                    assert(foundCell);
+
+                    auto cellGoupr = foundCell->first;
+                    const long int cellIndex = foundCell->second;
+
+                    auto multipoleData = cellGoupr.get().getCellMultipole(cellIndex);
+                    auto localData = cellGoupr.get().getCellLocal(cellIndex);
+
+                    for(int idxMultipole = 0 ; idxMultipole < static_cast<long int>(std::size(multipole)) ; ++idxMultipole){
+                        multipoleAccuracy.addValues(multipole[idxMultipole].real(), multipoleData[idxMultipole].real());
+                        multipoleAccuracy.addValues(multipole[idxMultipole].imag(), multipoleData[idxMultipole].imag());
+                    }
+
+                    for(int idxLocal = 0 ; idxLocal < static_cast<long int>(std::size(local)) ; ++idxLocal){
+                        localAccuracy.addValues(local[idxLocal].real(), localData[idxLocal].real());
+                        localAccuracy.addValues(local[idxLocal].imag(), localData[idxLocal].imag());
+                    }
+                });
+
+                std::cout << " - Multipole " << multipoleAccuracy << std::endl;
+                if constexpr (std::is_same<float, RealType>::value){
+                    UASSERTETRUE(multipoleAccuracy.getRelativeL2Norm() < 9e-5);
+                }
+                else{
+                    UASSERTETRUE(multipoleAccuracy.getRelativeL2Norm() < 9e-14);
+                }
+
+                std::cout << " - Local " << localAccuracy << std::endl;
+                if constexpr (std::is_same<float, RealType>::value){
+                    UASSERTETRUE(localAccuracy.getRelativeL2Norm() < 9e-5);
+                }
+                else{
+                    UASSERTETRUE(localAccuracy.getRelativeL2Norm() < 9e-14);
                 }
             }
         }
