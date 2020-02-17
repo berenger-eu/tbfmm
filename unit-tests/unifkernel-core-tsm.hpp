@@ -96,7 +96,7 @@ class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, TestAlgori
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
         FInterpMatrixKernelR<RealType> interpolator;
-        TestAlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
+        AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
 
         TbfTimer timerExecute;
 

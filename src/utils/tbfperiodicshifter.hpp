@@ -12,7 +12,7 @@ public:
                                 const SpacialConfiguration& inConfig, const long int inIndexArray){
             [[maybe_unused]] const auto& symSrcPos = inSymSrc.boxCoord;
             const auto& symTgtPos = inSymTgt.boxCoord;
-            const auto& indexPos = inConfig.getPosFromNeighborIndex(inIndexArray);
+            const auto& indexPos = inConfig.getRelativePosFromNeighborIndex(inIndexArray);
             const long int boxLimit = inConfig.getBoxLimitAtLeafLevel();
 
             bool needShift = false;
@@ -38,7 +38,7 @@ public:
 
             [[maybe_unused]] const auto& symSrcPos = inSymSrc.boxCoord;
             const auto& symTgtPos = inSymTgt.boxCoord;
-            const auto& indexPos = inConfig.getPosFromNeighborIndex(inIndexArray);
+            const auto& indexPos = inConfig.getRelativePosFromNeighborIndex(inIndexArray);
             const long int boxLimit = inConfig.getBoxLimitAtLeafLevel();
             const auto& boxWidths = inConfig.getConfiguration().getBoxWidths();
 

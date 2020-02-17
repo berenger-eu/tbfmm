@@ -245,8 +245,9 @@ public:
                     assert(arrayPos < TbfUtils::lipow(7,Dim));
 
                     if constexpr(IsPeriodic){
+                        auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
                         for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                            assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == getPosFromInteractionIndex(arrayPos)[idxDim]);
+                            assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == generatedPos[idxDim]);
                         }
                     }
 
@@ -384,8 +385,9 @@ public:
                         interaction.arrayIndexSrc = arrayPos;
 
                         if constexpr(IsPeriodic){
+                            auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
                             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                                assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == getPosFromInteractionIndex(arrayPos)[idxDim]);
+                                assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == generatedPos[idxDim]);
                             }
                         }
 
@@ -481,7 +483,7 @@ public:
                     for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         otherPos[idxDim] = ((otherPos[idxDim]+boxLimite)%boxLimite);
                     }
-                    const auto generatedPos = getPosFromNeighborIndex(arrayPos);
+                    const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
                     for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         assert((currentTest[idxDim]) == generatedPos[idxDim]);
                     }
@@ -597,7 +599,7 @@ public:
                         interaction.arrayIndexSrc = arrayPos;
 
                         if constexpr(IsPeriodic){
-                            const auto generatedPos = getPosFromNeighborIndex(arrayPos);
+                            const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
                             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                                 assert((currentTest[idxDim]) == generatedPos[idxDim]);
                             }
@@ -673,22 +675,42 @@ public:
         return nbNeighbors - 1;
     }
 
-    static auto getPosFromInteractionIndex(long int inArrayPos){
+    static auto getRelativePosFromInteractionIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-            pos[idxDim] = (inArrayPos%7) - 3;
+            pos[Dim-1-idxDim] = (inArrayPos%7) - 3;
             inArrayPos /= 7;
         }
         return pos;
     }
 
-    static auto getPosFromNeighborIndex(long int inArrayPos){
+    static auto getRelativePosFromNeighborIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
             pos[Dim-1-idxDim] = (inArrayPos%3) - 1;
             inArrayPos /= 3;
         }
         return pos;
+    }
+
+    static auto getInteractionIndexFromRelativePos(const std::array<long int, Dim>& pos){
+        long int arrayPos = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            arrayPos *= 7;
+            assert(-3 <= pos[idxDim] && pos[idxDim] <= 3);
+            arrayPos += (pos[idxDim] + 3);
+        }
+        return arrayPos;
+    }
+
+    static auto getNeighborIndexFromRelativePos(const std::array<long int, Dim>& pos){
+        long int arrayPos = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            arrayPos *= 3;
+            assert(-1 <= pos[idxDim] && pos[idxDim] <= 1);
+            arrayPos += (pos[idxDim] + 1);
+        }
+        return arrayPos;
     }
 
     template <class StreamClass>

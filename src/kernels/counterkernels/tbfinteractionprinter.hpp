@@ -65,7 +65,7 @@ public:
         for(long int idxInteraction = 0 ; idxInteraction < inNbNeighbors ; ++idxInteraction){
             std::cout << "[INTERACTION]  - Idx : " << idxInteraction << std::endl;
             std::cout << "[INTERACTION]  - Interaction index : " << neighPos[idxInteraction] << std::endl;
-            std::cout << "[INTERACTION]  - Interaction relative position : " << TbfUtils::ArrayPrinter(spaceSystem.getPosFromInteractionIndex(neighPos[idxInteraction])) << std::endl;
+            std::cout << "[INTERACTION]  - Interaction relative position : " << TbfUtils::ArrayPrinter(spaceSystem.getRelativePosFromInteractionIndex(neighPos[idxInteraction])) << std::endl;
         }
 
         RealKernel::M2L(inTargetIndex, inLevel, inInteractingCells, neighPos, inNbNeighbors, inOutCell);

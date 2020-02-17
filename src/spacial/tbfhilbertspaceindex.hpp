@@ -344,6 +344,13 @@ public:
                     }
                     assert(arrayPos < TbfUtils::lipow(7,Dim));
 
+                    if constexpr(IsPeriodic){
+                        auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
+                        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                            assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == generatedPos[idxDim]);
+                        }
+                    }
+
                     indexes.push_back(childIndex);
                 }
             }
@@ -477,6 +484,13 @@ public:
                         interaction.globalTargetPos = idxCell;
                         interaction.arrayIndexSrc = arrayPos;
 
+                        if constexpr(IsPeriodic){
+                            auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
+                            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                                assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == generatedPos[idxDim]);
+                            }
+                        }
+
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
                             if(testSelfInclusion == false || inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
@@ -568,6 +582,10 @@ public:
                 if constexpr(IsPeriodic){
                     for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         otherPos[idxDim] = ((otherPos[idxDim]+boxLimite)%boxLimite);
+                    }
+                    const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
+                    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                        assert((currentTest[idxDim]) == generatedPos[idxDim]);
                     }
                 }
 
@@ -680,6 +698,13 @@ public:
                         interaction.globalTargetPos = idxCell;
                         interaction.arrayIndexSrc = arrayPos;
 
+                        if constexpr(IsPeriodic){
+                            const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
+                            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                                assert((currentTest[idxDim]) == generatedPos[idxDim]);
+                            }
+                        }
+
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
                             if(testSelfInclusion == false || inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
@@ -750,16 +775,16 @@ public:
         return nbNeighbors - 1;
     }
 
-    static auto getPosFromInteractionIndex(long int inArrayPos){
+    static auto getRelativePosFromInteractionIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-            pos[idxDim] = (inArrayPos%7) - 3;
+            pos[Dim-1-idxDim] = (inArrayPos%7) - 3;
             inArrayPos /= 7;
         }
         return pos;
     }
 
-    static auto getPosFromNeighborIndex(long int inArrayPos){
+    static auto getRelativePosFromNeighborIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
             pos[Dim-1-idxDim] = (inArrayPos%3) - 1;

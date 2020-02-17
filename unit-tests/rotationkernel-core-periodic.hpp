@@ -59,7 +59,8 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
         using LocalClass = std::array<std::complex<RealType>, VectorSize>;
 
         using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
-        using KernelClass = TbfInteractionPrinter<FRotationKernel<RealType, P, SpacialSystemPeriodic>>;
+        // TODO using KernelClass = TbfInteractionPrinter<FRotationKernel<RealType, P, SpacialSystemPeriodic>>;
+        using KernelClass = FRotationKernel<RealType, P, SpacialSystemPeriodic>;
 
         const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
         using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass, SpacialSystemPeriodic>;
@@ -79,7 +80,8 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
+        /*for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel)*/{// TODO
+            const long int idxExtraLevel = 0;
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
@@ -100,6 +102,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
             algorithm->execute(tree, TbfAlgorithmUtils::TbfTransferStages);
             // Top to bottom
             algorithm->execute(tree, TbfAlgorithmUtils::TbfTopToBottomStages);
+            // algorithm->execute(tree, TbfAlgorithmUtils::TbfP2P);// TODO
 
             timerExecute.stop();
             std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
@@ -267,6 +270,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 std::unique_ptr<AlgorithmClassNonPeriodic> extentedAlgorithm(new AlgorithmClassNonPeriodic(extendedConfiguration, 3));
 
                 extentedAlgorithm->execute(extendedTree);
+                //extentedAlgorithm->execute(extendedTree, TbfAlgorithmUtils::TbfP2P);// TODO
 
                 //////////////////////////////////////////////////////////////////////
 
@@ -276,7 +280,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                 std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracyExt;
                 std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracyExt;
 
-                tree.applyToAllLeaves([&particles, &extendedTree, &configuration, &topAlgorithm, &partcilesAccuracy,
+                tree.applyToAllLeaves([&particlesRhs, &particles, &extendedTree, &configuration, &topAlgorithm, &partcilesAccuracy,
                                         &partcilesRhsAccuracy, &partcilesAccuracyExt, &partcilesRhsAccuracyExt]
                                       (auto&& leafHeader, const long int* particleIndexes,
                                       const std::array<RealType*, 4> particleDataPtr,
@@ -291,15 +295,25 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                     auto leafData = particlesGoupr.get().getParticleData(leafIndex);
                     auto leafRhs = particlesGoupr.get().getParticleRhs(leafIndex);
                     const long int* leafIndexes = particlesGoupr.get().getParticleIndexes(leafIndex);
+                    assert(leafHeader.nbParticles == particlesGoupr.get().getNbParticlesInLeaf(leafIndex));
 
                     for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                        assert(leafIndexes[idxPart] == particleIndexes[idxPart]);
+                        int indexFound = -1;
+                        for(int idxPartFound = 0 ; idxPartFound < leafHeader.nbParticles ; ++idxPartFound){
+                            if(leafIndexes[idxPartFound] == particleIndexes[idxPart]){
+                                indexFound = idxPartFound;
+                                break;
+                            }
+                        }
+
+                        assert(indexFound != -1);
+                        assert(leafIndexes[indexFound] == particleIndexes[idxPart]);
                         for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
-                           partcilesAccuracy[idxValue].addValues(leafData[idxValue][idxPart],
+                           partcilesAccuracy[idxValue].addValues(leafData[idxValue][indexFound],
                                                                 particleDataPtr[idxValue][idxPart]);
                         }
                         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                           partcilesRhsAccuracy[idxValue].addValues(leafRhs[idxValue][idxPart],
+                           partcilesRhsAccuracy[idxValue].addValues(leafRhs[idxValue][indexFound],
                                                                 particleRhsPtr[idxValue][idxPart]);
                         }
 
@@ -308,8 +322,8 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                                                                 particleDataPtr[idxValue][idxPart]);
                         }
                         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                           partcilesRhsAccuracyExt[idxValue].addValues(leafData[idxValue][particleIndexes[idxPart]],
-                                                                leafRhs[idxValue][idxPart]);
+                           partcilesRhsAccuracyExt[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
+                                                                leafRhs[idxValue][indexFound]);
                         }
                     }
                 });
@@ -359,7 +373,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
                     const MultipoleClass& multipole = (*multipoleRef);
                     const LocalClass& local = (*localRef);
 
-                    long int sameIndex = topAlgorithm->getExtendedIndex(cellHeader.spaceIndex, idxLevel); // TODO
+                    long int sameIndex = topAlgorithm->getExtendedIndex(cellHeader.spaceIndex, idxLevel);
                     auto foundCell = extendedTree.findGroupWithCell(topAlgorithm->getExtendedLevel(idxLevel), sameIndex);
                     assert(foundCell);
 
@@ -401,7 +415,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
     }
 
     void TestBasic() {
-//        for(long int idxNbParticles = 1 ; idxNbParticles <= 1000 ; idxNbParticles *= 10){
+//        for(long int idxNbParticles = 10 ; idxNbParticles <= 1000 ; idxNbParticles *= 10){
 //            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
 //                for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
 //                    for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
@@ -411,7 +425,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 //            }
 //        }
         // TODO
-        CorePart(1, 100, true, 2);
+        CorePart(/*1000*/4, 100, true, 2);
     }
 
     void SetTests() {
