@@ -110,7 +110,7 @@ public:
         std::cout << "[INTERACTION]  - Number of particles in neighbors: " << inNbParticlesNeighbors << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inParticlesIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
-        std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Number of particles in target: " << inNbOutParticles << std::endl;
         std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
         std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
 
@@ -140,7 +140,7 @@ public:
         std::cout << "[INTERACTION]  - Number of particles in neighbors: " << inNbParticlesNeighbors << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inParticlesIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inParticlesIndex.boxCoord) << std::endl;
-        std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Number of particles in target: " << inNbOutParticles << std::endl;
         std::cout << "[INTERACTION]  - Array index: " << arrayIndexSrc << std::endl;
         std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
 
@@ -163,7 +163,7 @@ public:
         std::cout << "[INTERACTION] P2PInner:" << std::endl;
         std::cout << "[INTERACTION]  - Target index: " << inLeafIndex.spaceIndex << std::endl;
         std::cout << "[INTERACTION]  - Target pos: " << TbfUtils::ArrayPrinter(inLeafIndex.boxCoord) << std::endl;
-        std::cout << "[INTERACTION]  - Target in neighbors: " << inNbOutParticles << std::endl;
+        std::cout << "[INTERACTION]  - Number of particles in target: " << inNbOutParticles << std::endl;
         std::cout << "[INTERACTION]  - Leaf widths: " << TbfUtils::ArrayPrinter(spaceSystem.getConfiguration().getLeafWidths()) << std::endl;
         RealKernel::P2PInner(inLeafIndex, targetIndexes, inOutParticles, inOutParticlesRhs, inNbOutParticles);
     }

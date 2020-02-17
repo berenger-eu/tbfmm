@@ -60,10 +60,10 @@ inline typename std::decay<VecClass>::type AddToVec(VecClass&& inVec, ScalarClas
 }
 
 template <class VecClass1, class VecClass2>
-inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, VecClass2&& inVec2){
+inline typename std::decay<VecClass1>::type AddVecToVec(const VecClass1& inVec1, const VecClass2& inVec2){
     assert(std::size(inVec1) == std::size(inVec2));
 
-    typename std::decay<VecClass1>::type dest = std::forward<VecClass1>(inVec1);
+    typename std::decay<VecClass1>::type dest = inVec1;
 
     auto iterDest = std::begin(dest);
     const auto endDest = std::end(dest);

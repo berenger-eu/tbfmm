@@ -62,31 +62,44 @@ public:
         }
 
         template <class SymbDataSource, class SymbDataTarget, class PositionsData>
-        static void ApplyShift(const SymbDataSource& inSymSrc, const SymbDataTarget& inSymTgt,
+        static auto DuplicatePositionsAndApplyShift(const SymbDataSource& inSymSrc, const SymbDataTarget& inSymTgt,
                                const SpacialConfiguration& inConfig, const long int inIndexArray,
                                PositionsData& inPositions, const long int inNbParticles){
-            std::array<RealType, Dim> shiftValues = GetShiftCoef(inSymSrc, inSymTgt, inConfig, inIndexArray);
+            const std::array<RealType, Dim> shiftValues = GetShiftCoef(inSymSrc, inSymTgt, inConfig, inIndexArray);
 
-            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                for(long int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
-                    inPositions[idxDim][idxPart] += shiftValues[idxDim];
-                }
-            }
-        }
-
-        template <class PositionsData>
-        static auto DuplicatePositions(const PositionsData& inPositions, const long int inNbParticles){
             constexpr long int NbValues = std::tuple_size<PositionsData>::value;
             static_assert (Dim <= NbValues, "Should be at least Dim");
-            std::array<std::unique_ptr<RealType[]>, NbValues> copyPositions;
-            for(long int idxDim = 0 ; idxDim < NbValues ; ++idxDim){
-                copyPositions[idxDim].reset(new RealType[inNbParticles]);
+            std::array<const RealType*, NbValues> copyPositions;
+
+            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                RealType* ptr = (new RealType[inNbParticles]);
 
                 for(long int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
-                    copyPositions[idxDim][idxPart] = inPositions[idxDim][idxPart];
+                    ptr[idxPart] = inPositions[idxDim][idxPart] + shiftValues[idxDim];
                 }
+
+                copyPositions[idxDim] = ptr;
             }
+
+            for(long int idxValue = Dim ; idxValue < NbValues ; ++idxValue){
+                RealType* ptr = (new RealType[inNbParticles]);
+
+                for(long int idxPart = 0 ; idxPart < inNbParticles ; ++idxPart){
+                    ptr[idxPart] = inPositions[idxValue][idxPart];
+                }
+
+                copyPositions[idxValue] = ptr;
+            }
+
             return copyPositions;
+        }
+
+        template <const long unsigned int NbValues>
+        static auto FreePositions(const std::array<const RealType*, NbValues>& copiedPositions){
+            for(long unsigned int idxDim = 0 ; idxDim < NbValues ; ++idxDim){
+                delete[] copiedPositions[idxDim];
+            }
+
         }
     };
 };

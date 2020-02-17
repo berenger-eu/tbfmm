@@ -244,6 +244,12 @@ public:
                     }
                     assert(arrayPos < TbfUtils::lipow(7,Dim));
 
+                    if constexpr(IsPeriodic){
+                        for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                            assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == getPosFromInteractionIndex(arrayPos)[idxDim]);
+                        }
+                    }
+
                     indexes.push_back(childIndex);
                 }
             }
@@ -377,6 +383,12 @@ public:
                         interaction.globalTargetPos = idxCell;
                         interaction.arrayIndexSrc = arrayPos;
 
+                        if constexpr(IsPeriodic){
+                            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                                assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == getPosFromInteractionIndex(arrayPos)[idxDim]);
+                            }
+                        }
+
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
                             if(testSelfInclusion == false || inGroup.getElementFromSpacialIndex(interaction.indexSrc)){
@@ -468,6 +480,10 @@ public:
                 if constexpr(IsPeriodic){
                     for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                         otherPos[idxDim] = ((otherPos[idxDim]+boxLimite)%boxLimite);
+                    }
+                    const auto generatedPos = getPosFromNeighborIndex(arrayPos);
+                    for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                        assert((currentTest[idxDim]) == generatedPos[idxDim]);
                     }
                 }
 
@@ -579,6 +595,13 @@ public:
                         interaction.indexSrc = otherIndex;
                         interaction.globalTargetPos = idxCell;
                         interaction.arrayIndexSrc = arrayPos;
+
+                        if constexpr(IsPeriodic){
+                            const auto generatedPos = getPosFromNeighborIndex(arrayPos);
+                            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                                assert((currentTest[idxDim]) == generatedPos[idxDim]);
+                            }
+                        }
 
                         if(inGroup.getStartingSpacialIndex() <= interaction.indexSrc
                                 && interaction.indexSrc <= inGroup.getEndingSpacialIndex()){
