@@ -60,8 +60,29 @@ inline typename std::decay<VecClass>::type AddToVec(VecClass&& inVec, ScalarClas
 }
 
 template <class VecClass1, class VecClass2>
+inline typename std::decay<VecClass1>::type AddVecToVec(const VecClass1& inVec1, const VecClass2& inVec2){
+    assert(std::size(inVec1) == std::size(inVec2));
+
+    typename std::decay<VecClass1>::type dest = inVec1;
+
+    auto iterDest = std::begin(dest);
+    const auto endDest = std::end(dest);
+    auto iter2 = std::begin(inVec2);
+
+    while(iterDest != endDest){
+        (*iterDest) += (*iter2);
+        ++iterDest;
+        ++iter2;
+    }
+
+    return dest;
+}
+
+template <class VecClass1, class VecClass2>
 inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, const VecClass2& inVec2){
     assert(std::size(inVec1) == std::size(inVec2));
+
+    typename std::decay<VecClass1>::type dest = inVec1;
 
     auto iterDest = std::begin(inVec1);
     const auto endDest = std::end(inVec1);
@@ -74,17 +95,6 @@ inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, cons
     }
 
     return inVec1;
-}
-
-template <class VecClass1, class VecClass2>
-inline typename std::decay<VecClass1>::type AddVecToVec(const VecClass1& inVec1, const VecClass2& inVec2){
-    auto dest = inVec1;
-    return AddVecToVec(std::move(dest), inVec2);
-}
-
-template <class VecClass1, class VecClass2>
-inline typename std::decay<VecClass1>::type AddVecToVec(const VecClass1& inVec1, VecClass2&& inVec2){
-    return AddVecToVec(std::forward<VecClass2>(inVec2), inVec1);
 }
 
 template <class VecClass, class ScalarClass>
