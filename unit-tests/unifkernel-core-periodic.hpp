@@ -90,8 +90,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        /*for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel)*/{
-            const long int idxExtraLevel = 0;
+        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
@@ -222,7 +221,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
             /////////////////////////////////////////////////////////////////////////////////////////
 
-            {
+            if(idxExtraLevel <= 0){
                 std::vector<std::array<RealType, Dim+1>> extendedParticlePositions(NbParticles * topAlgorithm.getNbTotalRepetitions());
 
                 const auto startRepeatInterval = topAlgorithm.getRepetitionsIntervals().first;
@@ -264,7 +263,8 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                 std::cout << extendedConfiguration << std::endl;
 
                 using SpacialSystemNonPeriodic = TbfDefaultSpaceIndexType<RealType>;
-                using AlgorithmClassNonPeriodic = TestAlgorithmClass<RealType, KernelClass, SpacialSystemNonPeriodic>;
+                using KernelClassNonPeriodic = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER, Dim, SpacialSystemNonPeriodic>;
+                using AlgorithmClassNonPeriodic = TestAlgorithmClass<RealType, KernelClassNonPeriodic, SpacialSystemNonPeriodic>;
                 using TreeClassNonPeriodic = TbfTree<RealType,
                                           RealType,
                                           NbDataValuesPerParticle,
@@ -276,7 +276,8 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
                 TreeClassNonPeriodic extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
 
-                AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClass(extendedConfiguration, &interpolator), 3);
+                FInterpMatrixKernelR<RealType> interpolatorExtended;
+                AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClassNonPeriodic(extendedConfiguration, &interpolatorExtended), 2);
 
                 extentedAlgorithm.execute(extendedTree);
 
@@ -344,10 +345,10 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
                    if constexpr (std::is_same<float, RealType>::value){
-                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-4);
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
                    }
                    else{
-                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-12);
+                       UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-6);
                    }
                 }
 
@@ -375,14 +376,17 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                                       (const long int idxLevel, auto&& cellHeader,
                                       const auto& multipoleRef,
                                       const auto& localRef){
+                    if(idxLevel < 1) return ;
+
                     assert(multipoleRef);
                     assert(localRef);
 
                     const MultipoleClass& multipole = (*multipoleRef);
                     const LocalClass& local = (*localRef);
 
-                    long int sameIndex = topAlgorithm.getExtendedIndex(cellHeader.spaceIndex, idxLevel);
-                    auto foundCell = extendedTree.findGroupWithCell(topAlgorithm.getExtendedLevel(idxLevel), sameIndex);
+                    const long int sameIndex = topAlgorithm.getExtendedIndex(cellHeader.spaceIndex, idxLevel);
+                    const long int extendedLevel = topAlgorithm.getExtendedLevel(idxLevel);
+                    auto foundCell = extendedTree.findGroupWithCell(extendedLevel, sameIndex);
                     assert(foundCell);
 
                     auto cellGoupr = foundCell->first;
@@ -423,16 +427,14 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
     }
 
     void TestBasic() {
-//        for(long int idxNbParticles = 10 ; idxNbParticles <= 1000 ; idxNbParticles *= 10){
-//            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
-//                for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
-//                    for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
-//                        CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
-//                    }
-//                }
-//            }
-//        }
-        CorePart(/*1000*/4, 100, true, 2);
+        const long int idxNbParticles = 1000;
+        for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+            for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
+                for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
+                    CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
+                }
+            }
+        }
     }
 
     void SetTests() {

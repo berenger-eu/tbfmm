@@ -158,7 +158,7 @@ protected:
                 std::array<long int, Dim> minLimits;
                 std::array<long int, Dim> maxLimits;
                 // First -3/2
-                if(idxLevel == 2){
+                if(idxLevel == 3){
                     minLimits.fill(-3);
                     maxLimits.fill(2);
                 }
