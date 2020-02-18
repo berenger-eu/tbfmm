@@ -793,6 +793,26 @@ public:
         return pos;
     }
 
+    static auto getInteractionIndexFromRelativePos(const std::array<long int, Dim>& pos){
+        long int arrayPos = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            arrayPos *= 7;
+            assert(-3 <= pos[idxDim] && pos[idxDim] <= 3);
+            arrayPos += (pos[idxDim] + 3);
+        }
+        return arrayPos;
+    }
+
+    static auto getNeighborIndexFromRelativePos(const std::array<long int, Dim>& pos){
+        long int arrayPos = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            arrayPos *= 3;
+            assert(-1 <= pos[idxDim] && pos[idxDim] <= 1);
+            arrayPos += (pos[idxDim] + 1);
+        }
+        return arrayPos;
+    }
+
     template <class StreamClass>
     friend  StreamClass& operator<<(StreamClass& inStream, const TbfHilbertSpaceIndex& inSpaceSystem) {
         inStream << "TbfHilbertSpaceIndex @ " << &inSpaceSystem << "\n";

@@ -97,7 +97,6 @@ protected:
     template <class TreeClass>
     void M2L(TreeClass& inTree){
         if(nbLevelsAbove0 == 0){
-            const auto cellPos = TbfUtils::make_array<long int, Dim>(3);
             const long int idxLevel = configuration.getTreeHeight()-2;
             assert(idxLevel == 3);
             std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
@@ -132,8 +131,8 @@ protected:
                     }
                 }
                 if(isTooClose == false){
-                    auto childPos = TbfUtils::AddVecToVec(cellPos, currentCellTest);
-                    const IndexType childIndex = spaceSystem.getIndexFromBoxPos(childPos);
+                    auto childPos = currentCellTest;
+                    const IndexType childIndex = spaceSystem.getInteractionIndexFromRelativePos(childPos);
 
                     assert(nbNeighbors < TbfUtils::lipow(7, Dim) - TbfUtils::lipow(3, Dim));
                     neighbors.emplace_back(multipoles[idxLevel]);
@@ -151,8 +150,6 @@ protected:
                          idxLevel, TbfUtils::make_const(neighbors), positionsOfNeighbors, nbNeighbors, locals[idxLevel]);
         }
         else{
-            const auto cellPos = TbfUtils::make_array<long int, Dim>(3);
-
             for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
                 std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
                 long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
@@ -161,7 +158,7 @@ protected:
                 std::array<long int, Dim> minLimits;
                 std::array<long int, Dim> maxLimits;
                 // First -3/2
-                if(idxLevel == 2){
+                if(idxLevel == 3){
                     minLimits.fill(-3);
                     maxLimits.fill(2);
                 }
@@ -195,8 +192,8 @@ protected:
                         }
                     }
                     if(isTooClose == false){
-                        auto childPos = TbfUtils::AddVecToVec(cellPos, currentCellTest);
-                        const IndexType childIndex = spaceSystem.getIndexFromBoxPos(childPos);
+                        auto childPos = currentCellTest;
+                        const IndexType childIndex = spaceSystem.getInteractionIndexFromRelativePos(childPos);
 
                         assert(nbNeighbors < spaceSystem.getNbInteractionsPerCell());
                         neighbors.emplace_back(multipoles[idxLevel]);
@@ -215,7 +212,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2L(TreeClass& inTree){        
+    void L2L(TreeClass& inTree){
         for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-3 ; ++idxLevel){
             std::vector<std::reference_wrapper<CellLocalType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
