@@ -64,7 +64,10 @@ protected:
                 const auto particleGroupObjGetDataPtr = particleGroupObj->getDataPtr();
                 auto leafGroupObjGetMultipolePtr = leafGroupObj->getMultipolePtr();
 
-#pragma omp task depend(in:particleGroupObjGetDataPtr[0]) depend(commute:leafGroupObjGetMultipolePtr[0]) default(shared) firstprivate(particleGroupObj, leafGroupObj) priority(priorities.getP2MPriority())
+                const unsigned char* ptr_particleGroupObjGetDataPtr = reinterpret_cast<const unsigned char*>(&particleGroupObjGetDataPtr[0]);
+                const unsigned char* ptr_leafGroupObjGetMultipolePtr = reinterpret_cast<const unsigned char*>(&leafGroupObjGetMultipolePtr[0]);
+
+#pragma omp task depend(in:ptr_particleGroupObjGetDataPtr[0]) depend(commute:ptr_leafGroupObjGetMultipolePtr[0]) default(shared) firstprivate(particleGroupObj, leafGroupObj) priority(priorities.getP2MPriority())
                 {
                     kernelWrapper.P2M(kernels[omp_get_thread_num()], *particleGroupObj, *leafGroupObj);
                 }
@@ -96,7 +99,10 @@ protected:
                 const auto lowerGroupGetMultipolePtr = lowerGroup->getMultipolePtr();
                 const auto upperGroupGetMultipolePtr = upperGroup->getMultipolePtr();
 
-#pragma omp task depend(in:lowerGroupGetMultipolePtr[0]) depend(commute:upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup)  priority(priorities.getM2MPriority(idxLevel))
+                const unsigned char* ptr_lowerGroupGetMultipolePtr = reinterpret_cast<const unsigned char*>(&lowerGroupGetMultipolePtr[0]);
+                const unsigned char* ptr_upperGroupGetMultipolePtr = reinterpret_cast<const unsigned char*>(&upperGroupGetMultipolePtr[0]);
+
+#pragma omp task depend(in:ptr_lowerGroupGetMultipolePtr[0]) depend(commute:ptr_upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup)  priority(priorities.getM2MPriority(idxLevel))
                 {
                     kernelWrapper.M2M(idxLevel, kernels[omp_get_thread_num()], *lowerGroup, *upperGroup);
                 }
@@ -141,7 +147,11 @@ protected:
 
                     auto groupTargetGetLocalPtr = groupTarget.getLocalPtr();
                     const auto groupSrcGetMultipolePtr = groupSrc.getMultipolePtr();
-#pragma omp task depend(in:groupSrcGetMultipolePtr[0]) depend(commute:groupTargetGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesVec, groupSrcPtr, groupTargetPtr)  priority(priorities.getM2LPriority(idxLevel))
+
+                    const unsigned char* ptr_groupSrcGetMultipolePtr = reinterpret_cast<const unsigned char*>(&groupSrcGetMultipolePtr[0]);
+                    const unsigned char* ptr_groupTargetGetLocalPtr = reinterpret_cast<const unsigned char*>(&groupTargetGetLocalPtr[0]);
+
+#pragma omp task depend(in:ptr_groupSrcGetMultipolePtr[0]) depend(commute:ptr_groupTargetGetLocalPtr[0]) default(shared) firstprivate(idxLevel, indexesVec, groupSrcPtr, groupTargetPtr)  priority(priorities.getM2LPriority(idxLevel))
                     {
                         kernelWrapper.M2LBetweenGroups(idxLevel, kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                         delete indexesVec;
@@ -175,7 +185,10 @@ protected:
                 const auto upperGroupGetLocalPtr = upperGroup->getLocalPtr();
                 auto lowerGroupGetLocalPtr = lowerGroup->getLocalPtr();
 
-#pragma omp task depend(in:upperGroupGetLocalPtr[0]) depend(commute:lowerGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup)  priority(priorities.getL2LPriority(idxLevel))
+                const unsigned char* ptr_upperGroupGetLocalPtr = reinterpret_cast<const unsigned char*>(&upperGroupGetLocalPtr[0]);
+                const unsigned char* ptr_lowerGroupGetLocalPtr = reinterpret_cast<const unsigned char*>(&lowerGroupGetLocalPtr[0]);
+
+#pragma omp task depend(in:ptr_upperGroupGetLocalPtr[0]) depend(commute:ptr_lowerGroupGetLocalPtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup)  priority(priorities.getL2LPriority(idxLevel))
                 {
                     kernelWrapper.L2L(idxLevel, kernels[omp_get_thread_num()], *upperGroup, *lowerGroup);
                 }
@@ -218,7 +231,10 @@ protected:
                 const auto leafGroupObjGetLocalPtr = leafGroupObj->getLocalPtr();
                 auto particleGroupObjGetRhsPtr = particleGroupObj->getRhsPtr();
 
-#pragma omp task depend(in:leafGroupObjGetLocalPtr[0]) depend(commute:particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
+                const unsigned char* ptr_leafGroupObjGetLocalPtr = reinterpret_cast<const unsigned char*>(&leafGroupObjGetLocalPtr[0]);
+                const unsigned char* ptr_particleGroupObjGetRhsPtr = reinterpret_cast<const unsigned char*>(&particleGroupObjGetRhsPtr[0]);
+
+#pragma omp task depend(in:ptr_leafGroupObjGetLocalPtr[0]) depend(commute:ptr_particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
                 {
                     kernelWrapper.L2P(kernels[omp_get_thread_num()], *leafGroupObj, *particleGroupObj);
                 }
@@ -260,7 +276,11 @@ protected:
                 auto groupTargetGetRhsPtr = groupTarget.getRhsPtr();
 
                 auto indexesVec = TbfUtils::CreateNew(indexes.toStdVector());
-#pragma omp task depend(commute:groupSrcGetDataPtr[0],groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
+
+                const unsigned char* ptr_groupSrcGetDataPtr = reinterpret_cast<const unsigned char*>(&groupSrcGetDataPtr[0]);
+                const unsigned char* ptr_groupTargetGetRhsPtr = reinterpret_cast<const unsigned char*>(&groupTargetGetRhsPtr[0]);
+
+#pragma omp task depend(commute:ptr_groupSrcGetDataPtr[0],ptr_groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
                     kernelWrapper.P2PBetweenGroupsTsm(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                     delete indexesVec;
