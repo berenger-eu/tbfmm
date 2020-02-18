@@ -91,19 +91,28 @@ int main(int argc, char** argv){
     using KernelClass = FRotationKernel<RealType, P>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
+    using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+    using TreeClass = TbfTree<RealType,
+                              RealType,
+                              NbDataValuesPerParticle,
+                              RealType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     // Here we put the kernel in the heap to make sure not to overflow the stack
-    std::unique_ptr<TbfAlgorithmSelecter::type<RealType, KernelClass>> algorithm(new TbfAlgorithmSelecter::type<RealType, KernelClass>(configuration));
+    std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));
 
     {
         TbfTimer timerExecute;

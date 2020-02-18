@@ -37,8 +37,11 @@ public:
     explicit KernelExample(const KernelExample&){}
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
-    void P2M(const CellSymbolicData& /*inLeafIndex*/,  const long int /*particlesIndexes*/[],
-             const ParticlesClass& /*inParticles*/, const long int /*inNbParticles*/, LeafClass& /*inOutLeaf*/) const {
+    void P2M(const CellSymbolicData& /*inLeafIndex*/,
+             const long int /*particlesIndexes*/[],
+             const ParticlesClass& /*inParticles*/,
+             const long int /*inNbParticles*/,
+             LeafClass& /*inOutLeaf*/) const {
         /// inLeafIndex:
         ///  - .spacialIndex is the spacial index (Morton index for example) of the current leaf
         ///  - .boxCoord is the coordinate in the spacial box of the current leaf
@@ -51,8 +54,11 @@ public:
 
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
     void M2M(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClassContainer& /*inLowerCell*/, CellClass& /*inOutUpperCell*/,
-             const long int /*childrenPos*/[], const long int /*inNbChildren*/) const {
+             const long int /*inLevel*/,
+             const CellClassContainer& /*inLowerCell*/,
+             CellClass& /*inOutUpperCell*/,
+             const long int /*childrenPos*/[],
+             const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
         /// inLevel: the level in the tree of the parent
         /// inLowerCell: a container over the multipole parts of the children (~ an array of MultipoleClass
@@ -72,8 +78,10 @@ public:
 
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
     void M2L(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClassContainer& /*inInteractingCells*/,
-             const long int /*neighPos*/[], const long int /*inNbNeighbors*/,
+             const long int /*inLevel*/,
+             const CellClassContainer& /*inInteractingCells*/,
+             const long int /*neighPos*/[],
+             const long int /*inNbNeighbors*/,
              CellClass& /*inOutCell*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the target cell.
         ///              The indexes of the neighbors could be found from inCellIndex and neighPos.
@@ -94,8 +102,11 @@ public:
 
     template <class CellSymbolicData, class CellClass, class CellClassContainer>
     void L2L(const CellSymbolicData& /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClass& /*inUpperCell*/, CellClassContainer& /*inOutLowerCells*/,
-             const long int /*childrednPos*/[], const long int /*inNbChildren*/) const {
+             const long int /*inLevel*/,
+             const CellClass& /*inUpperCell*/,
+             CellClassContainer& /*inOutLowerCells*/,
+             const long int /*childrednPos*/[],
+             const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
         /// inLevel: the level in the tree of the parent
         /// inUpperCell: the parent local data.
@@ -115,8 +126,10 @@ public:
 
     template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& /*inCellIndex*/,
-             const LeafClass& /*inLeaf*/,  const long int /*particlesIndexes*/[],
-             const ParticlesClassValues& /*inOutParticles*/, ParticlesClassRhs& /*inOutParticlesRhs*/,
+             const LeafClass& /*inLeaf*/,
+             const long int /*particlesIndexes*/[],
+             const ParticlesClassValues& /*inOutParticles*/,
+             ParticlesClassRhs& /*inOutParticlesRhs*/,
              const long int /*inNbParticles*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the current cell
         /// inLeaf: is the local part (here LocalClass defined in the main)
@@ -130,12 +143,17 @@ public:
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const LeafSymbolicData& /*inNeighborIndex*/,  const long int /*neighborsIndexes*/[],
-             const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs& /*inParticlesNeighborsRhs*/,
+    void P2P(const LeafSymbolicData& /*inNeighborIndex*/,
+             const long int /*neighborsIndexes*/[],
+             const ParticlesClassValues& /*inParticlesNeighbors*/,
+             ParticlesClassRhs& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
-             const LeafSymbolicData& /*inTargetIndex*/, const long int /*targetIndexes*/[],
+             const LeafSymbolicData& /*inTargetIndex*/,
+             const long int /*targetIndexes*/[],
              const ParticlesClassValues& /*inOutParticles*/,
-             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+             ParticlesClassRhs& /*inOutParticlesRhs*/,
+             const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         /// To compute the interations between a leaf and a neighbor (should be done in both way).
         /// inNeighborIndex: is the spacial index (Morton index for example) of the neighbor
         /// inParticlesNeighbors: is an array of pointers on the particles' data (not on the RHS)
@@ -153,18 +171,25 @@ public:
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
-             const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
-             const long int /*inNbParticlesNeighbors*/, const long int /*targetIndexes*/[],
-             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const ParticlesClassValuesTarget& /*inOutParticles*/,
-             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/,
+                const long int /*neighborsIndexes*/[],
+                const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
+                const long int /*inNbParticlesNeighbors*/,
+                const long int /*targetIndexes*/[],
+                const LeafSymbolicDataTarget& /*inParticlesIndex*/,
+                const ParticlesClassValuesTarget& /*inOutParticles*/,
+                ParticlesClassRhs& /*inOutParticlesRhs*/,
+                const long int /*inNbOutParticles*/,
+                const long /*arrayIndexSrc*/) const {
         // TODO
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInner(const LeafSymbolicData& /*inSpacialIndex*/, const long int /*targetIndexes*/[],
+    void P2PInner(const LeafSymbolicData& /*inSpacialIndex*/,
+                  const long int /*targetIndexes*/[],
                   const ParticlesClassValues& /*inOutParticles*/,
-                  ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+                  ParticlesClassRhs& /*inOutParticlesRhs*/,
+                  const long int /*inNbOutParticles*/) const {
         /// To compute the interations inside a leaf.
         /// inSpacialIndex: is the spacial index (Morton index for example) of the neighbor
         /// inParticles: is an array of pointers on the particles' data (not on the RHS)
@@ -212,26 +237,35 @@ int main(){
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
     using KernelClass = KernelExample<RealType>;
+    using TreeClass = TbfTree<RealType,
+                              RealType,
+                              NbDataValuesPerParticle,
+                              ParticleRhsType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
+#ifdef TBF_USE_SPETABARU
+    using AlgorithmClass = TbfSmSpetabaruAlgorithm<RealType, KernelClass>;
+#elif defined(TBF_USE_OPENMP)
+    using AlgorithmClass = TbfOpenmpAlgorithm<RealType, KernelClass>;
+#else
+    using AlgorithmClass = TbfAlgorithm<RealType, KernelClass>;
+#endif
+    // Or use:
+    // TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTree<RealType, RealType, NbDataValuesPerParticle, ParticleRhsType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-#ifdef TBF_USE_SPETABARU
-    TbfSmSpetabaruAlgorithm<RealType, KernelClass> algorithm(configuration);
-#elif defined(TBF_USE_OPENMP)
-    TbfOpenmpAlgorithm<RealType, KernelClass> algorithm(configuration);
-#else
-    TbfAlgorithm<RealType, KernelClass> algorithm(configuration);
-#endif
-    // Or use:
-    // TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    AlgorithmClass algorithm(configuration);
 
     TbfTimer timerExecute;
 

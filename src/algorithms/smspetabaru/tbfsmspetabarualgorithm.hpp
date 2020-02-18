@@ -25,14 +25,16 @@ protected:
     const SpacialConfiguration configuration;
     const SpaceIndexType spaceSystem;
 
+    const long int stopUpperLevel;
+
     TbfGroupKernelInterface<SpaceIndexType> kernelWrapper;
     std::vector<KernelClass> kernels;
 
-    TbfAlgorithmUtils::LFmmOperationsPriorities priorities;
+    TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
     template <class TreeClass>
     void P2M(SpRuntime& runtime, TreeClass& inTree){
-        if(configuration.getTreeHeight() > 2){
+        if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
 
@@ -62,7 +64,7 @@ protected:
 
     template <class TreeClass>
     void M2M(SpRuntime& runtime, TreeClass& inTree){
-        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= 2 ; --idxLevel){
+        for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
 
@@ -100,7 +102,7 @@ protected:
     void M2L(SpRuntime& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
-        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
+        for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
             auto& cellGroups = inTree.getCellGroupsAtLevel(idxLevel);
 
             auto currentCellGroup = cellGroups.begin();
@@ -131,7 +133,7 @@ protected:
 
     template <class TreeClass>
     void L2L(SpRuntime& runtime, TreeClass& inTree){
-        for(long int idxLevel = 2 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
+        for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
 
@@ -167,7 +169,7 @@ protected:
 
     template <class TreeClass>
     void L2P(SpRuntime& runtime, TreeClass& inTree){
-        if(configuration.getTreeHeight() > 2){
+        if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
 
@@ -239,46 +241,48 @@ protected:
     }
 
 public:
-    TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration)
-        : configuration(inConfiguration), spaceSystem(configuration),
+    explicit TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(configuration);
     }
 
-    template <class SourceKernelClass>
-    TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel)
-        : configuration(inConfiguration), spaceSystem(configuration),
+    template <class SourceKernelClass,
+              typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
+                                                 && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
+    TbfSmSpetabaruAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
+        : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
     }
 
     template <class TreeClass>
-    void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::LFmmOperations::LFmmNearAndFarFields){
+    void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
         SpRuntime runtime;
 
         increaseNumberOfKernels(runtime.getNbThreads());
 
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2M){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
             P2M(runtime, inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2M){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){
             M2M(runtime, inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmM2L){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfM2L){
             M2L(runtime, inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2L){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
             L2L(runtime, inTree);
         }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmL2P){
-            L2P(runtime, inTree);
-        }
-        if(inOperationToProceed & TbfAlgorithmUtils::LFmmP2P){
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
             P2P(runtime, inTree);
+        }
+        if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
+            L2P(runtime, inTree);
         }
 
         runtime.waitAllTasks();
@@ -289,6 +293,16 @@ public:
         for(const auto& kernel : kernels){
             inFunc(kernel);
         }
+    }
+
+    template <class StreamClass>
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpetabaruAlgorithm& inAlgo) {
+        inStream << "TbfSmSpetabaruAlgorithm @ " << &inAlgo << "\n";
+        inStream << " - Configuration: " << "\n";
+        inStream << inAlgo.configuration << "\n";
+        inStream << " - Space system: " << "\n";
+        inStream << inAlgo.spaceSystem << "\n";
+        return inStream;
     }
 };
 

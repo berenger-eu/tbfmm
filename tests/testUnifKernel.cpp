@@ -104,19 +104,28 @@ int main(int argc, char** argv){
     using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
+    using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+    using TreeClass = TbfTree<RealType,
+                              RealType,
+                              NbDataValuesPerParticle,
+                              RealType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
+    /////////////////////////////////////////////////////////////////////////////////////////
+
     FInterpMatrixKernelR<RealType> interpolator;
-    TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+    AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
 
     TbfTimer timerExecute;
 

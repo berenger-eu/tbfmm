@@ -49,27 +49,34 @@ int main(){
     using LocalClass = std::array<long int,1>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
+    using AlgorithmClass = TbfAlgorithmSelecterTsm::type<RealType, TbfTestKernel<RealType>>;
+    using TreeClass = TbfTreeTsm<RealType,
+                                 RealType,
+                                 NbDataValuesPerParticle,
+                                 long int,
+                                 NbRhsValuesPerParticle,
+                                 MultipoleClass,
+                                 LocalClass>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    {
-        TbfAlgorithmSelecterTsm::type<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+    /////////////////////////////////////////////////////////////////////////////////////////
 
-        TbfTimer timerExecute;
+    AlgorithmClass algorithm(configuration);
 
-        algorithm.execute(tree);
+    TbfTimer timerExecute;
 
-        timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
-    }
+    algorithm.execute(tree);
+
+    timerExecute.stop();
+    std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
 
     return 0;
 }

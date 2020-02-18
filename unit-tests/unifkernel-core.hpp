@@ -16,9 +16,9 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class AlgorithmClass>
-class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> > {
-    using Parent = UTester< TestUnifKernel<RealType, AlgorithmClass> >;
+template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmClass> > {
+    using Parent = UTester< TestUnifKernel<RealType, TestAlgorithmClass> >;
 
     void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
                   const bool inOneGroupPerParent, const long int TreeHeight){
@@ -68,18 +68,26 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
         using LocalClass = LocalData;
         using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
 
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using TreeClass = TbfTree<RealType,
+                                  RealType,
+                                  NbDataValuesPerParticle,
+                                  RealType,
+                                  NbRhsValuesPerParticle,
+                                  MultipoleClass,
+                                  LocalClass>;
+
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTree<RealType, RealType, NbDataValuesPerParticle, RealType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
         FInterpMatrixKernelR<RealType> interpolator;
-        AlgorithmClass<RealType, KernelClass> algorithm(configuration, KernelClass(configuration, &interpolator));
+        AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
 
         TbfTimer timerExecute;
 
@@ -176,7 +184,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, AlgorithmClass> 
     }
 
     void SetTests() {
-        Parent::AddTest(&TestUnifKernel<RealType, AlgorithmClass>::TestBasic, "Basic test based on the uniform kernel");
+        Parent::AddTest(&TestUnifKernel<RealType, TestAlgorithmClass>::TestBasic, "Basic test based on the uniform kernel");
     }
 };
 

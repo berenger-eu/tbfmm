@@ -47,19 +47,26 @@ int main(){
     using LocalClass = std::array<long int,1>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
+    using TreeClass = TbfTree<RealType,
+                              RealType,
+                              NbDataValuesPerParticle,
+                              long int,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     TbfTimer timerBuildTree;
 
-    TbfTree<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     {
-        TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>> algorithm(configuration);
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>>;
+        AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;
 
@@ -68,11 +75,12 @@ int main(){
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
     }
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType>>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 
-        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+        AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;
 
@@ -90,11 +98,12 @@ int main(){
 
         std::cout << counters << std::endl;
     }
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction timer
         using KernelClass = TbfInteractionTimer<TbfTestKernel<RealType>>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 
-        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+        AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;
 
@@ -112,12 +121,12 @@ int main(){
 
         std::cout << timers << std::endl;
     }
-
-
+    /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter & timer
         using KernelClass = TbfInteractionCounter<TbfInteractionTimer<TbfTestKernel<RealType>>>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 
-        TbfAlgorithmSelecter::type<RealType, KernelClass> algorithm(configuration);
+        AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;
 

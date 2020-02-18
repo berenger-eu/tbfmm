@@ -9,15 +9,8 @@
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-#include "algorithms/sequential/tbfalgorithm.hpp"
+#include "algorithms/tbfalgorithmselecter.hpp"
 #include "utils/tbftimer.hpp"
-#ifdef TBF_USE_SPETABARU
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
-#endif
-#ifdef TBF_USE_OPENMP
-#include "algorithms/openmp/tbfopenmpalgorithm.hpp"
-#endif
-
 
 #include <iostream>
 #include <type_traits>
@@ -111,7 +104,8 @@ public:
              ParticlesClassValues&& /*inParticlesNeighbors*/, ParticlesClassRhs&& /*inParticlesNeighborsRhs*/,
              const long int /*inNbParticlesNeighbors*/,
              LeafSymbolicData&& /*inTargetIndex*/,   const long int /*targetIndexes*/[], ParticlesClassValues&& /*inOutParticles*/,
-             ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+             ParticlesClassRhs&& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         should_be_const_ref<LeafSymbolicData>();
         should_be_const_ref<ParticlesClassValues>();
         should_be_non_const_ref<ParticlesClassRhs>();
@@ -123,8 +117,9 @@ public:
              const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
              const long int /*inNbParticlesNeighbors*/,
              const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-                const ParticlesClassValuesTarget& /*inOutParticles*/,
-             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/) const {
+             const ParticlesClassValuesTarget& /*inOutParticles*/,
+             ParticlesClassRhs& /*inOutParticlesRhs*/, const long int /*inNbOutParticles*/,
+             const long /*arrayIndexSrc*/) const {
         should_be_const_ref<LeafSymbolicDataSource>();
         should_be_const_ref<ParticlesClassValuesSource>();
         should_be_const_ref<LeafSymbolicDataTarget>();
@@ -172,34 +167,33 @@ class TestKernelConstness : public UTester< TestKernelConstness > {
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        constexpr long int NbDataValuesNeeded = 0; // TODO how many real values you need in the data part (in addition to the positions)
+        constexpr long int NbDataValuesNeeded = 0;
         constexpr long int NbDataValuesPerParticle = Dim + NbDataValuesNeeded;
-        using ParticleRhsType = double; // TODO what type are the particle RHS
-        constexpr long int NbRhsValuesPerParticle = 1; // TODO how many real values you need in the rhs part
-        using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part, could be a class, but must be POD
-        using LocalClass = std::array<RealType,1>; // TODO what is a local part, could be a class, but must be POD
+        constexpr long int NbRhsValuesPerParticle = 1;
+        using MultipoleClass = std::array<RealType,1>;
+        using LocalClass = std::array<RealType,1>;
         const long int inNbElementsPerBlock = 50;
         const bool inOneGroupPerParent = false;
+        using KernelClass = KernelCheckConstness<RealType>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+        using TreeClass = TbfTree<RealType,
+                                  RealType,
+                                  NbDataValuesPerParticle,
+                                  RealType,
+                                  NbRhsValuesPerParticle,
+                                  MultipoleClass,
+                                  LocalClass>;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
 
-        TbfTree<RealType, RealType, NbDataValuesPerParticle, ParticleRhsType, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                    particlePositions, inOneGroupPerParent);
+        TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
-    #ifdef TBF_USE_SPETABARU
-        TbfSmSpetabaruAlgorithm<RealType, KernelCheckConstness<RealType>> algorithm(configuration);
-    #elif defined(TBF_USE_OPENMP)
-        TbfOpenmpAlgorithm<RealType, KernelCheckConstness<RealType>> algorithm(configuration);
-    #else
-        TbfAlgorithm<RealType, KernelCheckConstness<RealType>> algorithm(configuration);
-    #endif
-        // Or use:
-        // TbfAlgorithmSelecter::type<RealType, KernelCheckConstness<RealType>> algorithm(configuration);
+        AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;
 

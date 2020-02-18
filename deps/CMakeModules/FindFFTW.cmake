@@ -33,7 +33,7 @@
 #   LONGDOUBLE_OPENMP_LIB
 #
 
-# TODO: Add to put "CACHE PATH "FFTW PATH" FORCE" other
+# TODO: Had to put "CACHE PATH "FFTW PATH" FORCE" other
 #       that was working only the first time...
 
 if( NOT FFTW_ROOT AND DEFINED ENV{FFTWDIR} )

@@ -26,6 +26,21 @@
  * @brief The FP2PR namespace
  */
 namespace FP2PR{
+
+/// Convert ptr to ptr
+template <class FReal,
+          typename = typename std::enable_if<std::is_floating_point<typename std::remove_const<typename std::remove_reference<FReal>::type>::type>::value, void>::type>
+FReal* GetPtr(FReal* ptr){
+    return ptr;
+}
+
+/// Convert smart ptr to ptr
+template <class FRealContainer,
+          typename = typename std::enable_if<!std::is_floating_point<typename std::remove_const<typename std::remove_reference<FRealContainer>::type>::type>::value, void>::type>
+auto GetPtr(FRealContainer&& ptr){
+    return ptr.get();
+}
+
 template <class FReal>
 inline void MutualParticles(const FReal sourceX,const FReal sourceY,const FReal sourceZ, const FReal sourcePhysicalValue,
                             FReal* sourceForceX, FReal* sourceForceY, FReal* sourceForceZ, FReal* sourcePotential,
@@ -85,25 +100,25 @@ template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
 static void FullMutualScalar(const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int nbParticlesSources,
                       const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
 
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
     const FReal mOne = 1;
 
-    const FReal*const sourcesX = inNeighbors[0];
-    const FReal*const sourcesY = inNeighbors[1];
-    const FReal*const sourcesZ = inNeighbors[2];
-    const FReal*const sourcesPhysicalValues = inNeighbors[3];
-    FReal*const sourcesForcesX = inNeighborsRhs[0];
-    FReal*const sourcesForcesY = inNeighborsRhs[1];
-    FReal*const sourcesForcesZ = inNeighborsRhs[2];
-    FReal*const sourcesPotentials = inNeighborsRhs[3];
+    const FReal*const sourcesX = GetPtr(inNeighbors[0]);
+    const FReal*const sourcesY = GetPtr(inNeighbors[1]);
+    const FReal*const sourcesZ = GetPtr(inNeighbors[2]);
+    const FReal*const sourcesPhysicalValues = GetPtr(inNeighbors[3]);
+    FReal*const sourcesForcesX = GetPtr(inNeighborsRhs[0]);
+    FReal*const sourcesForcesY = GetPtr(inNeighborsRhs[1]);
+    FReal*const sourcesForcesZ = GetPtr(inNeighborsRhs[2]);
+    FReal*const sourcesPotentials = GetPtr(inNeighborsRhs[3]);
 
     for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
         const FReal tx = targetsX[idxTarget];
@@ -155,23 +170,23 @@ static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRh
                       const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
     using VecType = InaVecBestType<FReal>;
 
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
-    const FReal*const sourcesX = inNeighbors[0];
-    const FReal*const sourcesY = inNeighbors[1];
-    const FReal*const sourcesZ = inNeighbors[2];
-    const FReal*const sourcesPhysicalValues = inNeighbors[3];
-    FReal*const sourcesForcesX = inNeighborsRhs[0];
-    FReal*const sourcesForcesY = inNeighborsRhs[1];
-    FReal*const sourcesForcesZ = inNeighborsRhs[2];
-    FReal*const sourcesPotentials = inNeighborsRhs[3];
+    const FReal*const sourcesX = GetPtr(inNeighbors[0]);
+    const FReal*const sourcesY = GetPtr(inNeighbors[1]);
+    const FReal*const sourcesZ = GetPtr(inNeighbors[2]);
+    const FReal*const sourcesPhysicalValues = GetPtr(inNeighbors[3]);
+    FReal*const sourcesForcesX = GetPtr(inNeighborsRhs[0]);
+    FReal*const sourcesForcesY = GetPtr(inNeighborsRhs[1]);
+    FReal*const sourcesForcesZ = GetPtr(inNeighborsRhs[2]);
+    FReal*const sourcesPotentials = GetPtr(inNeighborsRhs[3]);
 
     const VecType mOne = VecType(1);
 
@@ -269,14 +284,14 @@ static void FullMutual(const ParticlesClassValues& inNeighbors, ParticlesClassRh
 template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
 static void GenericInnerScalar(const ParticlesClassValues& inTargets,
                          ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
     for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
         for(long int idxSource = idxTarget+1 ; idxSource < nbParticlesTargets ; ++idxSource){
@@ -314,14 +329,14 @@ static void GenericInner(const ParticlesClassValues& inTargets,
                          ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
     using VecType = InaVecBestType<FReal>;
 
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
     const VecType mOne = VecType(1);
 
@@ -421,21 +436,21 @@ static void GenericInner(const ParticlesClassValues& inTargets,
 template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
 static void GenericFullRemoteScalar(const ParticlesClassValues& inNeighbors, const long int nbParticlesSources,
                               const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
     const FReal mOne = 1;
 
-    const FReal*const sourcesX = inNeighbors[0];
-    const FReal*const sourcesY = inNeighbors[1];
-    const FReal*const sourcesZ = inNeighbors[2];
-    const FReal*const sourcesPhysicalValues = inNeighbors[3];
+    const FReal*const sourcesX = GetPtr(inNeighbors[0]);
+    const FReal*const sourcesY = GetPtr(inNeighbors[1]);
+    const FReal*const sourcesZ = GetPtr(inNeighbors[2]);
+    const FReal*const sourcesPhysicalValues = GetPtr(inNeighbors[3]);
 
     for(long int idxTarget = 0 ; idxTarget < nbParticlesTargets ; ++idxTarget){
         const FReal tx = targetsX[idxTarget];
@@ -481,21 +496,21 @@ static void GenericFullRemote(const ParticlesClassValues& inNeighbors, const lon
                               const ParticlesClassValues& inTargets, ParticlesClassRhs& inTargetsRhs, const long int nbParticlesTargets){
     using VecType = InaVecBestType<FReal>;
 
-    const FReal*const targetsX = inTargets[0];
-    const FReal*const targetsY = inTargets[1];
-    const FReal*const targetsZ = inTargets[2];
-    const FReal*const targetsPhysicalValues = inTargets[3];
-    FReal*const targetsForcesX = inTargetsRhs[0];
-    FReal*const targetsForcesY = inTargetsRhs[1];
-    FReal*const targetsForcesZ = inTargetsRhs[2];
-    FReal*const targetsPotentials = inTargetsRhs[3];
+    const FReal*const targetsX = GetPtr(inTargets[0]);
+    const FReal*const targetsY = GetPtr(inTargets[1]);
+    const FReal*const targetsZ = GetPtr(inTargets[2]);
+    const FReal*const targetsPhysicalValues = GetPtr(inTargets[3]);
+    FReal*const targetsForcesX = GetPtr(inTargetsRhs[0]);
+    FReal*const targetsForcesY = GetPtr(inTargetsRhs[1]);
+    FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
+    FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
     const VecType mOne = VecType(1);
 
-    const FReal*const sourcesX = inNeighbors[0];
-    const FReal*const sourcesY = inNeighbors[1];
-    const FReal*const sourcesZ = inNeighbors[2];
-    const FReal*const sourcesPhysicalValues = inNeighbors[3];
+    const FReal*const sourcesX = GetPtr(inNeighbors[0]);
+    const FReal*const sourcesY = GetPtr(inNeighbors[1]);
+    const FReal*const sourcesZ = GetPtr(inNeighbors[2]);
+    const FReal*const sourcesPhysicalValues = GetPtr(inNeighbors[3]);
 
     const long int nbVectorizedInteractionsSource = (nbParticlesSources/VecType::GetVecLength())*VecType::GetVecLength();
 

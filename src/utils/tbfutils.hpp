@@ -60,10 +60,10 @@ inline typename std::decay<VecClass>::type AddToVec(VecClass&& inVec, ScalarClas
 }
 
 template <class VecClass1, class VecClass2>
-inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, VecClass2&& inVec2){
+inline typename std::decay<VecClass1>::type AddVecToVec(const VecClass1& inVec1, const VecClass2& inVec2){
     assert(std::size(inVec1) == std::size(inVec2));
 
-    typename std::decay<VecClass1>::type dest = std::forward<VecClass1>(inVec1);
+    typename std::decay<VecClass1>::type dest = inVec1;
 
     auto iterDest = std::begin(dest);
     const auto endDest = std::end(dest);
@@ -78,6 +78,25 @@ inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, VecC
     return dest;
 }
 
+template <class VecClass1, class VecClass2>
+inline typename std::decay<VecClass1>::type AddVecToVec(VecClass1&& inVec1, const VecClass2& inVec2){
+    assert(std::size(inVec1) == std::size(inVec2));
+
+    typename std::decay<VecClass1>::type dest = inVec1;
+
+    auto iterDest = std::begin(inVec1);
+    const auto endDest = std::end(inVec1);
+    auto iter2 = std::begin(inVec2);
+
+    while(iterDest != endDest){
+        (*iterDest) += (*iter2);
+        ++iterDest;
+        ++iter2;
+    }
+
+    return inVec1;
+}
+
 template <class VecClass, class ScalarClass>
 inline typename std::decay<VecClass>::type MulToVec(VecClass&& inVec, ScalarClass&& inScalar){
     typename std::decay<VecClass>::type dest = std::forward<VecClass>(inVec);
@@ -89,7 +108,7 @@ inline typename std::decay<VecClass>::type MulToVec(VecClass&& inVec, ScalarClas
     return dest;
 }
 
-inline long int lipow(long int val, const long int power){
+inline constexpr long int lipow(long int val, const long int power){
     long int res = 1;
 
     long incPower = val;
@@ -164,7 +183,7 @@ using marray = typename marray_core<Type, AllSizes...>::type;
 
 
 template<class T, class Compare>
-long int lower_bound_indexes(long int first, const long int last, const T& value, Compare comp)
+constexpr long int lower_bound_indexes(long int first, const long int last, const T& value, Compare comp)
 {
     long int count = (last - first);
 
@@ -180,6 +199,20 @@ long int lower_bound_indexes(long int first, const long int last, const T& value
             count = step;
     }
     return first;
+}
+
+
+template <typename T, std::size_t...Is>
+constexpr std::array<T, sizeof...(Is)>
+make_array_core(const T& value, std::index_sequence<Is...>)
+{
+    return {{(static_cast<void>(Is), value)...}};
+}
+
+template <typename T, std::size_t N>
+constexpr std::array<T, N> make_array(const T& value)
+{
+    return make_array_core(value, std::make_index_sequence<N>());
 }
 
 }

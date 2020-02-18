@@ -9,6 +9,8 @@
 #include "FMemUtils.hpp"
 #include "kernels/unifkernel/FP2PR.hpp"
 
+#include "utils/tbfperiodicshifter.hpp"
+
 /** This is a recursion to get the minimal size of the matrix dlmk
   */
 template<int N> struct NumberOfValuesInDlmk{
@@ -120,7 +122,7 @@ private:
             M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             // widthAtLevel represents half of the size of a box
-            RealType widthAtLevel = boxWidth/4;
+            RealType widthAtLevel = boxWidth/2;
             // we go from the root to the leaf-1
             for( int idxLevel = 0 ; idxLevel < treeHeight - 1 ; ++idxLevel){
                 // b is the parent-child distance = norm( vec(widthAtLevel,widthAtLevel,widthAtLevel))
@@ -1329,24 +1331,58 @@ public:
 
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    void P2P(const LeafSymbolicData& /*inNeighIndex*/, const long int /*neighborsIndexes*/[],
+    void P2P(const LeafSymbolicData& inNeighborIndex, const long int /*neighborsIndexes*/[],
              const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inTargetIndex*/,  const long int /*targetIndexes*/[],
+             const LeafSymbolicData& inTargetIndex,  const long int /*targetIndexes*/[],
              const ParticlesClassValues& inTargets,
-             ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
+             ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles,
+             [[maybe_unused]] const long arrayIndexSrc) const {
+        if constexpr(SpaceIndexType::IsPeriodic){
+            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                            inNeighbors, inNbParticlesNeighbors);
+                FP2PR::template FullMutual<RealType> ((duplicateSources),(inNeighborsRhs), inNbParticlesNeighbors,
+                                                             (inTargets), (inTargetsRhs), inNbOutParticles);
+                PeriodicShifter::FreePositions(duplicateSources);
+            }
+            else{
+                FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
+                                                             (inTargets), (inTargetsRhs), inNbOutParticles);
+            }
+        }
+        else{
+            FP2PR::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
                                                                                        (inTargets), (inTargetsRhs), inNbOutParticles);
+        }
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsm(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
+    void P2PTsm(const LeafSymbolicDataSource& inNeighborIndex, const long int /*neighborsIndexes*/[],
              const ParticlesClassValuesSource& inNeighbors,
              const long int inNbParticlesNeighbors,
-             const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
+             const LeafSymbolicDataTarget& inTargetIndex, const long int /*targetIndexes*/[],
              const ParticlesClassValuesTarget& inTargets,
-             ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
-        FP2PR::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
+             ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles,
+             [[maybe_unused]] const long arrayIndexSrc) const {
+        if constexpr(SpaceIndexType::IsPeriodic){
+            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                            inNeighbors, inNbParticlesNeighbors);
+                FP2PR::template GenericFullRemote<RealType> ((duplicateSources), inNbParticlesNeighbors,
+                                                             (inTargets), (inTargetsRhs), inNbOutParticles);
+                PeriodicShifter::FreePositions(duplicateSources);
+            }
+            else{
+                FP2PR::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
+                                                             (inTargets), (inTargetsRhs), inNbOutParticles);
+            }
+        }
+        else{
+            FP2PR::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
                                                                                        (inTargets), (inTargetsRhs), inNbOutParticles);
+        }
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>

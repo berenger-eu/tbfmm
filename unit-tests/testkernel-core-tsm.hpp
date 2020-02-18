@@ -50,6 +50,14 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
         using MultipoleClass = std::array<long int,1>;
         using LocalClass = std::array<long int,1>;
 
+        using TreeClass = TbfTreeTsm<RealType,
+                                     RealType,
+                                     NbDataValuesPerParticle,
+                                     long int,
+                                     NbRhsValuesPerParticle,
+                                     MultipoleClass,
+                                     LocalClass>;
+
         TbfDefaultSpaceIndexType<RealType> spacialSystem(configuration);
 
         {
@@ -67,11 +75,10 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
         /////////////////////////////////////////////////////////////////////////////////////////
 
         if(TreeHeight > 2){
-            TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
-            algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2M | TbfAlgorithmUtils::LFmmM2M | TbfAlgorithmUtils::LFmmM2L);
+            algorithm.execute(tree, TbfAlgorithmUtils::TbfP2M | TbfAlgorithmUtils::TbfM2M | TbfAlgorithmUtils::TbfM2L);
 
             tree.applyToAllLeavesSource([this, &tree, NbParticles, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, auto&& /*particleRhsPtr*/){
@@ -124,15 +131,14 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
         }
 
         {
-            TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
-            algorithm.execute(tree, TbfAlgorithmUtils::LFmmP2P);
+            algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
             tree.applyToAllLeavesTarget([this, &tree, &spacialSystem, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
-                auto indexes = spacialSystem.getNeighborListForBlock(leafHeader.spaceIndex, TreeHeight-1);
+                auto indexes = spacialSystem.getNeighborListForIndex(leafHeader.spaceIndex, TreeHeight-1);
                 long int totalSum = 0;
                 for(auto index : indexes){
                     auto groupForLeaf = tree.findGroupWithLeafSource(index);
@@ -155,8 +161,7 @@ class TestTestKernelTsm : public UTester< TestTestKernelTsm<AlgorithmClass> > {
         }
 
         {
-            TbfTreeTsm<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle, MultipoleClass, LocalClass> tree(configuration, inNbElementsPerBlock,
-                                                                                        particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
+            TreeClass tree(configuration, inNbElementsPerBlock, particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree);
