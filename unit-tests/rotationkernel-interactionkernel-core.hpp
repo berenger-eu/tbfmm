@@ -18,7 +18,7 @@
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+template <class RealType, template <typename T1, typename T2, typename T3> class TestAlgorithmClass>
 class TestRotationKernelInteraction : public UTester< TestRotationKernelInteraction<RealType, TestAlgorithmClass> > {
     using Parent = UTester< TestRotationKernelInteraction<RealType, TestAlgorithmClass> >;
 
@@ -61,7 +61,7 @@ class TestRotationKernelInteraction : public UTester< TestRotationKernelInteract
 
         using KernelClass = KernelInteractionCounter<FRotationKernel<RealType, P>>;
 
-        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass, TbfDefaultSpaceIndexType<RealType> >;
 
         using TreeClass = TbfTree<RealType,
                                   RealType,

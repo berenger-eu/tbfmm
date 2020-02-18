@@ -16,7 +16,7 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+template <class RealType, template <typename T1, typename T2, typename T3> class TestAlgorithmClass>
 class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> > {
     using Parent = UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> >;
 
@@ -67,7 +67,7 @@ class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, Te
         using LocalClass = std::array<std::complex<RealType>, VectorSize>;
 
         using KernelClass = FRotationKernel<RealType, P>;
-        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass, TbfDefaultSpaceIndexType<RealType> >;
         using TreeClass = TbfTreeTsm<RealType,
                                      RealType,
                                      NbDataValuesPerParticle,

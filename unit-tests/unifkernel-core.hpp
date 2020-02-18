@@ -16,7 +16,7 @@
 #include "utils/tbfaccuracychecker.hpp"
 
 
-template <class RealType, template <typename T1, typename T2> class TestAlgorithmClass>
+template <class RealType, template <typename T1, typename T2, typename T3> class TestAlgorithmClass>
 class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmClass> > {
     using Parent = UTester< TestUnifKernel<RealType, TestAlgorithmClass> >;
 
@@ -68,7 +68,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
         using LocalClass = LocalData;
         using KernelClass = FUnifKernel<RealType, FInterpMatrixKernelR<RealType>, ORDER>;
 
-        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass>;
+        using AlgorithmClass = TestAlgorithmClass<RealType, KernelClass, TbfDefaultSpaceIndexType<RealType> >;
         using TreeClass = TbfTree<RealType,
                                   RealType,
                                   NbDataValuesPerParticle,
