@@ -1,8 +1,8 @@
 [![pipeline status](https://gitlab.inria.fr/bramas/tbfmm/badges/master/pipeline.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 [![coverage report](https://gitlab.inria.fr/bramas/tbfmm/badges/master/coverage.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 
-This project is an FMM code designed to be lightweight and allow
-an easy customization of the kernel.
+TBFMM is a Fast Multipole Method library parallelized with task-based method.
+It is designed to be easy to customize and to create new FMM kernels.
 
 # Compilation
 
@@ -17,13 +17,12 @@ cd build
 cmake ..
 # To find FFTW
 cmake -DFFTW_ROOT=path-to-fftw ..
-# or (FFTW_DIR FFTWDIR)
+# or (set environement variables FFTW_DIR FFTWDIR)
 cmake ..
 
 # Build
 make
 ```
-
 
 # Running the tests
 
