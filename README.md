@@ -128,7 +128,59 @@ Therefore, TBFMM will then allocate multiple parts of the same kind together and
 
 ## Cell
 
+A cell is composed of:
+- a symbolic part
+This includes the spacial index and spacial coordinate.
+This cannot be configured by the users (without deep modification of the source code).
+This is expected to remain constant for a complete FMM algorithm execution.
+- a multipole part (`MultipoleClass`)
+This is a structure/class that represent the target of a P2M/M2M, or the source of a M2L.
+This really depend on the type of kernel (and maybe even the degree of a kernel).
+Here a possible examples of what could be a multipole part:
+```cpp
+// The multipole is simply a long int
+using MultipoleClass = long int;
 
+// The multipole is an array of a size known at compile time
+using MultipoleClass = std::array<double, 3>;
+
+// The multipole is an array of a size known at compile time
+// but based on a degree of the accuracy (P is a constant)
+const long int MultipoleArraySize = P*P; 
+using MultipoleClass = std::array<double, MultipoleArraySize>;
+
+// The multipole is a POD struct/class
+struct MyMultipole{
+    long int anInteger;
+    double aDouble;
+    std::array<double, 128> someValues;
+};
+using MultipoleClass = MyMultipole;
+```
+- a local part (`LocalClass`)
+This is a structure/class that represent the target of a P2M/M2M, or the source of a M2L.
+This really depend on the type of kernel (and maybe even the degree of a kernel).
+Here a possible examples of what could be a local part:
+```cpp
+// The local is simply a long int
+using LocalClass = long int;
+
+// The local is an array of a size known at compile time
+using LocalClass = std::array<double, 3>;
+
+// The local is an array of a size known at compile time
+// but based on a degree of the accuracy (P is a constant)
+const long int LocalArraySize = P*P; 
+using LocalClass = std::array<double, LocalArraySize>;
+
+// The local is a POD struct/class
+struct MyLocal{
+    long int anInteger;
+    double aDouble;
+    std::array<double, 128> someValues;
+};
+using LocalClass = MyLocal;
+```
 
 ## Particles
 
