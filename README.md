@@ -74,21 +74,61 @@ Can be found here: https://bramas.gitlabpages.inria.fr/tbfmm/
 
 ## OpenMP
 
-CMake will try to find if OpenMP is supported by the system.
-If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but in sequential or with SPETABARU).
+CMake will try to find if it is supported by the system.
+If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPETABARU).
 
 ## Inastemp
 
-https://gitlab.inria.fr/bramas/inastemp
+Inatemp is a vectorization library that makes it possible to implement a single kernel with abstract vector data type, which is then compiled for most vectorization instruction sets.
+It includes SSE, AVX(2), AVX512, ARM SVE, etc.
+To know more you can have a look at https://gitlab.inria.fr/bramas/inastemp
+
+In TBFMM, only the P2P kernel of the so called rotation and uniform kernels are vectorized with Inastemp (`src/kernels/unifkernel/FP2PR.hpp`).
+Therefore, if you are performing simulations with one of these kernels, it is recommended to enable Inastemp, since the performance difference can be impressive.
+
+To avoid having to manage external dependencies, Inastemp is shipped as a git submodule, and thus it will be managed by our cmake files.
+But, you must explicitly pull the submobule to enable it.
+```bash
+# To enable only Inastemp (runned from the main directory)
+git submodule init deps/inastemp && git submodule update
+```
 
 ## SPETABARU
 
-https://gitlab.inria.fr/bramas/spetabaru
+SPETABARU is a C++ task-based runtime system that has speculative execution capability.
+Currently, speculation is not used in TBFMM has it requires tasks with a specific pattern.
+To know more, you can have a look at https://gitlab.inria.fr/bramas/spetabaru
 
+SPETABARU is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler).
+It could be a nice alternative to OpenMP when this appear complicated to have an OpenMP lib (as it is sometime the case for some Mac users).
+
+To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files.
+But, you must explicitly pull the submobule to enable it.
+```bash
+# To enable only SPETABARU (runned from the main directory)
+git submodule init deps/spetabaru && git submodule update
+```
 
 # TBFMM design
 
+## Block/group tree
+
+TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block).
+This data structure is well described here http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf
+
+The advantage of this structure is that the memory blocks can be moved/copied with a `memcpy`, which is really convenient in HPC when we want to use GPUs or MPI.
+The side effect is a great data locality and forcing a low level abstraction on the data in the group, which mitigate the overhead.
+
+On the other hand, the constraint (drawback?) is that particles and cells must be POD (or at least to be raw copiable).
+For instance, an `std::vector` is not because it has a pointer internally such that making a raw copy of an object will lead to an undefined/invalid state (it could work in a shared memory system, but clearly not with different memory nodes).
+
+In the context of the FMM, this approach cut the particles and cells in multiple parts depending on what will be read/write by the kernels.
+For example, a cell is not a class, but described as three independent parts: a symbolic part, a multipole part and a local part.
+Therefore, TBFMM will then allocate multiple parts of the same kind together and maintain the coherency.
+
 ## Cell
+
+
 
 ## Particles
 
@@ -129,6 +169,8 @@ https://gitlab.inria.fr/bramas/spetabaru
 ## Creating a new kernel
 
 ## Find a cell or leaf in the tree (if it exists)
+
+## Spacial ordering/indexing (Morton, Hilbert, space filling curve)
 
 # Issues
 
