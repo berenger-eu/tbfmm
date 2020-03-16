@@ -20,16 +20,16 @@ template <class RealType, template <typename T1, typename T2, typename T3> class
 class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> > {
     using Parent = UTester< TestRotationKernelTsm<RealType, TestAlgorithmClass> >;
 
-    void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
-                  const bool inOneGroupPerParent, const long int TreeHeight){
+    void CorePart(const long int NbParticles, const long int NbElementsPerBlock,
+                  const bool OneGroupPerParent, const long int TreeHeight){
         const int Dim = 3;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,8 +80,8 @@ class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, Te
 
         TbfTimer timerBuildTree;
 
-        TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositionsSource),
-                       TbfUtils::make_const(particlePositionsTarget), inOneGroupPerParent);
+        TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositionsSource),
+                       TbfUtils::make_const(particlePositionsTarget), OneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

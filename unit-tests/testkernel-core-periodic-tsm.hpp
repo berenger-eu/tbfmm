@@ -21,16 +21,16 @@ class TestTestKernelPeriodicTsm : public UTester< TestTestKernelPeriodicTsm<Algo
     using Parent = UTester< TestTestKernelPeriodicTsm<AlgorithmClassTsm> >;
     using RealType = typename AlgorithmClassTsm::RealType;
 
-    void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
-                  const bool inOneGroupPerParent, const long int TreeHeight){
+    void CorePart(const long int NbParticles, const long int NbElementsPerBlock,
+                  const bool OneGroupPerParent, const long int TreeHeight){
         const int Dim = 3;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -70,7 +70,7 @@ class TestTestKernelPeriodicTsm : public UTester< TestTestKernelPeriodicTsm<Algo
         /////////////////////////////////////////////////////////////////////////////////////////
 
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-            TreeClassTsm tree(configuration, inNbElementsPerBlock, particlePositionsSource, particlePositionsTarget, inOneGroupPerParent);
+            TreeClassTsm tree(configuration, NbElementsPerBlock, particlePositionsSource, particlePositionsTarget, OneGroupPerParent);
 
             AlgorithmClassTsm algorithm(configuration, LastWorkingLevel);
             TopPeriodicAlgorithmClassTsm topAlgorithm(configuration, idxExtraLevel);

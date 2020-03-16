@@ -21,16 +21,16 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
     using Parent = UTester< TestTestKernelPeriodic<AlgorithmClass> >;
     using RealType = typename AlgorithmClass::RealType;
 
-    void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
-                  const bool inOneGroupPerParent, const long int TreeHeight){
+    void CorePart(const long int NbParticles, const long int NbElementsPerBlock,
+                  const bool OneGroupPerParent, const long int TreeHeight){
         const int Dim = 3;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +68,7 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
         /////////////////////////////////////////////////////////////////////////////////////////
 
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-            TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
+            TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
             AlgorithmClass algorithm(configuration, LastWorkingLevel);
             TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);

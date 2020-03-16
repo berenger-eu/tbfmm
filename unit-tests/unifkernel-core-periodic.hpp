@@ -22,16 +22,16 @@ template <class RealType, template <typename T1, typename T2, typename T3> class
 class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmClass> > {
     using Parent = UTester< TestUnifKernel<RealType, TestAlgorithmClass> >;
 
-    void CorePart(const long int NbParticles, const long int inNbElementsPerBlock,
-                  const bool inOneGroupPerParent, const long int TreeHeight){
+    void CorePart(const long int NbParticles, const long int NbElementsPerBlock,
+                  const bool OneGroupPerParent, const long int TreeHeight){
         const int Dim = 3;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +93,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
             TbfTimer timerBuildTree;
 
-            TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+            TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositions), OneGroupPerParent);
 
             timerBuildTree.stop();
             std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
@@ -274,7 +274,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                                           LocalClass,
                                           SpacialSystemNonPeriodic>;
 
-                TreeClassNonPeriodic extendedTree(extendedConfiguration, inNbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), inOneGroupPerParent);
+                TreeClassNonPeriodic extendedTree(extendedConfiguration, NbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), OneGroupPerParent);
 
                 FInterpMatrixKernelR<RealType> interpolatorExtended;
                 AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClassNonPeriodic(extendedConfiguration, &interpolatorExtended), 2);

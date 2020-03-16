@@ -16,9 +16,9 @@ class TestMorton : public UTester< TestMorton > {
         using RealType = double;
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
         const TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> > morton(configuration);
 
         using IndexType = typename TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
@@ -111,9 +111,9 @@ class TestMorton : public UTester< TestMorton > {
         using RealType = double;
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
         const TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> , true> morton(configuration);
 
         using IndexType = typename TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim>, true>::IndexType;

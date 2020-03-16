@@ -24,7 +24,7 @@ int main(int argc, char** argv){
     std::vector<std::array<RealType, Dim+1>> particlePositions;
     long int nbParticles;
     std::array<RealType, Dim> BoxWidths;
-    std::array<RealType, Dim> inBoxCenter;
+    std::array<RealType, Dim> BoxCenter;
 
     if(argc == 2 && std::string(argv[1]) != "--help"){
         TbfFmaLoader<RealType, Dim, Dim+1> loader(argv[1]);
@@ -37,11 +37,11 @@ int main(int argc, char** argv){
         nbParticles = loader.getNbParticles();
         particlePositions = loader.loadAllParticles();
         BoxWidths = loader.getBoxWidths();
-        inBoxCenter = loader.getBoxCenter();
+        BoxCenter = loader.getBoxCenter();
     }
     else if(argc == 1){
         BoxWidths = std::array<RealType, Dim>{{1, 1, 1}};
-        inBoxCenter = std::array<RealType, Dim>{{0.5, 0.5, 0.5}};
+        BoxCenter = std::array<RealType, Dim>{{0.5, 0.5, 0.5}};
 
         nbParticles = 1000;
 
@@ -63,7 +63,7 @@ int main(int argc, char** argv){
     }
 
     const long int TreeHeight = 4;
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     std::cout << configuration << std::endl;
 
@@ -80,7 +80,9 @@ int main(int argc, char** argv){
     /////////////////////////////////////////////////////////////////////////////////////////
 
     const unsigned int P = 12;
+    using ParticleDataType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim+1;
+    using ParticleRhsType = RealType;
     constexpr long int NbRhsValuesPerParticle = 4;
 
     constexpr long int VectorSize = ((P+2)*(P+1))/2;
@@ -89,13 +91,13 @@ int main(int argc, char** argv){
     using LocalClass = std::array<std::complex<RealType>, VectorSize>;
 
     using KernelClass = FRotationKernel<RealType, P>;
-    const long int inNbElementsPerBlock = 50;
-    const bool inOneGroupPerParent = false;
+    const long int NbElementsPerBlock = 50;
+    const bool OneGroupPerParent = false;
     using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
     using TreeClass = TbfTree<RealType,
-                              RealType,
+                              ParticleDataType,
                               NbDataValuesPerParticle,
-                              RealType,
+                              ParticleRhsType,
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass>;
@@ -104,7 +106,7 @@ int main(int argc, char** argv){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, inNbElementsPerBlock, TbfUtils::make_const(particlePositions), inOneGroupPerParent);
+    TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositions), OneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

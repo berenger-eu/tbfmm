@@ -210,9 +210,9 @@ int main(){
 
     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
     const long int TreeHeight = 8;
-    const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -228,17 +228,18 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    using ParticleDataType = RealType; // TODO the type of the constant values of the particles (can be modified outside the kernel)
     constexpr long int NbDataValuesNeeded = 0; // TODO how many real values you need in the data part (in addition to the positions)
     constexpr long int NbDataValuesPerParticle = Dim + NbDataValuesNeeded;
     using ParticleRhsType = double; // TODO what type are the particle RHS
     constexpr long int NbRhsValuesPerParticle = 1; // TODO how many real values you need in the rhs part
     using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part, could be a class, but must be POD
     using LocalClass = std::array<RealType,1>; // TODO what is a local part, could be a class, but must be POD
-    const long int inNbElementsPerBlock = 50;
-    const bool inOneGroupPerParent = false;
+    const long int NbElementsPerBlock = 50;
+    const bool OneGroupPerParent = false;
     using KernelClass = KernelExample<RealType>;
     using TreeClass = TbfTree<RealType,
-                              RealType,
+                              ParticleDataType,
                               NbDataValuesPerParticle,
                               ParticleRhsType,
                               NbRhsValuesPerParticle,
@@ -258,7 +259,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

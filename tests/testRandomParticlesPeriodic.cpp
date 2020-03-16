@@ -24,9 +24,9 @@ int main(){
 
     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
     const long int TreeHeight = 5;
-    const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -42,18 +42,20 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    using ParticleDataType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim;
+    using ParticleRhsType = long int;
     constexpr long int NbRhsValuesPerParticle = 1;
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
-    const long int inNbElementsPerBlock = 50;
-    const bool inOneGroupPerParent = false;
+    const long int NbElementsPerBlock = 50;
+    const bool OneGroupPerParent = false;
     using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
     const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
     using TreeClass = TbfTree<RealType,
-                              RealType,
+                              ParticleDataType,
                               NbDataValuesPerParticle,
-                              long int,
+                              ParticleRhsType,
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass,
@@ -63,7 +65,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

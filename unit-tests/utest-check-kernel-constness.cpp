@@ -149,9 +149,9 @@ class TestKernelConstness : public UTester< TestKernelConstness > {
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
         const long int TreeHeight = 8;
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -172,8 +172,8 @@ class TestKernelConstness : public UTester< TestKernelConstness > {
         constexpr long int NbRhsValuesPerParticle = 1;
         using MultipoleClass = std::array<RealType,1>;
         using LocalClass = std::array<RealType,1>;
-        const long int inNbElementsPerBlock = 50;
-        const bool inOneGroupPerParent = false;
+        const long int NbElementsPerBlock = 50;
+        const bool OneGroupPerParent = false;
         using KernelClass = KernelCheckConstness<RealType>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
         using TreeClass = TbfTree<RealType,
@@ -188,7 +188,7 @@ class TestKernelConstness : public UTester< TestKernelConstness > {
 
         TbfTimer timerBuildTree;
 
-        TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
+        TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

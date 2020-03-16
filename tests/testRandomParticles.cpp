@@ -41,18 +41,18 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    using DataParticleType = RealType;
+    using ParticleDataType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim;
-    using RhsParticleType = long int;
+    using ParticleRhsType = long int;
     constexpr long int NbRhsValuesPerParticle = 1;
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
-    const long int inNbElementsPerBlock = 50;
-    const bool inOneGroupPerParent = false;
+    const long int NbElementsPerBlock = 50;
+    const bool OneGroupPerParent = false;
     using TreeClass = TbfTree<RealType,
-                              DataParticleType,
+                              ParticleDataType,
                               NbDataValuesPerParticle,
-                              RhsParticleType,
+                              ParticleRhsType,
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass>;
@@ -61,7 +61,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, inNbElementsPerBlock, particlePositions, inOneGroupPerParent);
+    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

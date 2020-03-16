@@ -282,9 +282,24 @@ Therefore, the tree class must be defined with all the template parameters relat
 ```
 
 The tree needs four parameters:
-- spacial configuration
+- the spacial configuration (of type TbfSpacialConfiguration)
+- the size of the blocks (`NbElementsPerBlock`)
+- the positions of the particles
+- a Boolean to choose the parent/children blocking strategies (`OneGroupPerParent`).
+When this value is set to `true` the blocking strategy will try to set one parent group per child group.
+There will be potentially 2 parent groups because the first cells of the child group may have the same parent as the last cell of the previous group.
+If set to `false`, the cells are simply grouped by chunk of size `NbElementsPerBlock`.
 
 ## Kernel
+
+In TBFMM, the kernels must have a specific interface with different methods where the type of the parameters is strict.
+However, we recommanded to use template to facilitate the implementation of a kernel.
+More precisely, the data types given to the tree (TbfTree) could be used directly in the prototype of the kernel, but we advise to use template instead and to create generic kernels.
+For instance, if one set the multipole part of the cell as being of type `X`, it is clear that `X` will be passed in the P2M/M2M/M2L when the FMM algorithm will be executed.
+But it is better to use a template to accept `X` as parameter.
+
+Therefore, a kernel should have the following methods:
+
 
 ## Algorithms
 

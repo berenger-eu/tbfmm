@@ -16,9 +16,9 @@ class TestHilbert : public UTester< TestHilbert > {
         using RealType = double;
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-        const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+        const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+        const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
         const TbfHilbertSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> > hilbert(configuration);
 
         using IndexType = typename TbfHilbertSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim> >::IndexType;
