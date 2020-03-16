@@ -115,6 +115,35 @@ git submodule init deps/spetabaru && git submodule update
 
 # TBFMM design
 
+## Dimension (DIM)
+
+TBFMM can be solved for arbitrary dimension.
+The dimension must be known at compile time and is used as a template in most TBFMM classes.
+Usually, it is declared at the beginning of a main file:
+```cpp
+const int Dim = 3;
+```
+
+## Real/floating type (RealType)
+
+The data type used for the spacial configuration and the position should be specified at compile time to many TBFMM classes.
+Usually, it is declared at the beginning of a main file:
+```cpp
+using RealType = double;
+```
+
+## Spacial configuration (TbfSpacialConfiguration)
+
+The description of the spacial environment is saved into the TbfSpacialConfiguration class.
+This class stored the desired height of the tree, the simulation box's width and center.
+```cpp
+const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
+const long int TreeHeight = 8;
+const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
+
+const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
+```
+
 ## Block/group tree
 
 TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block).
@@ -199,14 +228,61 @@ For example, in `tests/testRandomParticles.cpp` you will see:
 
 In TBFMM, a particle cannot be defined as a single struct/class, but as multiple data types that will be allocated and managed by TBFMM.
 A particle is defined by three elements:
-- a tuple of values that represent its position (with as many values as the spacial dimension of the simulation).
-- the number of values that are constant during an iteration.
-This could be a physical value or some weight.
-- the number of values that will be updated during the simulation.
-This 
+- a tuple of values that should remained unchanged during a FMM step, that we call "symbolic" data.
+By default, it will include the positions of the particles and it could also be any type of physical values, such as weights.
+These are the sources values of P2M and P2P, but they are also used in the L2P.
+The data type of these values can be changed.
+We usually call it `DataParticleType` and make it equal to the `RealType`, which is `float` or `double` in most cases.
+The user can only specify how many of symbolic values per particle, but the type will `RealType`.
+The first values are used to store the particles' positions, and the extra values can be used by the users as they want.
+
+```cpp
+// The type of values
+using DataParticleType = RealType;
+
+// If no values are needed (apart from the position):
+constexpr long int NbDataValuesPerParticle = Dim;
+
+// Or, if two values are needed in addition to the values for the position:
+constexpr long int NbDataValuesPerParticle = Dim + 2;
+```
+
+- a set of values that will be updated during the FMM step.
+These are the target values of the L2P and P2P, and they cannot be accessed during the P2M.
+
+```cpp
+// The type of value that will be changed by the kernel
+using RhsParticleType = long int;
+// The number of values
+constexpr long int NbRhsValuesPerParticle = 1;
+```
+
+- an index value par particle, which cannot be controlled by the users, but is passed to the kernel.
 
 
-## Tree
+## Tree (TbfTree)
+
+In TBFMM, the tree will transform a set of particles into a block-tree and support all the access methods that the kernels need to perform the FMM algorithm.
+Therefore, the tree class must be defined with all the template parameters related to the cells and particles.
+```cpp
+    using DataParticleType = RealType;
+    constexpr long int NbDataValuesPerParticle = Dim;
+    using RhsParticleType = long int;
+    constexpr long int NbRhsValuesPerParticle = 1;
+    using MultipoleClass = std::array<long int,1>;
+    using LocalClass = std::array<long int,1>;
+    using TreeClass = TbfTree<RealType,
+                              DataParticleType,
+                              NbDataValuesPerParticle,
+                              RhsParticleType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
+    // From here, TreeClass can be used, but it needs parameters
+```
+
+The tree needs four parameters:
+- spacial configuration
 
 ## Kernel
 

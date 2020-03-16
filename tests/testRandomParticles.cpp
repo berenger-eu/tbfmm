@@ -23,9 +23,9 @@ int main(){
 
     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
     const long int TreeHeight = 8;
-    const std::array<RealType, Dim> inBoxCenter{{0.5, 0.5, 0.5}};
+    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, inBoxCenter);
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -41,16 +41,18 @@ int main(){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    using DataParticleType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim;
+    using RhsParticleType = long int;
     constexpr long int NbRhsValuesPerParticle = 1;
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
     const long int inNbElementsPerBlock = 50;
     const bool inOneGroupPerParent = false;
     using TreeClass = TbfTree<RealType,
-                              RealType,
+                              DataParticleType,
                               NbDataValuesPerParticle,
-                              long int,
+                              RhsParticleType,
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass>;
