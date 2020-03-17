@@ -36,12 +36,12 @@ public:
     /// shared pointer and safely update it in this copy function
     explicit KernelExample(const KernelExample&){}
 
-    template <class CellSymbolicData, class ParticlesClass, class LeafClass>
+    template <class CellSymbolicData, class ParticlesClass, class MultipoleClass>
     void P2M(const CellSymbolicData& /*inLeafIndex*/,
              const long int /*particlesIndexes*/[],
              const ParticlesClass& /*inParticles*/,
              const long int /*inNbParticles*/,
-             LeafClass& /*inOutLeaf*/) const {
+             MultipoleClass& /*inOutLeaf*/) const {
         /// inLeafIndex:
         ///  - .spacialIndex is the spacial index (Morton index for example) of the current leaf
         ///  - .boxCoord is the coordinate in the spacial box of the current leaf
@@ -52,18 +52,18 @@ public:
         /// inOutLeaf: is the multipole part (here MultipoleClass defined in the main)
     }
 
-    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    template <class CellSymbolicData, class MultipoleClassContainer, class MultipoleClass>
     void M2M(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/,
-             const CellClassContainer& /*inLowerCell*/,
-             CellClass& /*inOutUpperCell*/,
+             const MultipoleClassContainer& /*inLowerCell*/,
+             MultipoleClass& /*inOutUpperCell*/,
              const long int /*childrenPos*/[],
              const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
         /// inLevel: the level in the tree of the parent
         /// inLowerCell: a container over the multipole parts of the children (~ an array of MultipoleClass
         ///              defined in the main)
-        ///              const CellClass& child = inLowerCell[idxChild]
+        ///              const MultipoleClass& child = inLowerCell[idxChild]
         /// inOutUpperCell: the parent multipole data.
         /// childrenPos: the position of each child. In 3D each index will be between 0 and 7 (as there
         ///              are 2^3 children).
@@ -76,19 +76,19 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class CellSymbolicData, class CellClassContainer, class CellClass>
+    template <class CellSymbolicData, class MultipoleClassContainer, class LocalClass>
     void M2L(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/,
-             const CellClassContainer& /*inInteractingCells*/,
+             const MultipoleClassContainer& /*inInteractingCells*/,
              const long int /*neighPos*/[],
              const long int /*inNbNeighbors*/,
-             CellClass& /*inOutCell*/) const {
+             LocalClass& /*inOutCell*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the target cell.
         ///              The indexes of the neighbors could be found from inCellIndex and neighPos.
         /// inLevel: the level in the tree of the parent
         /// inInteractingCells: a container over the multipole parts of the children (~ an array of MultipoleClass
         ///                     defined in the main)
-        ///                     const CellClass& neigh = inInteractingCells[idxNeigh]
+        ///                     const LocalClass& neigh = inInteractingCells[idxNeigh]
         /// neighPos: the position of each neigh. In 3D each index will be between 0 and 189.
         ///              This could be use to quickly retreive an transfer matrix, for example, one could
         ///              have an array "mat[189]" and always use "mat[idxNeigh]" for the children at the same
@@ -100,11 +100,11 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class CellSymbolicData, class CellClass, class CellClassContainer>
+    template <class CellSymbolicData, class LocalClass, class LocalClassContainer>
     void L2L(const CellSymbolicData& /*inCellIndex*/,
              const long int /*inLevel*/,
-             const CellClass& /*inUpperCell*/,
-             CellClassContainer& /*inOutLowerCells*/,
+             const LocalClass& /*inUpperCell*/,
+             LocalClassContainer& /*inOutLowerCells*/,
              const long int /*childrednPos*/[],
              const long int /*inNbChildren*/) const {
         /// inCellIndex: is the spacial index (Morton index for example) of the parent
@@ -112,7 +112,7 @@ public:
         /// inUpperCell: the parent local data.
         /// inOutLowerCells: a container over the local parts of the children (~ an array of LocalClass
         ///              defined in the main)
-        ///              const CellClass& child = inOutLowerCells[idxChild]
+        ///              const LocalClass& child = inOutLowerCells[idxChild]
         /// childrenPos: the position of each child. In 3D each index will be between 0 and 7 (as there
         ///              are 2^3 children).
         ///              This could be use to quickly retreive an transfer matrix, for example, one could
@@ -124,9 +124,9 @@ public:
         /// if the children are stored on different blocks, there will be one call per block.
     }
 
-    template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
+    template <class CellSymbolicData, class LocalClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData& /*inCellIndex*/,
-             const LeafClass& /*inLeaf*/,
+             const LocalClass& /*inLeaf*/,
              const long int /*particlesIndexes*/[],
              const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs& /*inOutParticlesRhs*/,
