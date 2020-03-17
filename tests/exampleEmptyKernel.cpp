@@ -279,8 +279,8 @@ int main(){
 
     tree.applyToAllLeaves([]
                           (auto& /*leafHeader*/, const long int* /*particleIndexes*/,
-                          const std::array<RealType*, NbDataValuesPerParticle> /*particleDataPtr*/,
-                          const std::array<RealType*, NbRhsValuesPerParticle> /*particleRhsPtr*/){
+                          const std::array<ParticleDataType*, NbDataValuesPerParticle> /*particleDataPtr*/,
+                          const std::array<ParticleRhsType*, NbRhsValuesPerParticle> /*particleRhsPtr*/){
         /// leafHeader.nbParticles: spacial index of the current cell
         /// particleIndexes: indexes of the particles, this correspond to the original order when
         ///                  creating the tree.

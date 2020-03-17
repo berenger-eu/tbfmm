@@ -67,7 +67,8 @@ int main(){
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
 
     {
-        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, TbfTestKernel<RealType>>;
+        using KernelClass = TbfTestKernel<RealType>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
         AlgorithmClass algorithm(configuration);
 
         TbfTimer timerExecute;

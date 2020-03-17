@@ -159,8 +159,8 @@ int main(int argc, char** argv){
 
         tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
                               (auto&& leafHeader, const long int* particleIndexes,
-                              const std::array<RealType*, 4> particleDataPtr,
-                              const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
+                              const std::array<ParticleDataType*, 4> particleDataPtr,
+                              const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
             for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
                 for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
                    partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],

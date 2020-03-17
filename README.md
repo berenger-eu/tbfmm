@@ -418,6 +418,11 @@ The prototype is as follows:
              const long int /*inNbOutParticles*/,
              const long /*arrayIndexSrc*/) const {
 ```
+The P2P compute the interaction between one leaf and its neighbors.
+The interactions are supposed to be two ways, so each leaf is used as a source and as a target.
+As a consequence, not all neighbors are passed to the function, but only the lower half.
+By doing so, we can apply symmetric interactions directly between all the given leaves. 
+
 - a P2PTsm, which takes particles (one leaf) as input and particles (one leaf) as output.
 The prototype is as follows:
 ```cpp
@@ -433,6 +438,10 @@ The prototype is as follows:
                 const long int /*inNbOutParticles*/,
                 const long /*arrayIndexSrc*/) const {
 ```
+P2PTsm should compute the interaction with one target and multiple source neighbors.
+This function is usually called in a Tsm FMM (when sources != targets).
+The source leaves should not be modified, also they do not have rhs.
+
 - a P2PInner, which takes particles (one leaf) as input and output.
 The prototype is as follows:
 ```cpp
@@ -444,6 +453,7 @@ The prototype is as follows:
                   const long int /*inNbOutParticles*/) const {
 ```
 
+P2PInner is used to compute the interaction of a leaf on itself.
 
 An example of empty kernel is given in `tests/exampleEmptyKernel.cpp`.
 
@@ -464,8 +474,8 @@ Here is an example of asking TBFMM to provide the best algorithm class (sequenti
 
 ```cpp
 // Let TBFMM select the right algorithm class (for kernel = KernelClass)
-using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass<RealType>>;
-// Could be specific (but needs to be sure algorithms are supported)
+using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+// Could be specific (but needs to be sure the algorithm is supported)
 #ifdef TBF_USE_SPETABARU
     using AlgorithmClass = TbfSmSpetabaruAlgorithm<RealType, KernelClass>;
 #elif defined(TBF_USE_OPENMP)
@@ -477,7 +487,7 @@ using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass<RealType
 // Create an algorithm where the kernel will create using the default constructor
 AlgorithmClass algorithm(configuration);
 // Equivalent to
-AlgorithmClass algorithm(configuration, KernelClass<RealType>());
+AlgorithmClass algorithm(configuration, KernelClass());
 // Sometime the kernel constructor needs parameters
 // In this case, we create the kernel and pass it to the algorithm
 KernelClass<RealType> myKernel(some parameters);
@@ -504,35 +514,227 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
 ## Basic example
 
+Most of our examples a build similarly:
+
+- declaration of the spacial properties
+- initialization of the particles
+- definition of the template types
+- creation of the FMM components (tree, kernel, algorithm)
+- iteration on the results and/or rebuilding the tree to run the algorithm again
+
+```cpp
+    // Fix the real data type and dimension
+    using RealType = double;
+    const int Dim = 3;
+
+    // Set the simulation box property
+    const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
+    const long int TreeHeight = 8;
+    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
+    // Create the spacial configuration object
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
+
+    // Generate random particles
+    const long int NbParticles = 1000;
+    TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
+    std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
+    for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+        particlePositions[idxPart] = randomGenerator.getNewItem();
+    }
+
+    // Fix the templates
+    using ParticleDataType = RealType;
+    constexpr long int NbDataValuesPerParticle = Dim;
+    using ParticleRhsType = long int;
+    constexpr long int NbRhsValuesPerParticle = 1;
+    using MultipoleClass = std::array<long int,1>;
+    using LocalClass = std::array<long int,1>;
+    const long int NbElementsPerBlock = 50;
+    const bool OneGroupPerParent = false;
+    using TreeClass = TbfTree<RealType,
+                              ParticleDataType,
+                              NbDataValuesPerParticle,
+                              ParticleRhsType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass>;
+    using KernelClass = TbfTestKernel<RealType>;
+
+    // Create the tree
+    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+
+	// Create the algorithm
+    using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+    AlgorithmClass algorithm(configuration);
+    // Execute the algorithm
+    algorithm.execute(tree);
+```
+
 ## Changing cells
 
-## Counting the number of interactions
+If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding template.
 
-## Timing the different operations
+Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
+
+## Counting the number of interactions (TbfInteractionCounter)
+
+It is often very useful to count the number of interactions, and their types.
+To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
+
+This kernel is fully templatized, and this can work with any kernel.
+It takes as template the type of the original kernel and support the `<<` operator to print the results.
+However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
+
+Consider an original source code:
+
+```cpp
+using KernelClass = TbfTestKernel<RealType>;
+```
+
+This must be transformed into (ant that's all):
+
+```cpp
+using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType>>;
+```
+
+However, to get the results we have to use the following piece of code
+
+```cpp
+auto counters = typename KernelClass::ReduceType();
+
+algorithm.applyToAllKernels([&](const auto& inKernel){
+    counters = KernelClass::ReduceType::Reduce(counters, inKernel.getReduceData());
+});
+// Print the counters (merge from all the kernels)
+std::cout << counters << std::endl;
+```
+
+## Timer (TbfTimer)
+
+TBFMM provides an easy to use timer based on standard C++.
+
+It is the `TbfTimer`, which supports start/stop/etc...
+
+In the following example, we print the time it takes to build the tree:
+
+```
+    TbfTimer timerBuildTree;
+
+    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+
+    timerBuildTree.stop();
+    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+```
+
+
+
+## Timing the different operations (TbfInteractionTimer)
+
+It is often very useful to time in details the different operators.
+To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
+
+This kernel is fully templatized, and this can work with any kernel.
+It takes as template the type of the original kernel and support the `<<` operator to print the results.
+However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
+
+Consider an original source code:
+
+```cpp
+using KernelClass = TbfTestKernel<RealType>;
+```
+
+This must be transformed into (ant that's all):
+
+```cpp
+using KernelClass = TbfInteractionTimer<TbfTestKernel<RealType>>;
+```
+
+However, to get the results we have to use the following piece of code
+
+```cpp
+auto timers = typename KernelClass::ReduceType();
+
+algorithm.applyToAllKernels([&](const auto& inKernel){
+     timers = KernelClass::ReduceType::Reduce(timers, inKernel.getReduceData());
+});
+// Print the execution time of the different operators
+std::cout << timers << std::endl;
+```
 
 ## Iterating on the tree
 
-## Have source and target particles
+Once the tree is built, it might be useful to iterate on the cells, and it is usually mandatory to iterate on the leaves/particles.
+
+Our tree does not support range for loop because we prefer to fully abstract the iteration, avoid creating iterator, and constraint the prototype of the lambda function.
+
+Consequently, to iterate over all the cells could be done with the following code:
+
+```cpp
+ tree.applyToAllCells([](
+                       const long int inLevel,
+                       auto&& cellHeader,
+                       const std::optional<std::reference_wrapper<MultipoleClass>> cellMultipole,
+                       const std::optional<std::reference_wrapper<LocalClass>> cellLocalr){
+    // Do whatever we want here
+});
+```
+
+Iterating over the leaves could be done with:
+
+```cpp
+tree.applyToAllLeaves([](auto& /*leafHeader*/,
+                         const long int* /*particleIndexes*/,
+                         const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
+                         const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
+    // Do whatever we want
+});
+```
+
+
+
+## Have source and target particles (Tsm)
+
+
 
 ## Use periodicity
 
+
+
 ## Vectorization of kernels
+
+
 
 ## Using mesh element as particles
 
+
+
 ## Rebuilding the tree
+
+
 
 ## Computing an accuracy
 
+
+
 ## Select the height of the tree (treeheight)
+
+
 
 ## Select the block size (blocksize)
 
+
+
 ## Creating a new kernel
+
+
 
 ## Find a cell or leaf in the tree (if it exists)
 
+
+
 ## Spacial ordering/indexing (Morton, Hilbert, space filling curve)
+
+
 
 ## Execute only part of the FMM
 
@@ -548,7 +750,15 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
 ## Uniform kernel cannot be used
 
+
+
 ## It is slower with the FMM (compared to direct interactions)
+
+
+
+## How to select the right tree height
+
+
 
 ## Make command builds nothing
 
