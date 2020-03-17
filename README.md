@@ -1,21 +1,15 @@
 [![pipeline status](https://gitlab.inria.fr/bramas/tbfmm/badges/master/pipeline.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 [![coverage report](https://gitlab.inria.fr/bramas/tbfmm/badges/master/coverage.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 
-TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method.
-It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies.
-It uses the block-tree (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
+TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
 
-The current document is at the same time a classic README but also the main documentation of TBFMM.
-We try to answer all the questions that users could have regarding implementation and the use of the library.
-Of course, we invite users to post an issues if they find a bug or have any question about TBFMM.
+The current document is at the same time a classic README but also the main documentation of TBFMM. We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issues if they find a bug or have any question about TBFMM.
 
-TBFMM uses C++ templates heavily.
-It is not required to master templates in order to use TBFMM but it helps to better understand how things work internally.
+TBFMM uses C++ templates heavily. It is not required to master templates in order to use TBFMM but it helps to better understand how things work internally.
 
 # Compilation
 
-TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler.
-So far, TBFMM has been tested on the following compilers:
+TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. So far, TBFMM has been tested on the following compilers:
 - GNU g++ (7 and 8) https://gcc.gnu.org/
 - Clang/LLVM (8 and 10) https://llvm.org/
 
@@ -25,9 +19,7 @@ TBFMM should work on Linux and Mac OS.
 
 TBFMM uses CMake as build system https://cmake.org/
 
-The build process consists in the following steps: adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all.
-The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system).
-Both are optional, and to be activated their repository must be cloned/updated before running cmake.
+The build process consists in the following steps: adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to be activated their repository must be cloned/updated before running cmake.
 
 ```bash
 # To enable SPETABARU and Inastemp
@@ -78,20 +70,15 @@ Can be found here: https://bramas.gitlabpages.inria.fr/tbfmm/
 
 ## OpenMP
 
-CMake will try to check if OpenMP is supported by the system.
-If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPETABARU).
+CMake will try to check if OpenMP is supported by the system. If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPETABARU).
 
 ## Inastemp
 
-Inatemp is a vectorization library that makes it possible to implement a single kernel with an abstract vector data type, which is then compiled for most vectorization instruction sets.
-It supports SSE, AVX(2), AVX512, ARM SVE, etc.
-To know more, you can have a look at https://gitlab.inria.fr/bramas/inastemp
+Inatemp is a vectorization library that makes it possible to implement a single kernel with an abstract vector data type, which is then compiled for most vectorization instruction sets. It supports SSE, AVX(2), AVX512, ARM SVE, etc. To know more, you can have a look at https://gitlab.inria.fr/bramas/inastemp
 
-In TBFMM, only the P2P kernel of the so called rotation and uniform kernels are vectorized with Inastemp (`src/kernels/unifkernel/FP2PR.hpp`).
-Therefore, if you are performing simulations with one of these kernels, it is recommended to enable Inastemp, since the performance difference can be impressive.
+In TBFMM, only the P2P kernel of the so called rotation and uniform kernels are vectorized with Inastemp (`src/kernels/unifkernel/FP2PR.hpp`). Therefore, if you are performing simulations with one of these kernels, it is recommended to enable Inastemp, since the performance difference can be impressive.
 
-To avoid having to manage external dependencies, Inastemp is shipped as a git submodule, and thus it will be managed by our cmake files.
-But, you must explicitly pull the submobule to enable it.
+To avoid having to manage external dependencies, Inastemp is shipped as a git submodule, and thus it will be managed by our cmake files. But, you must explicitly pull the submobule to enable it.
 ```bash
 # To enable only Inastemp (runned from the main directory)
 git submodule init deps/inastemp && git submodule update
@@ -99,15 +86,11 @@ git submodule init deps/inastemp && git submodule update
 
 ## SPETABARU
 
-SPETABARU is a C++ task-based runtime system that has speculative execution capability.
-Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern.
-To know more, you can have a look at https://gitlab.inria.fr/bramas/spetabaru
+SPETABARU is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, you can have a look at https://gitlab.inria.fr/bramas/spetabaru
 
-SPETABARU is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler).
-It could be a nice alternative to OpenMP when this appears complicated to have an OpenMP lib (as it is sometime the case one some Mac).
+SPETABARU is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler). It could be a nice alternative to OpenMP when this appears complicated to have an OpenMP lib (as it is sometime the case one some Mac).
 
-To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files.
-But, you must explicitly pull the submobule to enable it.
+To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files. But, you must explicitly pull the submobule to enable it.
 ```bash
 # To enable only SPETABARU (runned from the main directory)
 git submodule init deps/spetabaru && git submodule update
@@ -117,9 +100,7 @@ git submodule init deps/spetabaru && git submodule update
 
 ## Dimension (DIM)
 
-TBFMM can be run simulations of arbitrary dimension.
-The dimension must be known at compile time and is used as a template in most TBFMM classes.
-Usually, it is declared at the beginning of a main file:
+TBFMM can be run simulations of arbitrary dimension. The dimension must be known at compile time and is used as a template in most TBFMM classes. Usually, it is declared at the beginning of a main file:
 
 ```cpp
 const int Dim = 3;
@@ -127,16 +108,14 @@ const int Dim = 3;
 
 ## Real/floating type (RealType)
 
-The data type used for the spacial configuration and the position should be specified at compile time to many TBFMM classes.
-Usually, it is declared at the beginning of a main file:
+The data type used for the spacial configuration and the position should be specified at compile time to many TBFMM classes. Usually, it is declared at the beginning of a main file:
 ```cpp
 using RealType = double;
 ```
 
 ## Spacial configuration (TbfSpacialConfiguration)
 
-The description of the spacial environment is saved into the TbfSpacialConfiguration class.
-This class stored the desired height of the tree, the simulation box's width and center.
+The description of the spacial environment is saved into the `TbfSpacialConfiguration` class. This class stored the desired height of the tree, the simulation box's width and center.
 ```cpp
 // Consider Dim = 3
 const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
@@ -148,18 +127,13 @@ const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths
 
 ## Block/group tree
 
-TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block).
-This data structure is well described here http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf
+TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block). This data structure is well described here http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf
 
-The advantage of this structure is that the memory blocks can be moved/copied with a `memcpy`, which is really convenient in HPC when we want to use GPUs or MPI.
-The positive side effects are a great data locality and forcing a low level abstraction on the data in the group, which mitigate the overhead.
+The advantage of this structure is that the memory blocks can be moved/copied with a `memcpy`, which is really convenient in HPC when we want to use GPUs or MPI. The positive side effects are a great data locality and forcing a low level abstraction on the data in the group, which mitigate the overhead.
 
-On the other hand, the constraint (drawback?) is that particles and cells must be POD (or at least to be raw copiable).
-For instance, an `std::vector` is not, because it has a pointer internally such that making a raw copy of an object will lead to an undefined/invalid state (it could work in a shared memory system, but clearly not with different memory nodes).
+On the other hand, the constraint (drawback?) is that particles and cells must be POD (or at least to be raw copiable). For instance, an `std::vector` is not, because it has a pointer internally such that making a raw copy of an object will lead to an undefined/invalid state (it could work in a shared memory system, but clearly not with different memory nodes).
 
-In the context of the FMM, this approach cut the particles and cells in multiple parts depending on what will be read/write by the kernels.
-For example, a cell is not a class, but described as three independent parts: a symbolic part, a multipole part and a local part.
-Therefore, TBFMM will then allocate multiple parts of the same kind together and maintain the coherency.
+In the context of the FMM, this approach cut the particles and cells in multiple parts depending on what will be read/write by the kernels. For example, a cell is not a class, but described as three independent parts: a symbolic part, a multipole part and a local part. Therefore, TBFMM will then allocate multiple parts of the same kind together and maintain the coherency.
 
 ## Cell
 
@@ -217,8 +191,7 @@ struct MyLocal{
 using LocalClass = MyLocal;
 ```
 
-Therefore, inside each `main` file of TBFMM, you will see template lines that define what is a multipole part and a local part.
-Also, if you create your own kernel, it is clear that you will need to update these lines.
+Therefore, inside each `main` file of TBFMM, you will see template lines that define what is a multipole part and a local part. Also, if you create your own kernel, it is clear that you will need to update these lines.
 
 For example, in `tests/testRandomParticles.cpp` you will see:
 ```cpp
@@ -266,8 +239,7 @@ constexpr long int NbRhsValuesPerParticle = 1;
 
 ## Tree (TbfTree)
 
-In TBFMM, the tree will transform a set of particles into a block-tree and supports all the access methods that the kernels need to perform the FMM algorithm, but also different method to iterate on the particles/cells, or to find a given cell.
-The tree class must be defined with all the template parameters related to the cells and particles.
+In TBFMM, the tree will transform a set of particles into a block-tree and supports all the access methods that the kernels need to perform the FMM algorithm, but also different method to iterate on the particles/cells, or to find a given cell. The tree class must be defined with all the template parameters related to the cells and particles.
 
 ```cpp
     using DataParticleType = RealType;
@@ -289,7 +261,7 @@ The tree class must be defined with all the template parameters related to the c
 The tree needs four parameters to be instanciated:
 - the spacial configuration (of type `TbfSpacialConfiguration`)
 - the size of the blocks (`NbElementsPerBlock`)
-- the positions of the particles, which must be an container that supports `std::size` and which has two dimensions. The first one is the index of the particles, and the second one the index of the positions. For example, we classically use `std::vector<std::array<RealType, Dim>>`.
+- the positions of the particles, which must be an container that supports `std::size` and which has two dimensions. The first one is the index of the particles, and the second one the index of the positions. For example, we classically use `std::vector<std::array<RealType, Dim>>`. The order of the particles in the array is used as an index that is given every time the particles are used. The first particle has index 0, etc.
 - a Boolean to choose the parent/children blocking strategies (`OneGroupPerParent`).
 When this value is set to `true` the blocking strategy will try to set one parent group per child group.
 There will be potentially 2 parent groups because the first cells of the child group may have the same parent as the last cell of the previous group.
@@ -299,11 +271,7 @@ In order to know how to iterate on the tree's elements or how to find a cell/lea
 
 ## Kernel
 
-In TBFMM, the kernels must have a specific interface with different methods where the type of the parameters is strict.
-However, we recommanded to use template to facilitate the implementation of a kernel.
-More precisely, the data types given to the tree (`TbfTree`) could be used directly in the prototype of the kernel, but we advise to use template instead and to create generic kernels.
-For instance, if one set the multipole part of the cell as being of type `X`, it is clear that `X` will be passed to the P2M/M2M/M2L when the FMM algorithm will be executed.
-But it is better to use a template to accept `X` as parameter, such that future modifications will not impact the methods' prototypes.
+In TBFMM, the kernels must have a specific interface with different methods where the type of the parameters is strict. However, we recommended to use template to facilitate the implementation of a kernel. More precisely, the data types given to the tree (`TbfTree`) could be used directly in the prototype of the kernel, but we advise to use template instead and to create generic kernels. For instance, if one set the multipole part of the cell as being of type `X`, it is clear that `X` will be passed to the P2M/M2M/M2L when the FMM algorithm will be executed. But it is better to use a template to accept `X` as parameter, such that future modifications will not impact the methods' prototypes.
 
 A kernel should have the following methods:
 - a copy constructor.
@@ -402,6 +370,8 @@ This can be seen as the opposite as the P2M, where the multipole part is replace
 
 Therefore, the parameter `inOutParticlesRhs` of type `ParticlesClassRhs` is an array of pointers to the rhs of the particles, can be seen as being of type `RhsParticleType* [NbRhsValuesPerParticle]`.
 
+`particlesIndexes` corresponds to the indexes of the particles in this leaf, which is the positions of the particles in the array that was used to create the tree.
+
 - a P2P, which takes particles (two leaves) as input and output.
 The prototype is as follows:
 ```cpp
@@ -467,8 +437,6 @@ There are several different kernels:
 - all particles are sources and targets, or target/source model (Tsm)
 
 In addition, an extra algorithm can be used to apply periodicity above the level 1 (to simulate a repetition of the simulation box).
-
-
 
 Here is an example of asking TBFMM to provide the best algorithm class (sequential < OpenMP < SPETABARU)
 
@@ -572,18 +540,13 @@ Most of our examples a build similarly:
 
 ## Changing cells
 
-If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding template.
-
-Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
+If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding template. Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
 
 ## Counting the number of interactions (TbfInteractionCounter)
 
-It is often very useful to count the number of interactions, and their types.
-To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
+It is often very useful to count the number of interactions, and their types. To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
 
-This kernel is fully templatized, and this can work with any kernel.
-It takes as template the type of the original kernel and support the `<<` operator to print the results.
-However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
+This kernel is fully templatized, and this can work with any kernel. It takes as template the type of the original kernel and support the `<<` operator to print the results. However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
 
 Consider an original source code:
 
@@ -611,9 +574,7 @@ std::cout << counters << std::endl;
 
 ## Timer (TbfTimer)
 
-TBFMM provides an easy to use timer based on standard C++.
-
-It is the `TbfTimer`, which supports start/stop/etc...
+TBFMM provides an easy to use timer based on standard C++. It is the `TbfTimer`, which supports start/stop/etc...
 
 In the following example, we print the time it takes to build the tree:
 
@@ -630,12 +591,9 @@ In the following example, we print the time it takes to build the tree:
 
 ## Timing the different operations (TbfInteractionTimer)
 
-It is often very useful to time in details the different operators.
-To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
+It is often very useful to time in details the different operators. To do so, we propose a wrapper kernel that has to be plug between the real kernel and the FMM algorithm.
 
-This kernel is fully templatized, and this can work with any kernel.
-It takes as template the type of the original kernel and support the `<<` operator to print the results.
-However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
+This kernel is fully templatized, and this can work with any kernel. It takes as template the type of the original kernel and support the `<<` operator to print the results. However, since each thread has its own copy of the kernel, we need to use a trick to merge all the counters together.
 
 Consider an original source code:
 
@@ -675,28 +633,140 @@ Consequently, to iterate over all the cells could be done with the following cod
                        auto&& cellHeader,
                        const std::optional<std::reference_wrapper<MultipoleClass>> cellMultipole,
                        const std::optional<std::reference_wrapper<LocalClass>> cellLocalr){
-    // Do whatever we want here
+    // Some code
 });
 ```
 
-Iterating over the leaves could be done with:
+Iterating over the leaves/particles could be done with:
 
 ```cpp
 tree.applyToAllLeaves([](auto& /*leafHeader*/,
                          const long int* /*particleIndexes*/,
                          const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
                          const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
-    // Do whatever we want
+    // Some code
 });
 ```
+
+The `particleIndexes` parameter gives the index of each particle (which correspond to the position of the particles when they were inserted in the tree).
 
 
 
 ## Have source and target particles (Tsm)
 
+Most of the examples we give consider that particles are sources and targets at the same time.
+
+But there are many applications where that it is not the case. It is very easy to switch to this mode by putting `Tsm` postfix behind the algorithm and the tree classes:
+
+```cpp
+// TbfAlgorithmSelecter => TbfAlgorithmSelecterTsm
+// Same if specific algorithm class is used
+using AlgorithmClass = TbfAlgorithmSelecterTsm::type<RealType, TbfTestKernel<RealType>>;
+// TbfTree => TbfTreeTsm
+using TreeClass = TbfTreeTsm<RealType,
+                                 ParticleDataType,
+                                 NbDataValuesPerParticle,
+                                 ParticleRhsType,
+                                 NbRhsValuesPerParticle,
+                                 MultipoleClass,
+                                 LocalClass>;
+```
+
+The main differences come from the creation of the tree and how to iterate over the tree's elements.
+
+```cpp
+// Usually only one array of positions is needed, but with tsm
+// we need to pass one array for the sources, and one array for the targets
+TreeClass tree(configuration, NbElementsPerBlock, particlePositionsSource, particlePositionsTarget, OneGroupPerParent);
+```
+
+When we iterate, we have to specify if we iterate over the targets or the sources:
+
+```cpp
+tree.applyToAllCellsSource([](const long int inLevel,
+                              auto&& cellHeader,
+                              const std::optional<std::reference_wrapper<MultipoleClass>> cellMultipole,
+                                 auto&& /*local part unused*/){
+    // Some code
+});
+
+tree.applyToAllCellsTarget([](const long int inLevel,
+                              auto&& cellHeader,
+                              auto&& /*multipole part unused*/,
+                              const std::optional<std::reference_wrapper<LocalClass>> cellLocal){
+    // Some code
+});
+```
+
+In the previous example, the source cells do not have a local part, therefore we leave this parameter unused. Similarly, the target cells do not have a multipole part.
+
+For the leaves/particles:
+
+```cpp
+tree.applyToAllLeavesSource([](auto&& leafHeader,
+                               const long int* particleIndexes,
+                               const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
+                               auto&& /*particles rhs unused*/){
+    // Some code
+});
+tree.applyToAllLeavesTarget([](auto& /*leafHeader*/,
+                         const long int* /*particleIndexes*/,
+                         const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
+                         const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
+    // Some code
+});
+```
+
+Source particles do not have rhs, this is why we commented this parameter.
+
 
 
 ## Use periodicity
+
+In TBFMM we support a pure FMM/algorithmic-based periodic model (described in http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf).
+
+The idea is to duplicate the simulation box a huge number of times in all directions. The numerical stability of the method relies on the kernel because we simply use the classical FMM operators. With this aim, we takes the cell at the level 1 of the FMM tree and then perform computation as if the tree was going to a much higher level.
+
+In order to use this model, it is necessary to select the level up to which the FMM is applied. In addition, the classical classes that are used for a non-periodic FMM must be slightly modified to apply periodic operations. The P2P and M2L should takes cells considering that the box is repeated.
+
+By default, many classes use `TbfDefaultSpaceIndexType` as spacial ordering (which is Morton indexing/space filling curve). When we use the periodic model, we have to specify to each class that the space ordering to use is different, and for example that it is `TbfDefaultSpaceIndexTypePeriodic` (which is also Morton indexing but with periodicity turned on). Therefore, the template declaration are a little different:
+
+```cpp
+using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
+using TreeClass = TbfTree<RealType,
+                              ParticleDataType,
+                              NbDataValuesPerParticle,
+                              ParticleRhsType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass,
+                              SpacialSystemPeriodic>; // optional last template
+using AlgorithmClass = TbfTestKernel<RealType,
+     							     SpacialSystemPeriodic>; // optional last template
+```
+
+Then, we need to run the classical FMM algorithm but up to level 1 (instead of level 2, because in a non periodic FMM there are no M2L to do at level 1), and to run a top periodic FMM algorithm
+
+```cpp
+using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, AlgorithmClass, SpacialSystemPeriodic>;
+// New template
+using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, AlgorithmClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
+
+
+AlgorithmClass algorithm(configuration, LastWorkingLevel);
+TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
+
+
+// Bottom to top classical FMM algorithm
+algorithm.execute(tree, TbfAlgorithmUtils::TbfBottomToTopStages);
+// Periodic at the top (could be done in parallel with TbfTransferStages)
+topAlgorithm.execute(tree);
+// Transfer (could be done in parallel with topAlgorithm.execute)
+// (M2L and P2P will be periodic)
+algorithm.execute(tree, TbfAlgorithmUtils::TbfTransferStages);
+// Top to bottom classical FMM algorithm
+algorithm.execute(tree, TbfAlgorithmUtils::TbfTopToBottomStages);
+```
 
 
 
