@@ -14,8 +14,6 @@ template <class RealType, class DataType, long int NbDataValuesPerParticle, clas
           class MultipoleClass, class LocalClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 class TbfTreeTsm {
 public:
-    struct void_data{};
-
     using TreeClassSource = TbfTree<RealType, DataType, NbDataValuesPerParticle, void_data, 0, MultipoleClass, void_data, SpaceIndexType>;
     using TreeClassTarget = TbfTree<RealType, DataType, NbDataValuesPerParticle, RhsType, NbRhsValuesPerParticle, void_data, LocalClass, SpaceIndexType>;
 

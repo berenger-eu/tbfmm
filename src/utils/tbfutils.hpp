@@ -217,4 +217,7 @@ constexpr std::array<T, N> make_array(const T& value)
 
 }
 
+// Global scope
+struct void_data{};
+
 #endif

@@ -772,9 +772,95 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfTopToBottomStages);
 
 ## Vectorization of kernels
 
+In a previous section, we have described what is Inastemp and how we use it to vectorize the P2P. We strongly advised our users to do as well. Using Inastemp is really easy and is automatically managed by our CMake configuration.
+
+Moreover, one can leave a comment or issue on the Inastemp's website if any feature is missing for a given project.
+
 
 
 ## Using mesh element as particles
+
+It is quite common that the FMM is mapped on an existing application with its own data structures, etc. For instance, one could have a mesh defined with spacial elements, and where each element has an index. In this context, it could appear difficult to transform these elements into "particles" or to create some kind of P2P (because, in such cases, it is common that the P2P is nothing more than working on the mesh with a classical approach).
+
+To solve this issue, we propose the following design. A particle will have no specific data or rhs values. A particle will simply be a position and an index (which will correspond to an index in the mesh structure). Then, in the P2P, one will simply use the index to compute the interaction between the mesh elements.
+
+In this section, we provide a simplified code to implement this mechanism.
+
+First, transform mesh elements' positions into array of positions:
+
+```cpp
+// Here "mesh" is an example of application specific data structure
+std::vector<std::array<double, Dim>> positions(mesh.nb_elements);
+for(element : mesh.elements){
+    positions[element.index] = element.position;
+}
+```
+
+Then, we create template with 0 data and rhs values for the particles:
+
+```cpp
+using ParticleDataType = RealType;
+constexpr long int NbDataValuesPerParticle = Dim; // Nothing more
+using ParticleRhsType = void_data; // TBFMM empty struct
+constexpr long int NbRhsValuesPerParticle = 0;
+using MultipoleClass = TODO;
+using LocalClass = TODO;
+using TreeClass = TbfTree<RealType,
+                            ParticleDataType,
+                            NbDataValuesPerParticle,
+                            ParticleRhsType,
+                            NbRhsValuesPerParticle,
+                            MultipoleClass,
+                            LocalClass>;
+```
+
+The kernel any method that implies the particles will not use the positions or rhs but only the indexes:
+
+```cpp
+template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
+class KernelMeshExample{    
+public:
+    using RealType = RealType_T;
+    using SpaceIndexType = SpaceIndexType_T;
+    using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
+    
+private:
+    MeshType* myMesh; // Ptr to the real mesh data structure
+    
+public:
+    explicit KernelExample(const SpacialConfiguration& /*inConfiguration*/,
+                           MeshType* inMyMesh)
+    	: myMesh(inMyMesh){}
+
+    explicit KernelExample(const KernelExample& inOther) : myMesh(inOther.myMesh){}
+    
+    // Just the example for a P2M
+    template <class CellSymbolicData, class ParticlesClass, class MultipoleClass>
+    void P2M(const CellSymbolicData& inLeafIndex,
+             const long int particlesIndexes[],
+             const ParticlesClass& /*inParticles*/,
+             const long int inNbParticles,
+             MultipoleClass& inOutLeaf) const {
+        // The spacial position of the cell
+        const std::array<RealType,SpaceIndexType::Dim> cellPosition = getLeafCenter(LeafIndex.boxCoord);
+        
+        for(long int idxElement = 0 ; idxElement < inNbParticles ; ++idxElement){
+            computation from myMesh[particlesIndexes[idxElement]]
+                to inOutLeaf using cellPosition;
+        }
+    }
+    
+    // All the other methods
+};
+```
+
+Then, the tree and kernel are created as usual:
+
+```cpp
+
+```
+
+
 
 
 
