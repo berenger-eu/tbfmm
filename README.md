@@ -1,7 +1,7 @@
 [![pipeline status](https://gitlab.inria.fr/bramas/tbfmm/badges/master/pipeline.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 [![coverage report](https://gitlab.inria.fr/bramas/tbfmm/badges/master/coverage.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 
-TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
+TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
 
 The current document is at the same time a classic README but also the main documentation of TBFMM. We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issues if they find a bug or have any question about TBFMM.
 
@@ -9,17 +9,17 @@ TBFMM uses C++ templates heavily. It is not required to master templates in orde
 
 # Compilation
 
-TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. So far, TBFMM has been tested with the following compilers:
+TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM has been tested with the following compilers:
 - GNU g++ (7 and 8) https://gcc.gnu.org/
 - Clang/LLVM (8 and 10) https://llvm.org/
 
-TBFMM should work on Linux and Mac OS.
+TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
 
 ## How to compile
 
 TBFMM uses CMake as build system https://cmake.org/
 
-The build process consists in the following steps: adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to be activated their repository must be cloned/updated before running cmake.
+The build process consists in the following steps: adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to activate them, it is needed to clone their repository before running cmake.
 
 ```bash
 # To enable SPETABARU and Inastemp
@@ -107,14 +107,14 @@ git submodule init deps/spetabaru && git submodule update
   - load: basic loader to get particles from FMA files
   - spacial: all classes related to spacial (configuration/morton/hilbert)
   - utils: several helpful classes
-- tests: the examples to use the library
+- examples: some examples to use TBFMM
 - unit-tests: tests and stuff for the continuous integration
 
 # TBFMM design
 
 ## Dimension (DIM)
 
-TBFMM can be run simulations of arbitrary dimension. The dimension must be known at compile time and is used as a template in most TBFMM classes. Usually, it is declared at the beginning of a main file:
+TBFMM can run simulations of arbitrary dimension. The dimension must be known at compile time and is used as a template in most TBFMM classes. Usually, it is declared at the beginning of a main file:
 
 ```cpp
 const int Dim = 3;
@@ -207,7 +207,7 @@ using LocalClass = MyLocal;
 
 Therefore, inside each `main` file of TBFMM, you will see template lines that define what is a multipole part and a local part. Also, if you create your own kernel, it is clear that you will need to update these lines.
 
-For example, in `tests/testRandomParticles.cpp` you will see:
+For example, in `examples/testRandomParticles.cpp` you will see:
 ```cpp
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
@@ -441,7 +441,7 @@ The prototype is as follows:
 
 P2PInner is used to compute the interaction of a leaf on itself.
 
-An example of empty kernel is given in `tests/exampleEmptyKernel.cpp`.
+An example of empty kernel is given in `examples/exampleEmptyKernel.cpp`.
 
 ## Algorithms
 
@@ -1030,7 +1030,7 @@ What could be done is to perform several test and try attempts to find the best 
 
 ## Creating a new kernel
 
-To create a new kernel, we refer to the file `tests/exampleEmptyKernel.cpp` that provides an empty kernel and many comments.
+To create a new kernel, we refer to the file `examples/exampleEmptyKernel.cpp` that provides an empty kernel and many comments.
 
 ## Find a cell or leaf in the tree (if it exists)
 
@@ -1146,3 +1146,13 @@ Considering the test is performed in sequential, one has to make sure the correc
 ## Make command builds nothing
 
 Ensure that no protective keys are in the source file `@TBF_USE_...` and that they are correct.
+
+## OpenMP algorithm + Float
+
+We currently have a bug when using OpenMP and `float` as real data type.
+
+We are currently investigating...
+
+# Pesperctive
+
+TBFMM will be extended with MPI and GPUs.
