@@ -37,7 +37,7 @@ cd build
 # Run cmake with default options
 cmake ..
 # To enable testing
-cmake cmake -DUSE_TESTING=ON -DUSE_SIMU_TESTING=ON ..
+cmake cmake -DBUILD_TESTS=ON ..
 # To set FFTW directory from cmake config (or set one of the environement variables FFTW_DIR or FFTWDIR)
 cmake -DFFTW_ROOT=path-to-fftw ..
 # To build in debug
@@ -1119,15 +1119,26 @@ Therefore, cmake will not use these file if FFTW is not supported.
 
 ## Uniform kernel cannot be used
 
+This is likely that FFTW has not been found on the system. This could be check by running `cmake ..` in the build directory.
+
+```bash
+# Example of falling build will have:
+-- Could NOT find FFTW (missing: FFTW_INCLUDE_DIRS FLOAT_LIB DOUBLE_LIB) 
+-- FFTW Cannot be found, try by setting -DFFTW_ROOT=... or env FFTW_ROOT
+.....
+-- UTests -- utest-should-not-compile cannot be compiled due to missing libs (/home/berenger/Projects/tbfmm/unit-tests/./utest-should-not-compile.cpp)
+-- UTests -- utest-unifkernel-float needs FFTW
+....
+```
+
 
 
 ## It is slower with the FMM (compared to direct interactions)
 
-
-
-## How to select the right tree height
+Considering the test is performed in sequential, one has to make sure the correct height of the tree is used (and try to find the best value) and that there are enough particles.
 
 
 
 ## Make command builds nothing
 
+Ensure that no protective keys are in the source file `@TBF_USE_...` and that they are correct.

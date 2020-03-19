@@ -4,13 +4,13 @@ tbfmm:
   tags:
     - medium
   script:
-    - g++ --version
+    - g++-7 --version
     - cmake --version
     - git submodule init deps/inastemp
     - git submodule update
     - mkdir build
     - cd build
-    - CXX=g++ cmake -DBUILD_TESTS=ON ..
+    - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
 
@@ -18,13 +18,13 @@ tbfmm-full-coverage:
   tags:
     - medium
   script:
-    - g++ --version
+    - g++-7 --version
     - cmake --version
     - git submodule init deps/inastemp
     - git submodule update
     - mkdir build
     - cd build
-    - CXX=g++ cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON ..
+    - CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
     - lcov --directory CMakeFiles/ --directory unit-tests/CMakeFiles/ -c -o coverage-rapport.info
