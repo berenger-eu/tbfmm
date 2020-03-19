@@ -60,7 +60,6 @@ int main(){
                               MultipoleClass,
                               LocalClass,
                               SpacialSystemPeriodic>;
-    using AlgorithmClass = TbfTestKernel<RealType, SpacialSystemPeriodic>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,8 +75,9 @@ int main(){
     //////////////////////////////////////////////////////////////////////////
 
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, AlgorithmClass, SpacialSystemPeriodic>;
-        using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, AlgorithmClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
+        using KernelClass = TbfTestKernel<RealType, SpacialSystemPeriodic>;
+        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic>;
+        using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
 
         AlgorithmClass algorithm(configuration, LastWorkingLevel);
         TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);
@@ -112,7 +112,7 @@ int main(){
     //////////////////////////////////////////////////////////////////////////
 
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){ // Same as above but with interaction counter
-        using KernelClass = TbfInteractionCounter<AlgorithmClass>;
+        using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType, SpacialSystemPeriodic>>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic>;
         using TopPeriodicAlgorithmClass = TbfAlgorithmPeriodicTopTree<RealType, KernelClass, MultipoleClass, LocalClass, SpacialSystemPeriodic>;
 
