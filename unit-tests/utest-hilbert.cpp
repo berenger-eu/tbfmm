@@ -8,7 +8,7 @@
 
 class TestHilbert : public UTester< TestHilbert > {
     using Parent = UTester< TestHilbert >;
-    
+
     void TestBasic() {
         const int Dim = 3;
         const long int TreeHeight = 5;
@@ -83,7 +83,7 @@ class TestHilbert : public UTester< TestHilbert > {
                 }
 
                 {
-                    const auto interactionList = hilbert.getInteractionListForIndex(idx, idxLevel);
+                    const auto interactionList = hilbert.getNeighborListForIndex(idx, idxLevel);
                     for(auto interaction : interactionList){
                         const auto posInteraction = hilbert.getBoxPosFromIndex(interaction);
 
@@ -103,7 +103,7 @@ class TestHilbert : public UTester< TestHilbert > {
             }
         }
     }
-    
+
     void SetTests() {
         Parent::AddTest(&TestHilbert::TestBasic, "Basic test for Hilbert");
     }
