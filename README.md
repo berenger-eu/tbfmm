@@ -98,7 +98,17 @@ git submodule init deps/spetabaru && git submodule update
 
 ## Files organization
 
-TODO
+- CMakeLists.txt: the build configuration
+- deps: the dependencies (inastemp/spetabaru)
+- src: the library
+  - algorithms: the algorithms (sequential/openmp/spetabaru)
+  - containers: the low-level containers for pure POD approach
+  - core: the trees, cells, particles related classes
+  - load: basic loader to get particles from FMA files
+  - spacial: all classes related to spacial (configuration/morton/hilbert)
+  - utils: several helpful classes
+- tests: the examples to use the library
+- unit-tests: tests and stuff for the continuous integration
 
 # TBFMM design
 
@@ -1113,8 +1123,6 @@ Any cpp file in the tests or unit-tests directories will not be compiled if it c
 
 Therefore, cmake will not use these file if FFTW is not supported.
 
-
-
 # Issues
 
 ## Uniform kernel cannot be used
@@ -1131,13 +1139,9 @@ This is likely that FFTW has not been found on the system. This could be check b
 ....
 ```
 
-
-
 ## It is slower with the FMM (compared to direct interactions)
 
 Considering the test is performed in sequential, one has to make sure the correct height of the tree is used (and try to find the best value) and that there are enough particles.
-
-
 
 ## Make command builds nothing
 
