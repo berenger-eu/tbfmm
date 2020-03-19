@@ -137,7 +137,7 @@ endif()
 #################################################
 
 
-file(GLOB_RECURSE cpp_for_examples ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp)
+file(GLOB_RECURSE cpp_for_examples ${CMAKE_CURRENT_SOURCE_DIR}/examples/*.cpp)
 foreach(an_example ${cpp_for_examples})
     set(compile_exec TRUE)
     get_filename_component(execname ${an_example} NAME_WE)
