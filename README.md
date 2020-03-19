@@ -9,7 +9,7 @@ TBFMM uses C++ templates heavily. It is not required to master templates in orde
 
 # Compilation
 
-TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. So far, TBFMM has been tested on the following compilers:
+TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. So far, TBFMM has been tested with the following compilers:
 - GNU g++ (7 and 8) https://gcc.gnu.org/
 - Clang/LLVM (8 and 10) https://llvm.org/
 
@@ -76,7 +76,7 @@ CMake will try to check if OpenMP is supported by the system. If it is the case,
 
 Inatemp is a vectorization library that makes it possible to implement a single kernel with an abstract vector data type, which is then compiled for most vectorization instruction sets. It supports SSE, AVX(2), AVX512, ARM SVE, etc. To know more, you can have a look at https://gitlab.inria.fr/bramas/inastemp
 
-In TBFMM, only the P2P kernel of the so called rotation and uniform kernels are vectorized with Inastemp (`src/kernels/unifkernel/FP2PR.hpp`). Therefore, if you are performing simulations with one of these kernels, it is recommended to enable Inastemp, since the performance difference can be impressive.
+In TBFMM, only the P2P kernel of the so called rotation and uniform kernels are vectorized with Inastemp (`src/kernels/unifkernel/FP2PR.hpp`). Therefore, if users are performing simulations with one of these kernels, it is recommended to enable Inastemp, since the performance difference can be impressive.
 
 To avoid having to manage external dependencies, Inastemp is shipped as a git submodule, and thus it will be managed by our cmake files. But, you must explicitly pull the submobule to enable it.
 ```bash
@@ -86,15 +86,19 @@ git submodule init deps/inastemp && git submodule update
 
 ## SPETABARU
 
-SPETABARU is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, you can have a look at https://gitlab.inria.fr/bramas/spetabaru
+SPETABARU is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, one can have a look at https://gitlab.inria.fr/bramas/spetabaru
 
 SPETABARU is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler). It could be a nice alternative to OpenMP when this appears complicated to have an OpenMP lib (as it is sometime the case one some Mac).
 
-To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files. But, you must explicitly pull the submobule to enable it.
+To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files. But, the users must explicitly pull the submobule to enable it.
 ```bash
 # To enable only SPETABARU (runned from the main directory)
 git submodule init deps/spetabaru && git submodule update
 ```
+
+## Files organization
+
+TODO
 
 # TBFMM design
 
@@ -143,7 +147,7 @@ This includes the spacial index and spacial coordinate.
 This cannot be configured by the users (without deep modification of the source code).
 This is expected to remain constant for a complete FMM algorithm execution.
 - a multipole part (`MultipoleClass`)
-This is a structure/class that represents the target of a P2M/M2M, or the source of a M2L.
+This is a structure/class that represents the target of a P2M/M2M, or the source of a M2M/M2L.
 This really depends on the type of kernel (and maybe even the degree of a kernel).
 Here a possible examples of what could be a multipole part:
 ```cpp
@@ -208,7 +212,7 @@ A particle is defined by three elements:
   These are the sources values of P2M and P2P, but they are also used in the L2P.
   The data type of these values can be chosen by the users.
   We usually call it `DataParticleType` and make it equal to the `RealType`, which is `float` or `double` in most cases.
-  The users can only specify how many of symbolic values per particle, but the type will `RealType`.
+  The users can only specify how many of symbolic values per particle there are.
   The first values are used to store the particles' positions, and the extra values can be used by the users as they want.
 
   If the type of `DataParticleType` is not set to `RealType` then conversion will happen and re-building the tree will be based on `DataParticleType`.
@@ -235,6 +239,8 @@ constexpr long int NbRhsValuesPerParticle = 1;
 ```
 
 - an index value par particle, which cannot be controlled by the users, but is passed to the kernel.
+  It corresponds to the indexes of the particles when they are inserted in the tree.
+  So inside the kernels, it is possible to know the original index of each particle.
 
 
 ## Tree (TbfTree)
@@ -275,7 +281,7 @@ In TBFMM, the kernels must have a specific interface with different methods wher
 
 A kernel should have the following methods:
 - a copy constructor.
-This is mandatory only for parallel FMM algorithms, because these algorithms will copy the kernel to have only one kernel object per thread.
+This is mandatory only for parallel FMM algorithms, because these algorithms will copy the kernel to have one kernel object per thread.
 This guarantees that each kernel is called by only one thread, thus if the kernel modifies some of its attributes in its methods, this will still be valid (and will not require any exclusion mechanism).
 On the other hand, the users should consider optimizing in the creation and copy of their kernels.
 For example, if the kernel need a matrix that takes time to be initialized, instead of recomputing it, it could faster to copy it in the copy constructor.
@@ -491,56 +497,65 @@ Most of our examples a build similarly:
 - iteration on the results and/or rebuilding the tree to run the algorithm again
 
 ```cpp
-    // Fix the real data type and dimension
-    using RealType = double;
-    const int Dim = 3;
+// Fix the real data type and dimension
+using RealType = double;
+const int Dim = 3;
 
-    // Set the simulation box property
-    const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-    const long int TreeHeight = 8;
-    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
-    // Create the spacial configuration object
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
+// Set the simulation box property
+const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
+const long int TreeHeight = 8;
+const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
+// Create the spacial configuration object
+const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
-    // Generate random particles
-    const long int NbParticles = 1000;
-    TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
-    std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
-    for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        particlePositions[idxPart] = randomGenerator.getNewItem();
-    }
+// Generate random particles
+const long int NbParticles = 1000;
+TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
+std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
+for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
+    particlePositions[idxPart] = randomGenerator.getNewItem();
+}
 
-    // Fix the templates
-    using ParticleDataType = RealType;
-    constexpr long int NbDataValuesPerParticle = Dim;
-    using ParticleRhsType = long int;
-    constexpr long int NbRhsValuesPerParticle = 1;
-    using MultipoleClass = std::array<long int,1>;
-    using LocalClass = std::array<long int,1>;
-    const long int NbElementsPerBlock = 50;
-    const bool OneGroupPerParent = false;
-    using TreeClass = TbfTree<RealType,
-                              ParticleDataType,
-                              NbDataValuesPerParticle,
-                              ParticleRhsType,
-                              NbRhsValuesPerParticle,
-                              MultipoleClass,
-                              LocalClass>;
-    using KernelClass = TbfTestKernel<RealType>;
+// Fix the templates
+using ParticleDataType = RealType;
+constexpr long int NbDataValuesPerParticle = Dim;
+using ParticleRhsType = long int;
+constexpr long int NbRhsValuesPerParticle = 1;
+using MultipoleClass = std::array<long int,1>;
+using LocalClass = std::array<long int,1>;
+const long int NbElementsPerBlock = 50;
+const bool OneGroupPerParent = false;
+using TreeClass = TbfTree<RealType,
+                            ParticleDataType,
+                            NbDataValuesPerParticle,
+                            ParticleRhsType,
+                            NbRhsValuesPerParticle,
+                            MultipoleClass,
+                            LocalClass>;
+using KernelClass = TbfTestKernel<RealType>;
 
-    // Create the tree
-    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+// Create the tree
+TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
 
-	// Create the algorithm
-    using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
-    AlgorithmClass algorithm(configuration);
-    // Execute the algorithm
-    algorithm.execute(tree);
+// Create the algorithm
+using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
+AlgorithmClass algorithm(configuration);
+// Execute the algorithm
+algorithm.execute(tree);
+
+// Execute for 10 iterations
+for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
+    // TODO update positions
+    // Then rebuild the tree
+    tree.rebuild();
+    // Run the algorithm again
+	algorithm.execute(tree);
+}
 ```
 
 ## Changing cells
 
-If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding template. Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
+If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding templates. Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
 
 ## Counting the number of interactions (TbfInteractionCounter)
 
@@ -621,9 +636,9 @@ std::cout << timers << std::endl;
 
 ## Iterating on the tree
 
-Once the tree is built, it might be useful to iterate on the cells, and it is usually mandatory to iterate on the leaves/particles.
+Once the tree is built, it might be useful to iterate on the cells, and it is usually needed to iterate on the leaves/particles.
 
-Our tree does not support range for loop because we prefer to fully abstract the iteration, avoid creating iterator, and constraint the prototype of the lambda function.
+Our tree does not support range for loop because we prefer to fully abstract the iteration system, avoid creating iterator, and constraint the prototype of the lambda function.
 
 Consequently, to iterate over all the cells could be done with the following code:
 
@@ -640,11 +655,12 @@ Consequently, to iterate over all the cells could be done with the following cod
 Iterating over the leaves/particles could be done with:
 
 ```cpp
-tree.applyToAllLeaves([](auto& /*leafHeader*/,
+tree.applyToAllLeaves([](auto& leafHeader,
                          const long int* /*particleIndexes*/,
                          const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
                          const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
     // Some code
+    // The number of particles is in leafHeader.nbParticles
 });
 ```
 
@@ -708,12 +724,14 @@ tree.applyToAllLeavesSource([](auto&& leafHeader,
                                const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
                                auto&& /*particles rhs unused*/){
     // Some code
+    // The number of particles is in leafHeader.nbParticles
 });
-tree.applyToAllLeavesTarget([](auto& /*leafHeader*/,
+tree.applyToAllLeavesTarget([](auto&& leafHeader,
                          const long int* /*particleIndexes*/,
                          const std::array<ParticleDataType*, NbDataValuesPerParticle> particleDataPtr,
                          const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
     // Some code
+    // The number of particles is in leafHeader.nbParticles
 });
 ```
 
@@ -725,7 +743,7 @@ Source particles do not have rhs, this is why we commented this parameter.
 
 In TBFMM we support a pure FMM/algorithmic-based periodic model (described in http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf).
 
-The idea is to duplicate the simulation box a huge number of times in all directions. The numerical stability of the method relies on the kernel because we simply use the classical FMM operators. With this aim, we takes the cell at the level 1 of the FMM tree and then perform computation as if the tree was going to a much higher level.
+The idea is to duplicate the simulation box a huge number of times in all directions. The numerical stability of the method relies on the kernel because we simply use the classical FMM operators. With this aim, we take the cell at the level 1 of the FMM tree and then perform computation as if the tree was going to a much higher level.
 
 In order to use this model, it is necessary to select the level up to which the FMM is applied. In addition, the classical classes that are used for a non-periodic FMM must be slightly modified to apply periodic operations. The P2P and M2L should takes cells considering that the box is repeated.
 
@@ -820,17 +838,31 @@ The kernel any method that implies the particles will not use the positions or r
 template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
 class KernelMeshExample{    
 public:
+    constexpr int Dim = SpaceIndexType::Dim;
     using RealType = RealType_T;
     using SpaceIndexType = SpaceIndexType_T;
-    using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
+    using SpacialConfiguration = TbfSpacialConfiguration<RealType, Dim>;
     
 private:
+    std::array<RealType,Dim> getLeafCenter(const std::array<long int, 3>& coordinate) const {
+        std::array<RealType, Dim> center;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            center[idxDim] = (configuration.getBoxCorner()[idxDim] + RealType(coordinate[idxDim]) + RealType(.5)) * inConfiguration.getLeafWidths()[idxDim];
+        }
+        return center;
+    }
+
+    std::array<RealType, Dim> getLeafCenter(const typename SpaceIndexType::IndexType& inIndex) const{
+        return getLeafCenter(spaceIndexSystem.getBoxPosFromIndex(inIndex));
+    }
+    
+    const SpacialConfiguration configuration;
     MeshType* myMesh; // Ptr to the real mesh data structure
     
 public:
-    explicit KernelExample(const SpacialConfiguration& /*inConfiguration*/,
+    explicit KernelExample(const SpacialConfiguration& inConfiguration,
                            MeshType* inMyMesh)
-    	: myMesh(inMyMesh){}
+    	: configuration(inConfiguration), myMesh(inMyMesh){}
 
     explicit KernelExample(const KernelExample& inOther) : myMesh(inOther.myMesh){}
     
@@ -857,24 +889,130 @@ public:
 Then, the tree and kernel are created as usual:
 
 ```cpp
+using KernelClass = KernelMeshExample;
 
+KernelClass kernelWithMeshPtr(&mesh);
+AlgorithmClass algorithm(configuration, kernelWithMeshPtr);
+
+algorithm.execute(tree);
 ```
-
-
 
 
 
 ## Rebuilding the tree
 
+In most applications, the particles move at each iteration (usually their forces are updated during the FMM, and the move happen just after). Therefore, some particles are no longer in the appropriate leaves. In TBFMM, it then requires to rebuild the tree.
+
+Here is an example:
+
+```cpp
+for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
+    tree.applyToAllLeaves([](auto& leafHeader,
+                         const long int* particleIndexes,
+                         std::array<ParticleDataType*,
+                         				NbDataValuesPerParticle> particleDataPtr,
+                         const std::array<ParticleRhsType*, 
+                         				NbRhsValuesPerParticle> particleRhsPtr){
+        // Update the position of the particles
+        for(lont int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+            // Use particle id if needed
+            const long int originalParticleIndex = particleIndexes[idxPart];
+            for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+                particleDataPtr[idxPart][idxDim] = ... TODO ... ;
+            }
+        }
+    });
+    // Then rebuild the tree
+    tree.rebuild();
+    // Run the algorithm again
+	algorithm.execute(tree);
+}
+```
+
+## Cell/leaf/particles header (cellHeader/leafHeader)
+
+In the kernel invocation or in the iteration over the tree, TBFMM provdes `cellHeader` and `leafHeader`.
+
+The content of these structures is the following:
+
+```cpp
+struct CellHeader {
+    IndexType spaceIndex;
+    std::array<long int, Dim> boxCoord;
+};
+
+struct LeafHeader {
+    IndexType spaceIndex;
+    long int nbParticles;
+    long int offSet;
+    std::array<long int, Dim> boxCoord;
+};
+```
 
 
-## Computing an accuracy
+
+## Computing an accuracy (TbfAccuracyChecker)
+
+TBFMM provides `TbfAccuracyChecker`, a class to evaluate the accuracy between a good and an approximate values.
+
+It can be used as follows:
+
+```cpp
+TbfAccuracyChecker<RealType> accurater;
+// Add on or lots of values
+accurater.addValues(a_good_value, a_value_to_test);
+// Print the result
+std::cout << accurater << std::endl;
+// Test the accuracy
+if(accurater.getRelativeL2Norm() > 1E-6){
+    // Oups...
+}
+```
+
+To check all the values of the particles, one can do as follows:
+
+```cpp
+std::array<TbfAccuracyChecker<RealType>, NbDataValuesPerParticle> partcilesAccuracy;
+std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+
+tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
+                      (auto&& leafHeader, const long int* particleIndexes,
+                       const std::array<RealType*, NbDataValuesPerParticle> particleDataPtr,
+                       const std::array<RealType*, NbRhsValuesPerParticle> particleRhsPtr){
+    for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+       for(int idxValue = 0 ; idxValue < NbDataValuesPerParticle ; ++idxValue){
+            partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],                                                  particleDataPtr[idxValue][idxPart]);
+        }                         
+        for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+               partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
+                         particleRhsPtr[idxValue][idxPart]);
+         }
+     }
+ });
+
+std::cout << "Relative differences:" << std::endl;
+for(int idxValue = 0 ; idxValue < NbDataValuesPerParticle ; ++idxValue){
+    std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
+    UASSERTETRUE(partcilesAccuracy[idxValue].getRelativeL2Norm() < 1e-16);
+}
+for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+    std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
+    if constexpr (std::is_same<float, RealType>::value){
+        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
+    }
+    else{
+        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
+    }
+}
+```
 
 
 
 ## Select the height of the tree (treeheight)
 
+There is no magical formula to know the perfect height of the tree (the one for which the execution time will be minimal). In fact, the tree height should be selected depending of the costs of the FMM operators (so depending on what the kernel does, and maybe on some kind of accuracy parameters such as degree of approximation polynomial, etc), but also depending on the data distribution.
 
+What could be done is to perform several test and try attempts to find the best tree height: adding one level will add work on the far field (the work above the leaves) and decrease the work at leaf level, while removing one level will do the opposite. Therefore, one should find a good balance between both.
 
 ## Select the block size (blocksize)
 
@@ -882,23 +1020,98 @@ Then, the tree and kernel are created as usual:
 
 ## Creating a new kernel
 
-
+To create a new kernel, we refer to the file `tests/exampleEmptyKernel.cpp` that provides an empty kernel and many comments.
 
 ## Find a cell or leaf in the tree (if it exists)
+
+After the particles are inserted and the tree built, it is possible to query to find a cell or a leaf. To do so, one has to ask for a specific spacial index (and the level to find the cell).
+
+```cpp
+// Find a cell
+//    findResult will be of type:
+//    std::optional<std::pair<std::reference_wrapper<CellGroupClass>,long int>>
+auto findResult = tree.findGroupWithCell(levelOfTheCellToFind, indexToFind);
+if(findResult){
+    auto multipoleData = (*findResult).first.get().getCellMultipole((*findResult).second);
+    auto LocalData = (*findResult).first.get().getCellLocal((*findResult).second);
+}
+
+// Find a leaf
+//     findResult will be of type:
+//     std::optional<std::pair<std::reference_wrapper<LeafGroupClass>,long int>>
+auto groupForLeaf = tree.findGroupWithLeaf(indexToFind);
+if(findResult){
+    auto nbParticles = (*findResult).first.get().getNbParticlesInLeaf((*findResult).second);
+    // Other methods are getParticleIndexes, getParticleData, getParticleRhs
+}
+```
 
 
 
 ## Spacial ordering/indexing (Morton, Hilbert, space filling curve)
 
+It is possible to create a new spacial ordering, or to use one of the current system: Morton (`TbfMortonSpaceIndex`) or Hilber indexing (`TbfHilbertSpaceIndex`). By default, all classes use `TbfDefaultSpaceIndexType`, which is `TbfMortonSpaceIndex` for dimension equals to 3 and without periodicity. `TbfDefaultSpaceIndexTypePeriodic` is the same but with periodicity enabled.
+
+If someone wants to use something else, it is needed to pass it to the tree and algorithm classes with template, and potentially to the kernel.
+
+```cpp
+using SpacialSystemToUse = select a spacial system;
+using TreeClass = TbfTree<RealType,
+                              ParticleDataType,
+                              NbDataValuesPerParticle,
+                              ParticleRhsType,
+                              NbRhsValuesPerParticle,
+                              MultipoleClass,
+                              LocalClass,
+                              SpacialSystemToUse>; // optional last template
+using AlgorithmClass = TbfTestKernel<RealType,
+     							     SpacialSystemToUse>; // optional last template
+```
+
 
 
 ## Execute only part of the FMM
+
+The execute method of the algorithms accepts an optional parameter to specify which part of the FMM algorithm should be done. By default, the complete FMM will be done.
+
+```cpp
+// Execute the complete FMM
+algorithm.execute(tree);
+
+// Execute only a P2P
+algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
+// Could be one of the following (or a combination with binary OR of the following)
+// TbfP2P TbfP2M TbfM2M TbfM2L TbfL2L TbfL2P
+// TbfNearField = TbfP2P,
+// TbfFarField  = (TbfP2M|TbfM2M|TbfM2L|TbfL2L|TbfL2P),
+// TbfNearAndFarFields = (TbfNearField|TbfFarField),
+// TbfBottomToTopStages = (TbfP2M|TbfM2M),
+// TbfTopToBottomStages = (TbfL2L|TbfL2P),
+// TbfTransferStages
+```
 
 
 
 ## Macros
 
+The cmake system will define several macro for the potential dependencies:
 
+```cpp
+TBF_USE_SPETABARU
+TBF_USE_OPENMP
+TBF_USE_INASTEMP
+TBF_USE_FFTW
+```
+
+Any cpp file in the tests or unit-tests directories will not be compiled if it contains ` @TBF_USE_X` and that `X` is not supported. For example, the tests related to the uniform kernel have the following code:
+
+```cpp
+// -- DOT NOT REMOVE AS LONG AS LIBS ARE USED --
+// @TBF_USE_FFTW
+// -- END --
+```
+
+Therefore, cmake will not use these file if FFTW is not supported.
 
 
 
