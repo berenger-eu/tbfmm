@@ -175,7 +175,7 @@ class TestRotationKernelInteraction : public UTester< TestRotationKernelInteract
     }
 
     void TestBasic() {
-        for(long int idxTreeHeight = 1 ; idxTreeHeight < 5 ; ++idxTreeHeight){
+        for(long int idxTreeHeight = 1 ; idxTreeHeight < 4 ; ++idxTreeHeight){
             const long int nbParticles = 1000;
             const long int nbElementsPerBlock = 100;
             const bool oneGroupPerParent = false;
