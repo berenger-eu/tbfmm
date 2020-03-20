@@ -646,6 +646,24 @@ algorithm.applyToAllKernels([&](const auto& inKernel){
 std::cout << timers << std::endl;
 ```
 
+## Printing all the interactions (TbfInteractionPrinter)
+
+It is often very useful to print all the interactions between cells/leaves, for instance to debug. To do so, we propose a wrapper kernel that has to be plugged between the real kernel and the FMM algorithm.
+
+This kernel is fully templatized, and this can work with any kernel. 
+
+Consider an original source code:
+
+```cpp
+using KernelClass = TbfTestKernel<RealType>;
+```
+
+This must be transformed into (ant that's all):
+
+```cpp
+using KernelClass = TbfInteractionPrinter<TbfTestKernel<RealType>>;
+```
+
 ## Iterating on the tree
 
 Once the tree is built, it might be useful to iterate on the cells, and it is usually needed to iterate on the leaves/particles.
