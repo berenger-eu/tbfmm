@@ -103,7 +103,7 @@ if(FFTW_FOUND)
 
     INCLUDE_DIRECTORIES("${FFTW_INCLUDES}")
     link_directories("${FFTW_LIBRARIES}")
-    list(APPEND TBFMM_LIBRARIES ${FFTW_LIB})
+    list(APPEND TBFMM_LIBRARIES ${FFTW_LIBRARIES})
     list(APPEND TBF_USE_LIST FFTW)
 else()
     message(STATUS "FFTW Cannot be found, try by setting -DFFTW_ROOT=... or env FFTW_ROOT")
