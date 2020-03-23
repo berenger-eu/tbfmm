@@ -428,9 +428,9 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
     void TestBasic() {
         const long int idxNbParticles = 1000;
-        for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+        for(const long int idxNbElementsPerBlock : std::vector<long int>{{10}}){
             for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
-                for(long int idxTreeHeight = 2 ; idxTreeHeight < 4 ; ++idxTreeHeight){
+                for(long int idxTreeHeight = 2 ; idxTreeHeight < 3 ; ++idxTreeHeight){
                     CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                 }
             }
