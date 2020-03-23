@@ -7,6 +7,8 @@ The current document is at the same time a classic README but also the main docu
 
 TBFMM uses C++ templates heavily. It is not required to master templates in order to use TBFMM but it helps to better understand how things work internally.
 
+TBFMM is under MIT license, however, some code related to the rotation and the uniform kernels (src/kernels/[rotation|uniform]), are under CeCILL-C license. Using TBFMM without one of these two kernels is under MIT, as zero part of these kernels will be involved.
+
 # Compilation
 
 TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM has been tested with the following compilers:
@@ -1148,6 +1150,25 @@ Any cpp file in the tests or unit-tests directories will not be compiled if it c
 ```
 
 Therefore, cmake will not use these file if FFTW is not supported.
+
+## Existing kernels
+
+Currently, we have taken two kernels the rotation kernel and the uniform kernel. They have been taken from ScalFMM, which is an FMM library where the kernels have a very similar interface to what we use.
+
+We do not plan to improve or work on these kernels, they are just here to illustrate how TBFMM works, how a kernel can be implemented and to perform some experiments.
+
+We refer to the following documents to know more:
+
+- rotation
+  - Dachsel, H. (2006). Fast and accurate determination of the Wigner rotation matrices in the fast multipole method. *The Journal of chemical physics*, *124*(14), 144115.
+  - White, C. A., & Head‐Gordon, M. (1994). Derivation and efficient implementation of the fast multipole method. *The Journal of Chemical Physics*, *101*(8), 6593-6605.
+  - White, C. A., & Head‐Gordon, M.  (1996). Rotating around the quartic angular momentum barrier in fast  multipole method calculations. *The Journal of Chemical Physics*, *105*(12), 5061-5067.
+  - Haigh, A. (2011). Implementation of rotation-based operators for Fast Multipole Method in X10.
+- uniform
+  - Blanchard, P., Coulaud, O., & Darve, E. (2015). Fast hierarchical algorithms for generating Gaussian random fields.
+  - Blanchard, P., Coulaud, O., Darve, E., & Franc, A. (2016). FMR: Fast randomized algorithms for covariance  matrix computations.
+  - Blanchard, P., Coulaud, O., Darve, E., & Bramas, B. (2015, October). Hierarchical Randomized Low-Rank Approximations.
+  - Blanchard, P., Coulaud, O.,  Etcheverry, A., Dupuy, L., & Darve, E. (2016, June). An Efficient  Interpolation Based FMM for Dislocation Dynamics Simulations.
 
 # Issues
 
