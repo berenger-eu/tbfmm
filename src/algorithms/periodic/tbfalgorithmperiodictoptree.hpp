@@ -216,10 +216,10 @@ protected:
         for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-3 ; ++idxLevel){
             std::vector<std::reference_wrapper<CellLocalType>> children;
             long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
-            long int nbChildren = 1;
 
             children.emplace_back(locals[idxLevel+1]);
-            positionsOfChildren[nbChildren] = (0);
+            positionsOfChildren[0] = (0);
+            long int nbChildren = 1;
 
             kernel.L2L(inTree.getCellGroupsAtLevel(0).front().getCellSymbData(0),
                          idxLevel, TbfUtils::make_const(locals[idxLevel]), children,
