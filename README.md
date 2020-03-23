@@ -1151,6 +1151,68 @@ Any cpp file in the tests or unit-tests directories will not be compiled if it c
 
 Therefore, cmake will not use these file if FFTW is not supported.
 
+## Generating several versions of a template-based kernel
+
+TBFMM is really template oriented, and it is expected that the kernels include as template their "degree" or "order". For instance, one could have a kernel such as:
+
+```cpp
+template <class RealType, int Order>
+class MyKernel{
+    // Do everything based on Order,
+    // allocate arrays, create loops, etc...
+}
+```
+
+In the `main`, the type of Multipole and Local parts are based on this order:
+
+```cpp
+constexpr int Order = 5;
+constexpr int SizeOfMultipole = Order*Order; // This is an example
+using MultipoleClass = std::array<long int,SizeOfMultipole>;
+constexpr int SizeOfLocal = Order*Order*Order; // This is an example
+using LocalClass = std::array<long int,SizeOfLocal>;
+using KernelClass = MyKernel<RealType, Order>;
+```
+
+However, one could want to decide at runtime the value used for Order, for instance, by looking at application's arguments. One possibility would be to do this manually, but we offer a class to help the generation of multiple versions.
+
+```cpp
+#include "utils/tbftemplate.hpp"
+
+int main(int argc, char** argv){
+    // Some code
+    
+    const int dynamicOrder = atoi(argv[1]); // This is an example
+    
+    // Will generate all the code for order from 0 to 4 by step 1
+    TbfTemplate::If<0, 5, 1>(dynamicOrder, [&](const auto index){
+    	constexpr int Order = index.index;
+        assert(Order == dynamicOrder); // Will be true
+        
+        // From that line we can use Order as a const value,
+        // but it will be specified at compile time
+        
+        constexpr int SizeOfMultipole = Order*Order; // This is an example
+        using MultipoleClass = std::array<long int,SizeOfMultipole>;
+        constexpr int SizeOfLocal = Order*Order*Order; // This is an example
+        using LocalClass = std::array<long int,SizeOfLocal>;
+        using KernelClass = MyKernel<RealType, Order>;
+        // Do the rest as usual
+        ....
+    });
+    // Rest of the main
+    ....
+    return 0;
+}
+
+
+
+```
+
+
+
+
+
 ## Existing kernels
 
 Currently, we have taken two kernels the rotation kernel and the uniform kernel. They have been taken from ScalFMM, which is an FMM library where the kernels have a very similar interface to what we use.
