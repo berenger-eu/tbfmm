@@ -188,8 +188,9 @@ protected:
 
                 const auto& leafGroupObj = *currentLeafGroup;
                 auto& particleGroupObj = *currentParticleGroup;
-                runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()), SpCommuteWrite(*particleGroupObj.getRhsPtr()),
-                                   [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
+                runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
+                             SpRead(*particleGroupObj.getDataPtr()), SpCommuteWrite(*particleGroupObj.getRhsPtr()),
+                                   [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
                     kernelWrapper.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
                 });
 
@@ -215,8 +216,9 @@ protected:
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
 
-                runtime.task(SpPriority(priorities.getP2PPriority()), SpCommuteWrite(*groupSrc.getDataPtr()), SpCommuteWrite(*groupTarget.getRhsPtr()),
-                                   [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
+                runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommuteWrite(*groupSrc.getRhsPtr()),
+                             SpRead(*groupTarget.getDataPtr()), SpCommuteWrite(*groupTarget.getRhsPtr()),
+                                   [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&, const unsigned char&, unsigned char&){
                     kernelWrapper.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                 });
 

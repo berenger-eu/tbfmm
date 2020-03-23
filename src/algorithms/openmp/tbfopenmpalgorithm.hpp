@@ -238,12 +238,14 @@ protected:
                 auto particleGroupObj = &(*currentParticleGroup);
 
                 const auto leafGroupObjGetLocalPtr = leafGroupObj->getLocalPtr();
+                auto particleGroupObjGetDataPtr = particleGroupObj->getDataPtr();
                 auto particleGroupObjGetRhsPtr = particleGroupObj->getRhsPtr();
 
                 const unsigned char* ptr_leafGroupObjGetLocalPtr = reinterpret_cast<const unsigned char*>(&leafGroupObjGetLocalPtr[0]);
+                const unsigned char* ptr_particleGroupObjGetDataPtr = reinterpret_cast<const unsigned char*>(&particleGroupObjGetDataPtr[0]);
                 const unsigned char* ptr_particleGroupObjGetRhsPtr = reinterpret_cast<const unsigned char*>(&particleGroupObjGetRhsPtr[0]);
 
-#pragma omp task depend(in:ptr_leafGroupObjGetLocalPtr[0]) depend(commute:ptr_particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
+#pragma omp task depend(in:ptr_leafGroupObjGetLocalPtr[0],ptr_particleGroupObjGetDataPtr[0]) depend(commute:ptr_particleGroupObjGetRhsPtr[0]) default(shared) firstprivate(leafGroupObj, particleGroupObj)  priority(priorities.getL2PPriority())
                 {
                     kernelWrapper.L2P(kernels[omp_get_thread_num()], *leafGroupObj, *particleGroupObj);
                 }
@@ -274,14 +276,18 @@ protected:
                 auto groupTargetPtr = &groupTarget;
 
                 auto groupSrcGetDataPtr = groupSrc.getDataPtr();
+                auto groupSrcGetRhsPtr = groupSrc.getRhsPtr();
                 auto groupTargetGetRhsPtr = groupTarget.getRhsPtr();
+                auto groupTargetGetDataPtr = groupTarget.getDataPtr();
 
                 auto indexesVec = TbfUtils::CreateNew(indexes.toStdVector());
 
                 const unsigned char* ptr_groupSrcGetDataPtr = reinterpret_cast<const unsigned char*>(&groupSrcGetDataPtr[0]);
+                const unsigned char* ptr_groupSrcGetRhsPtr = reinterpret_cast<const unsigned char*>(&groupSrcGetRhsPtr[0]);
+                const unsigned char* ptr_groupTargetGetDataPtr = reinterpret_cast<const unsigned char*>(&groupTargetGetDataPtr[0]);
                 const unsigned char* ptr_groupTargetGetRhsPtr = reinterpret_cast<const unsigned char*>(&groupTargetGetRhsPtr[0]);
 
-#pragma omp task depend(commute:ptr_groupSrcGetDataPtr[0],ptr_groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
+#pragma omp task depend(in:ptr_groupSrcGetDataPtr[0],ptr_groupTargetGetDataPtr[0]) depend(commute:ptr_groupSrcGetRhsPtr[0],ptr_groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
                     kernelWrapper.P2PBetweenGroups(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
                     delete indexesVec;
