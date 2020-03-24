@@ -1,26 +1,66 @@
 image: berenger/tbfmmci
 
-tbfmm:
+tbfmm-gcc-inastemp-spetabaru:
   tags:
     - medium
   script:
     - g++-7 --version
     - cmake --version
-    - git submodule init deps/inastemp
+    - git submodule init
     - git submodule update
     - mkdir build
     - cd build
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+   
 
-tbfmm-full-coverage:
+tbfmm-clang-inastemp-spetabaru:
+  tags:
+    - medium
+  script:
+    - clang++-8 --version
+    - cmake --version
+    - git submodule init
+    - git submodule update
+    - mkdir build
+    - cd build
+    - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+
+tbfmm-gcc-no-modules:
   tags:
     - medium
   script:
     - g++-7 --version
     - cmake --version
-    - git submodule init deps/inastemp
+    - mkdir build
+    - cd build
+    - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+
+
+tbfmm-clang-no-modules:
+  tags:
+    - medium
+  script:
+    - clang++-8 --version
+    - cmake --version
+    - mkdir build
+    - cd build
+    - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
+    - make
+    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+
+tbfmm-full-coverage:
+  tags:
+    - large
+  script:
+    - g++-7 --version
+    - cmake --version
+    - git submodule init
     - git submodule update
     - mkdir build
     - cd build

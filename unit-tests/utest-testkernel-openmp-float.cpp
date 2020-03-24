@@ -5,6 +5,10 @@
 // @TBF_USE_OPENMP
 // -- END --
 
+#ifdef __GNUC__
+int main(){}
+#else
 // You must do this
 using AlgoTestClass = TestTestKernel<TbfOpenmpAlgorithm<float, TbfTestKernel<float>>>;
 TestClass(AlgoTestClass)
+#endif

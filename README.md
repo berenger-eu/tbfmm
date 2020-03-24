@@ -1261,11 +1261,9 @@ Considering the test is performed in sequential, one has to make sure the correc
 
 Ensure that no protective keys are in the source file `@TBF_USE_...` or that they are correct.
 
-## OpenMP algorithm + Float
+## OpenMP algorithm + GCC
 
-We currently have a bug when using OpenMP and `float` as real data type.
-
-We are currently investigating...
+We currently have a bug when using OpenMP and GCC. We get a segmentation fault, and we currently think that it is a bug in the compiler (Versions 7 or 8, we do not know for newer versions). It usually works with Clang.
 
 # Pesperctive
 

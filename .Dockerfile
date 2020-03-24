@@ -10,7 +10,8 @@ RUN apt-get update \
     && wget https://github.com/Kitware/CMake/releases/download/v3.15.6/cmake-3.15.6-Linux-x86_64.sh && chmod +x cmake-3.15.6-Linux-x86_64.sh \
        && ./cmake-3.15.6-Linux-x86_64.sh --skip-license --prefix=/usr/ \
     && apt-get install -y lcov \
-    && apt-get install -y libfftw3-dev libfftw3-double3 libfftw3-single3
+    && apt-get install -y libfftw3-dev libfftw3-double3 libfftw3-single3 \
+    && apt-get install -y clang-8
 
 # To rebuild and update the repo:
 # - Make sure there are not images: sudo docker images
