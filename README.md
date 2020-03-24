@@ -141,7 +141,7 @@ const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 ```
 
-## Block/group tree
+## Block/group tree organization
 
 TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block). This data structure is described here http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf
 
@@ -279,12 +279,14 @@ using TreeClass = TbfTree<RealType,
 
 The tree needs four parameters to be instanciated:
 - the spacial configuration (of type `TbfSpacialConfiguration`)
-- the size of the blocks (`NbElementsPerBlock`)
 - the positions of the particles, which must be a container that supports `std::size` and which has two dimensions. The first one is the index of the particles, and the second one the index of the positions. For example, we classically use `std::vector<std::array<RealType, Dim>>`. The order of the particles in the array is used as an index that is given every time the particles are used. The first particle has index 0, etc.
-- a Boolean to choose the parent/children blocking strategies (`OneGroupPerParent`).
-When this value is set to `true` the blocking strategy will try to set one parent group per child group.
-There will be potentially 2 parent groups because the first cells of the child group may have the same parent as the last cell of the previous group.
-If set to `false`, the cells are simply grouped by chunk of size `NbElementsPerBlock`.
+- the size of the blocks (`NbElementsPerBlock`) [optional]
+  If no values is passed to the constructor, then the block size is selected based on the particles positions and number of CPU cores (`TbfBlockSizeFinder`).
+- a Boolean to choose the parent/children blocking strategies (`OneGroupPerParent`). [optional]
+  When this value is set to `true` the blocking strategy will try to set one parent group per child group.
+  There will be potentially 2 parent groups because the first cells of the child group may have the same parent as the last cell of the previous group.
+  If set to `false`, the cells are simply grouped by chunk of size `NbElementsPerBlock`.
+  It is usually recommended to set it to `false` except when the "cost" of the interactions grows at each level, or when the amount of work is significant and the tree full/dense and ``NbElementsPerBlock` set to a power of 2.
 
 In order to know how to iterate on the tree's elements or how to find a cell/leaf, we refer to the corresponding section of the current document.
 
@@ -537,8 +539,6 @@ using ParticleRhsType = long int;
 constexpr long int NbRhsValuesPerParticle = 1;
 using MultipoleClass = std::array<long int,1>;
 using LocalClass = std::array<long int,1>;
-const long int NbElementsPerBlock = 50;
-const bool OneGroupPerParent = false;
 using TreeClass = TbfTree<RealType,
                             ParticleDataType,
                             NbDataValuesPerParticle,
@@ -549,7 +549,11 @@ using TreeClass = TbfTree<RealType,
 using KernelClass = TbfTestKernel<RealType>;
 
 // Create the tree
-TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+TreeClass tree(configuration, particlePositions);
+// Or by specifiying the tree structure:
+// const long int NbElementsPerBlock = 50;
+// const bool OneGroupPerParent = false;
+// TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
 // Create the algorithm
 using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
@@ -725,7 +729,8 @@ The main differences come from the creation of the tree and how to iterate over 
 ```cpp
 // Usually only one array of positions is needed, but with tsm
 // we need to pass one array for the sources, and one array for the targets
-TreeClass tree(configuration, NbElementsPerBlock, particlePositionsSource, particlePositionsTarget, OneGroupPerParent);
+TreeClass tree(configuration, particlePositionsSource, particlePositionsTarget);
+// Optional extra arguments: OneGroupPerParent, NbElementsPerBlock
 ```
 
 When we iterate, we have to specify if we iterate over the targets or the sources:
