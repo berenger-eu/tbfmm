@@ -485,7 +485,7 @@ public:
                         interaction.arrayIndexSrc = arrayPos;
 
                         if constexpr(IsPeriodic){
-                            auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
+                            [[maybe_unused]] auto generatedPos = getRelativePosFromInteractionIndex(arrayPos);
                             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                                 assert((childPos[idxDim] + periodicShift[idxDim] - cellPos[idxDim]) == generatedPos[idxDim]);
                             }
@@ -699,7 +699,7 @@ public:
                         interaction.arrayIndexSrc = arrayPos;
 
                         if constexpr(IsPeriodic){
-                            const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
+                            [[maybe_unused]] const auto generatedPos = getRelativePosFromNeighborIndex(arrayPos);
                             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
                                 assert((currentTest[idxDim]) == generatedPos[idxDim]);
                             }

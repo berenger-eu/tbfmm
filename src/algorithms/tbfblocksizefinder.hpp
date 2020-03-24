@@ -13,7 +13,6 @@ int Estimate(const ParticleContainer& inParticlePositions,
              const TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>& inConfiguration,
              const int inNbThreads = static_cast<int>(std::thread::hardware_concurrency())){
     using IndexType = typename SpaceIndexType::IndexType;
-    constexpr long int Dim = SpaceIndexType::Dim;
 
     SpaceIndexType spaceSystem(inConfiguration);
 
@@ -33,7 +32,6 @@ int EstimateTsm(const ParticleContainerSource& inParticlePositionsSource,
              const TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>& inConfiguration,
              const int inNbThreads = static_cast<int>(std::thread::hardware_concurrency())){
     using IndexType = typename SpaceIndexType::IndexType;
-    constexpr long int Dim = SpaceIndexType::Dim;
 
     SpaceIndexType spaceSystem(inConfiguration);
 
