@@ -90,7 +90,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
-        for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
+        for(long int idxExtraLevel = -1 ; idxExtraLevel < 3 ; ++idxExtraLevel){
             TbfTimer timerBuildTree;
 
             TreeClass tree(configuration, TbfUtils::make_const(particlePositions), NbElementsPerBlock, OneGroupPerParent);
