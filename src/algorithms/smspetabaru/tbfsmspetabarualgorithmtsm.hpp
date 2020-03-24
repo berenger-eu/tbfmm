@@ -306,6 +306,10 @@ public:
         inStream << inAlgo.spaceSystem << "\n";
         return inStream;
     }
+
+    static int GetNbThreads(){
+        return SpUtils::DefaultNumThreads();
+    }
 };
 
 #endif

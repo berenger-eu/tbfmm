@@ -81,7 +81,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         TbfTimer timerBuildTree;
 
-        TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositions), OneGroupPerParent);
+        TreeClass tree(configuration, TbfUtils::make_const(particlePositions), NbElementsPerBlock, OneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

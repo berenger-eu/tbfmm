@@ -68,7 +68,7 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
         /////////////////////////////////////////////////////////////////////////////////////////
 
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-            TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+            TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
             AlgorithmClass algorithm(configuration, LastWorkingLevel);
             TopPeriodicAlgorithmClass topAlgorithm(configuration, idxExtraLevel);

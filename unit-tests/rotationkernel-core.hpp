@@ -71,7 +71,7 @@ class TestRotationKernel : public UTester< TestRotationKernel<RealType, TestAlgo
 
         TbfTimer timerBuildTree;
 
-        TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositions), OneGroupPerParent);
+        TreeClass tree(configuration, TbfUtils::make_const(particlePositions), NbElementsPerBlock, OneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

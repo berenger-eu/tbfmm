@@ -369,6 +369,10 @@ public:
         inStream << inAlgo.spaceSystem << "\n";
         return inStream;
     }
+
+    static int GetNbThreads(){
+        return omp_get_max_threads();
+    }
 };
 
 #endif

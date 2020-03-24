@@ -93,7 +93,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
             TbfTimer timerBuildTree;
 
-            TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositions), OneGroupPerParent);
+            TreeClass tree(configuration, TbfUtils::make_const(particlePositions), NbElementsPerBlock, OneGroupPerParent);
 
             timerBuildTree.stop();
             std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
@@ -274,7 +274,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
                                           LocalClass,
                                           SpacialSystemNonPeriodic>;
 
-                TreeClassNonPeriodic extendedTree(extendedConfiguration, NbElementsPerBlock, TbfUtils::make_const(extendedParticlePositions), OneGroupPerParent);
+                TreeClassNonPeriodic extendedTree(extendedConfiguration, TbfUtils::make_const(extendedParticlePositions), NbElementsPerBlock, OneGroupPerParent);
 
                 FInterpMatrixKernelR<RealType> interpolatorExtended;
                 AlgorithmClassNonPeriodic extentedAlgorithm(extendedConfiguration, KernelClassNonPeriodic(extendedConfiguration, &interpolatorExtended), 2);

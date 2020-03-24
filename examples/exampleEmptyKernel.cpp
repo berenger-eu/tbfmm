@@ -8,6 +8,9 @@
 #include "core/tbftree.hpp"
 #include "algorithms/sequential/tbfalgorithm.hpp"
 #include "utils/tbftimer.hpp"
+
+// The following headers have to be used only if
+// you want to manage the algorithm type explicitely
 #ifdef TBF_USE_SPETABARU
 #include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
 #endif
@@ -235,8 +238,6 @@ int main(){
     constexpr long int NbRhsValuesPerParticle = 1; // TODO how many real values you need in the rhs part
     using MultipoleClass = std::array<RealType,1>; // TODO what is a multipole part, could be a class, but must be POD
     using LocalClass = std::array<RealType,1>; // TODO what is a local part, could be a class, but must be POD
-    const long int NbElementsPerBlock = 50;
-    const bool OneGroupPerParent = false;
     using KernelClass = KernelExample<RealType>;
     using TreeClass = TbfTree<RealType,
                               ParticleDataType,
@@ -259,7 +260,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+    TreeClass tree(configuration, particlePositions);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

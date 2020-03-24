@@ -80,8 +80,8 @@ class TestRotationKernelTsm : public UTester< TestRotationKernelTsm<RealType, Te
 
         TbfTimer timerBuildTree;
 
-        TreeClass tree(configuration, NbElementsPerBlock, TbfUtils::make_const(particlePositionsSource),
-                       TbfUtils::make_const(particlePositionsTarget), OneGroupPerParent);
+        TreeClass tree(configuration, TbfUtils::make_const(particlePositionsSource),
+                       TbfUtils::make_const(particlePositionsTarget), NbElementsPerBlock, OneGroupPerParent);
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

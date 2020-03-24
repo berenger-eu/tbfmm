@@ -49,8 +49,6 @@ int main(){
     constexpr long int NbRhsValuesPerParticle = 1;
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
-    const long int NbElementsPerBlock = 50;
-    const bool OneGroupPerParent = false;
     using AlgorithmClass = TbfAlgorithmSelecterTsm::type<RealType, TbfTestKernel<RealType>>;
     using TreeClass = TbfTreeTsm<RealType,
                                  ParticleDataType,
@@ -64,7 +62,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, NbElementsPerBlock, particlePositionsSource, particlePositionsTarget, OneGroupPerParent);
+    TreeClass tree(configuration, particlePositionsSource, particlePositionsTarget);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

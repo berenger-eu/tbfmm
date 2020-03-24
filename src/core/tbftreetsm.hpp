@@ -7,6 +7,8 @@
 #include "tbfcellscontainer.hpp"
 #include "tbftree.hpp"
 
+#include "algorithms/tbfblocksizefinder.hpp"
+
 #include <vector>
 #include <array>
 
@@ -37,11 +39,21 @@ public:
 
     template<class ParticleContainer>
     TbfTreeTsm(const SpacialConfiguration& inConfiguration,
-               const long int inNbElementsPerBlock, const ParticleContainer& inParticleSourcePositions,
-               const ParticleContainer& inParticleTargetPositions, const bool inOneGroupPerParent)
+               const ParticleContainer& inParticleSourcePositions,
+               const ParticleContainer& inParticleTargetPositions,
+               const long int inNbElementsPerBlock = -1,
+               const bool inOneGroupPerParent = false)
         : configuration(inConfiguration), spaceSystem(configuration),
-          treeSource(inConfiguration, inNbElementsPerBlock, inParticleSourcePositions, inOneGroupPerParent),
-          treeTarget(inConfiguration, inNbElementsPerBlock, inParticleTargetPositions, inOneGroupPerParent){
+          treeSource(inConfiguration, inParticleSourcePositions,
+                     inNbElementsPerBlock == -1 ?
+                         TbfBlockSizeFinder::EstimateTsm<RealType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
+                         inNbElementsPerBlock,
+                     inOneGroupPerParent),
+          treeTarget(inConfiguration, inParticleTargetPositions,
+                     inNbElementsPerBlock == -1 ?
+                         TbfBlockSizeFinder::EstimateTsm<RealType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
+                         inNbElementsPerBlock,
+                     inOneGroupPerParent){
     }
 
     //////////////////////////////////////////////////////////////////////////////

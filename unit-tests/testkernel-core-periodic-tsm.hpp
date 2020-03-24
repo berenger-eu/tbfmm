@@ -70,7 +70,7 @@ class TestTestKernelPeriodicTsm : public UTester< TestTestKernelPeriodicTsm<Algo
         /////////////////////////////////////////////////////////////////////////////////////////
 
         for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
-            TreeClassTsm tree(configuration, NbElementsPerBlock, particlePositionsSource, particlePositionsTarget, OneGroupPerParent);
+            TreeClassTsm tree(configuration, particlePositionsSource, particlePositionsTarget, NbElementsPerBlock, OneGroupPerParent);
 
             AlgorithmClassTsm algorithm(configuration, LastWorkingLevel);
             TopPeriodicAlgorithmClassTsm topAlgorithm(configuration, idxExtraLevel);

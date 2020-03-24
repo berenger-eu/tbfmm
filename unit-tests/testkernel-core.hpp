@@ -74,7 +74,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         /////////////////////////////////////////////////////////////////////////////////////////
 
         if(TreeHeight > 2){
-            TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+            TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2M | TbfAlgorithmUtils::TbfM2M | TbfAlgorithmUtils::TbfM2L);
@@ -132,7 +132,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         }
 
         {
-            TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+            TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
@@ -158,7 +158,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         }
 
         {
-            TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+            TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
             AlgorithmClass algorithm(configuration);
             algorithm.execute(tree);

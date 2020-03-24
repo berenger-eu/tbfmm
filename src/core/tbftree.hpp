@@ -6,6 +6,8 @@
 #include "tbfinteraction.hpp"
 #include "tbfcellscontainer.hpp"
 
+#include "algorithms/tbfblocksizefinder.hpp"
+
 #include <vector>
 #include <array>
 
@@ -33,9 +35,13 @@ public:
 
     template<class ParticleContainer>
     TbfTree(const SpacialConfiguration& inConfiguration,
-               const long int inNbElementsPerBlock, const ParticleContainer& inParticlePositions,
-               const bool inOneGroupPerParent)
-        : configuration(inConfiguration), spaceSystem(configuration), nbElementsPerBlock(inNbElementsPerBlock),
+               const ParticleContainer& inParticlePositions,
+               const long int inNbElementsPerBlock = -1,
+               const bool inOneGroupPerParent = false)
+        : configuration(inConfiguration), spaceSystem(configuration),
+          nbElementsPerBlock(inNbElementsPerBlock == -1 ? TbfBlockSizeFinder::Estimate<RealType>(inParticlePositions,
+                                                                                                 inConfiguration):
+                                                          inNbElementsPerBlock),
           oneGroupPerParent(inOneGroupPerParent), nbParticles(static_cast<long int>(std::size(inParticlePositions))){
 
         cellBlocks.resize(configuration.getTreeHeight());

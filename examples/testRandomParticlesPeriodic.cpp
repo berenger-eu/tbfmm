@@ -48,8 +48,6 @@ int main(){
     constexpr long int NbRhsValuesPerParticle = 1;
     using MultipoleClass = std::array<long int,1>;
     using LocalClass = std::array<long int,1>;
-    const long int NbElementsPerBlock = 50;
-    const bool OneGroupPerParent = false;
     using SpacialSystemPeriodic = TbfDefaultSpaceIndexTypePeriodic<RealType>;
     const long int LastWorkingLevel = TbfDefaultLastLevelPeriodic;
     using TreeClass = TbfTree<RealType,
@@ -65,7 +63,7 @@ int main(){
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, NbElementsPerBlock, particlePositions, OneGroupPerParent);
+    TreeClass tree(configuration, particlePositions);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;

@@ -238,6 +238,10 @@ public:
         inStream << inAlgo.spaceSystem << "\n";
         return inStream;
     }
+
+    static int GetNbThreads(){
+        return 1;
+    }
 };
 
 #endif
