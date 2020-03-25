@@ -1,5 +1,11 @@
 image: berenger/tbfmmci
 
+stages:
+  - release
+  - nomodules
+  - coverage
+  - deploy
+
 tbfmm-gcc-inastemp-spetabaru:
   tags:
     - medium
@@ -13,6 +19,7 @@ tbfmm-gcc-inastemp-spetabaru:
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+  stage: release
    
 
 tbfmm-clang-inastemp-spetabaru:
@@ -28,8 +35,7 @@ tbfmm-clang-inastemp-spetabaru:
     - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
-  dependencies:
-    - tbfmm-gcc-inastemp-spetabaru
+  stage: release
 
 tbfmm-gcc-no-modules:
   tags:
@@ -42,8 +48,7 @@ tbfmm-gcc-no-modules:
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
-  dependencies:
-    - tbfmm-clang-inastemp-spetabaru
+  stage: nomodules
 
 
 tbfmm-clang-no-modules:
@@ -57,8 +62,7 @@ tbfmm-clang-no-modules:
     - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
     - make
     - CTEST_OUTPUT_ON_FAILURE=TRUE make test
-  dependencies:
-    - tbfmm-gcc-no-modules
+  stage: nomodules
 
 tbfmm-full-coverage:
   tags:
@@ -79,8 +83,7 @@ tbfmm-full-coverage:
   artifacts:
     paths:
       - coverage/
-  dependencies:
-    - tbfmm-clang-no-modules
+  stage: coverage
 
 pages:
   stage: deploy
