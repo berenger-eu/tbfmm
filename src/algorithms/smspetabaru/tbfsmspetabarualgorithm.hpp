@@ -33,7 +33,7 @@ protected:
     TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
     template <class TreeClass>
-    void P2M(SpRuntime& runtime, TreeClass& inTree){
+    void P2M(SpRuntime<>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
@@ -63,7 +63,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2M(SpRuntime& runtime, TreeClass& inTree){
+    void M2M(SpRuntime<>& runtime, TreeClass& inTree){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -99,7 +99,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2L(SpRuntime& runtime, TreeClass& inTree){
+    void M2L(SpRuntime<>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -132,7 +132,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2L(SpRuntime& runtime, TreeClass& inTree){
+    void L2L(SpRuntime<>& runtime, TreeClass& inTree){
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -168,7 +168,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2P(SpRuntime& runtime, TreeClass& inTree){
+    void L2P(SpRuntime<>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
@@ -201,7 +201,7 @@ protected:
     }
 
     template <class TreeClass>
-    void P2P(SpRuntime& runtime, TreeClass& inTree){
+    void P2P(SpRuntime<>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroups = inTree.getParticleGroups();
