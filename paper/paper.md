@@ -5,6 +5,7 @@ tags:
   - FMM
   - OpenMP
   - task-based
+  - HPC
 authors:
   - name: Berenger Bramas
     orcid: 0000-0003-0281-9709
@@ -22,49 +23,92 @@ affiliations:
    index: 4
 date: 26 march 2020
 bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-# aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-# aas-journal: Astrophysical Journal <- The name of the AAS journal.
 ---
 
 # Summary
 
-The fast multipole library [@fmm] has been classified as one of the more important algorithm of the 20th century [@siam].
-This algorithm was originally designed to compute interaction between stars and designed for n-body.
+The fast multipole library [@fmm] has been classified as one of the most important algorithms of the 20th century [@siam].
+This algorithm was originally designed to compute pair-wise interactions between particles (n-body problems) but has been used and extended to different other type of simulations, such as FEM, BEM, .
+The main idea behind the FMM is to avoid computing all the interactions between the elements but to approximate the interaction between far elements, considering that the interaction decrease with the distance.
+This makes it possible to reduce the complexity from quadratic to quasi-linear. 
+To this achievement, the FMM uses a tree over the simulation box and executes a specific algorithm where cells (nodes of the tree) represent parts of the simulation box and are used to factorize the interactions.
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+`TBFMM` is an high-performance package that implement the FMM in a generic manner.
+Its design allow to easily customize the kernels, the type of interacting elements or the parallelization scheme.
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+# Background
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+The FMM algorithm is described using different operators that use letter to express the type of elements they work on: `P` for particle, `M` for multipole and `L` for local.
+The term particle is used for legacy reason but it represent the basic elements that interact and for which we want to approximate.
+The multipole part represent the aggregation of potential, it represent what is emitted by a sub-part of the simulation box.
+Wherease, the local part represent the outside that is emitted onto a sub-part of the simulation box.
+The different operator are schemtized in Figure~X.
 
-# Mathematics
+Because it is a fundamental building blocks for many type of simulation, the FMM parallelization has been investigated.
+Traditional pure MPI or MPI+fork-join has been used.
+Later task-based parallelization have been developed for multicore~[paper], heterogeneous architecture~[paper] and heterogeneous distributed platforms~[paper].
+We have participated on these investegation and we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
+The two main idea of this container is (1) to allocated and manage several cells of the same level together (2) to split the management of symbolic data, multipole data and local data, such that each memory block can be moved anywhere on the memory and used by a task independently from the other.
+
+# Statement of need
+
+
+To be used for scientist to create new kernels.
+To be used for computer scientist to study block-based FMM and task-based parallelization (as benchmark).
+From our size we will apply GPU but with the idea to remain generic.
+We will also use it to study scheduling of irregular applications.
+
+More closer existing package is ScalFMM.
+But is has X lines of code, for only Y for TBFMM.
+It needs several dependencies, does not relies on standard C++ and include lots of old approaches.
+It only works for 3D problems, where TBFMM can work for any dimension.
+But, the interace for the kernel is very similar to ours such that creating a kernel for ScalFMM or TBFMM it is easy to adapt to the other.
+
+# Features
+
+## Genericity
+
+Full generic design.
+Use of template.
+
+
+## Tree
+It uses the block-tree (also called group-tree) where cells of the same level are managed together.
+This has been shown that it is well designed for the task-based parallelization including
+
+Automatic bloc-size finder.
+
+## Kernel
+
+Easy to customize.
+The parallelization is then automatic
+
+## Parallelization
+
+OpenMP
+Spetabaru commute.
+
+## Periodicity
+
+The periodicity consists in considering that the simulation box is repeated unlimited in all direction.
+To compute the potential of the periodic box over the simulation, it is classic to use the X approach.
+In TBFMM we have implemented a different approach, which is a pure algorithmic strategy [cite].
+The idea is to consider that the the FMM is a sub-part of a more larger tree.
+Then, instead of stopping the algorithm up to level 2, we continue up to the root where the multipole part of the root represent the complete simulation box.
+We use it by continuing the FMM algorithm partially above the root.
+By doing so, we have several advantages.
+The method needs nothing more than a FMM kernel (the same as the one use without periodicity).
+The accuracy relies on the FMM kernel.
+The method is generic.
+
+# Performance
+
+Example of performance
+
+# Conclusion & Perspective
+
+
+# To be removed
 
 Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
 
@@ -81,8 +125,6 @@ You can also use plain \LaTeX for equations
 \end{equation}
 and refer to \autoref{eq:fourier} from text.
 
-# Citations
-
 Citations to entries in paper.bib should be in
 [rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
 format.
@@ -94,14 +136,8 @@ For a quick reference, the following citation commands can be used:
 - `@author:2001`  ->  "Author et al. (2001)"
 - `[@author:2001]` -> "(Author et al., 2001)"
 - `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
 ![Caption for example figure.\label{fig:example}](figure.png)
 and referenced from text using \autoref{fig:example}.
-
-Fenced code blocks are rendered with syntax highlighting:
 ```python
 for n in range(10):
     yield f(n)
