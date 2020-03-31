@@ -1,0 +1,219 @@
+@article{GREENGARD1987325,
+title = "A fast algorithm for particle simulations",
+journal = "Journal of Computational Physics",
+volume = "73",
+number = "2",
+pages = "325 - 348",
+year = "1987",
+issn = "0021-9991",
+doi = "https://doi.org/10.1016/0021-9991(87)90140-9",
+url = "http://www.sciencedirect.com/science/article/pii/0021999187901409",
+author = "L Greengard and V Rokhlin",
+abstract = "An algorithm is presented for the rapid evaluation of the potential and force fields in systems involving large numbers of particles whose interactions are Coulombic or gravitational in nature. For a system of N particles, an amount of work of the order O(N2) has traditionally been required to evaluate all pairwise interactions, unless some approximation or truncation method is used. The algorithm of the present paper requires an amount of work proportional to N to evaluate all interactions to within roundoff error, making it considerably more practical for large-scale problems encountered in plasma physics, fluid dynamics, molecular dynamics, and celestial mechanics."
+}
+
+@misc {openmp4,
+    author = "OpenMP Architecture Review Board",
+    title  = "OpenMP Application Program Interface",
+    month  = "jul",
+    year   = "2013",
+    url    = "https://www.openmp.org/wp-content/uploads/OpenMP4.0.0.pdf"
+}
+
+@article{10.7717/peerj-cs.183,
+ title = {Increasing the degree of parallelism using speculative execution in task-based runtime systems},
+ author = {Bramas, Bérenger},
+ year = 2019,
+ month = mar,
+ keywords = {STF, Monte-Carlo, Speculation, Task-based},
+ abstract = {
+            Task-based programming models have demonstrated their efficiency in the development of scientific applications on modern high-performance platforms. They allow delegation of the management of parallelization to the runtime system (RS), which is in charge of the data coherency, the scheduling, and the assignment of the work to the computational units. However, some applications have a limited degree of parallelism such that no matter how efficient the RS implementation, they may not scale on modern multicore CPUs. In this paper, we propose using speculation to unleash the parallelism when it is uncertain if some tasks will modify data, and we formalize a new methodology to enable speculative execution in a graph of tasks. This description is partially implemented in our new C++ RS called SPETABARU, which is capable of executing tasks in advance if some others are not certain to modify the data. We study the behavior of our approach to compute Monte Carlo and replica exchange Monte Carlo simulations.
+         },
+ volume = 5,
+ pages = {e183},
+ journal = {PeerJ Computer Science},
+ issn = {2376-5992},
+ url = {https://doi.org/10.7717/peerj-cs.183},
+ doi = {10.7717/peerj-cs.183}
+}
+
+@article{bramas2017inastemp,
+  title={Inastemp: A Novel Intrinsics-as-Template Library for Portable SIMD-Vectorization},
+  author={Bramas, Berenger},
+  journal={Scientific Programming},
+  volume={2017},
+  year={2017},
+  publisher={Hindawi}
+}
+
+
+@techreport{agullo:hal-01387482,
+  TITLE = {{Task-based fast multipole method for clusters of multicore processors}},
+  AUTHOR = {Agullo, Emmanuel and Bramas, B{\'e}renger and Coulaud, Olivier and Khannouz, Martin and Stanisic, Luka},
+  URL = {https://hal.inria.fr/hal-01387482},
+  TYPE = {Research Report},
+  NUMBER = {RR-8970},
+  PAGES = {15 },
+  INSTITUTION = {{Inria Bordeaux Sud-Ouest}},
+  YEAR = {2017},
+  MONTH = Mar,
+  KEYWORDS = {multicore processor ; high performance computing (HPC) ; fast multipole method ; hybrid   parallelization ; runtime system ; task-based programming ; cluster ; FMM ; m{\'e}thode multip{\^o}les rapide ; Calcul haute performance ; architecture multic{\oe}ur ; moteur d'ex{\'e}cution ; parall{\'e}lisation hybride ; programmation {\`a} base de t{\^a}ches ; MPI ; OpenMP},
+  PDF = {https://hal.inria.fr/hal-01387482/file/report-8970.pdf},
+  HAL_ID = {hal-01387482},
+  HAL_VERSION = {v4},
+}
+
+
+@article{doi:10.1002/cpe.3723,
+author = {Agullo, Emmanuel and Bramas, Berenger and Coulaud, Olivier and Darve, Eric and Messner, Matthias and Takahashi, Toru},
+title = {Task-based FMM for heterogeneous architectures},
+journal = {Concurrency and Computation: Practice and Experience},
+volume = {28},
+number = {9},
+pages = {2608-2629},
+keywords = {fast multipole methods, graphics processing unit, heterogeneous architectures, runtime system, scheduling, pipeline},
+doi = {10.1002/cpe.3723},
+url = {https://onlinelibrary.wiley.com/doi/abs/10.1002/cpe.3723},
+eprint = {https://onlinelibrary.wiley.com/doi/pdf/10.1002/cpe.3723},
+abstract = {Summary High performance fast multipole method is crucial for the numerical simulation of many physical problems. In a previous study, we have shown that task-based fast multipole method provides the flexibility required to process a wide spectrum of particle distributions efficiently on multicore architectures. In this paper, we now show how such an approach can be extended to fully exploit heterogeneous platforms. For that, we design highly tuned graphics processing unit (GPU) versions of the two dominant operators P2P and M2L) as well as a scheduling strategy that dynamically decides which proportion of subsequent tasks is processed on regular CPU cores and on GPU accelerators. We assess our method with the StarPU runtime system for executing the resulting task flow on an Intel X5650 Nehalem multicore processor possibly enhanced with one, two, or three Nvidia Fermi M2070 or M2090 GPUs (Santa Clara, CA, USA). A detailed experimental study on two 30 million particle distributions (a cube and an ellipsoid) shows that the resulting software consistently achieves high performance across architectures. Copyright © 2015 John Wiley \& Sons, Ltd.},
+year = {2016}
+}
+
+
+@article{doi:10.1137/130915662,
+author = {Agullo, Emmanuel and Bramas, Bérenger and Coulaud, Olivier and Darve, Eric and Messner, Matthias and Takahashi, Toru},
+title = {Task-Based FMM for Multicore Architectures},
+journal = {SIAM Journal on Scientific Computing},
+volume = {36},
+number = {1},
+pages = {C66-C93},
+year = {2014},
+doi = {10.1137/130915662},
+
+URL = { 
+        https://doi.org/10.1137/130915662
+    
+},
+eprint = { 
+        https://doi.org/10.1137/130915662
+    
+}
+
+}
+
+@phdthesis{bramas2016optimization,
+  title={Optimization and parallelization of the boundary element method for the wave equation in time domain},
+  author={Bramas, Bérenger},
+  year={2016},
+  school={Bordeaux}
+}
+
+
+@article{cipra2000best,
+  title={The best of the 20th century: Editors name top 10 algorithms},
+  author={Cipra, Barry A},
+  journal={SIAM news},
+  volume={33},
+  number={4},
+  pages={1--2},
+  year={2000}
+}
+
+@article{blanchard2015fast,
+  title={Fast hierarchical algorithms for generating Gaussian random fields},
+  author={Blanchard, Pierre and Coulaud, Olivier and Darve, Eric},
+  year={2015}
+}
+
+
+@inproceedings{blanchard2016efficient,
+  title={An Efficient Interpolation Based FMM for Dislocation Dynamics Simulations},
+  author={Blanchard, Pierre and Coulaud, Olivier and Etcheverry, Arnaud and Dupuy, Laurent and Darve, Eric},
+  year={2016}
+}
+
+
+@inproceedings{darve2013optimizing,
+  title={Optimizing the Black-box FMM for Smooth and Oscillatory Kernels},
+  author={Darve, Eric and Messner, Matthias and Schanz, Martin and Coulaud, Olivier},
+  year={2013}
+}
+
+
+@article{darve2004fast,
+  title={A fast multipole method for Maxwell equations stable at all frequencies},
+  author={Darve, Eric and Hav{\'e}, Pascal},
+  journal={Philosophical Transactions of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences},
+  volume={362},
+  number={1816},
+  pages={603--628},
+  year={2004},
+  publisher={The Royal Society}
+}
+
+
+@article{malhotra2015pvfmm,
+  title={PVFMM: A parallel kernel independent FMM for particle and volume potentials},
+  author={Malhotra, Dhairya and Biros, George},
+  journal={Communications in Computational Physics},
+  volume={18},
+  number={3},
+  pages={808--830},
+  year={2015},
+  publisher={Cambridge University Press}
+}
+
+
+@article{barba2011exafmm,
+  title={ExaFMM: An open source library for Fast Multipole Methods aimed towards Exascale systems},
+  author={Barba, L and Yokota, Rio},
+  journal={Boston: Boston University. Retrieved from barbagroup: http://barbagroup. bu. edu},
+  year={2011}
+}
+
+
+@inproceedings{frangi2003coupled,
+  title={Coupled Fast Multipole Method-Finite Element Method for the analysis of magneto-mechanical problems},
+  author={Frangi, Attilio and Faure-Ragani, Paolo and Ghezzi, Luca},
+  booktitle={Proceedings of the Sixth French National Congress" Calcul des structures},
+  pages={273--280},
+  year={2003}
+}
+
+
+@article{sabariego2004fast,
+  title={The fast multipole method for electromagnetic field computation in numerical and physical hybrid systems},
+  author={Sabariego, Ruth},
+  year={2004}
+}
+
+
+@article{pham2012fast,
+  title={Fast multipole method applied to Symmetric Galerkin boundary element method for 3D elasticity and fracture problems},
+  author={Pham, Anh Duc and Mouhoubi, Saida and Bonnet, Marc and Chazallon, Cyrille},
+  journal={Engineering analysis with boundary elements},
+  volume={36},
+  number={12},
+  pages={1838--1847},
+  year={2012},
+  publisher={Elsevier}
+}
+
+
+@article{SABARIEGO2004403,
+title = "Application of the fast multipole method to hybrid finite element–boundary element models",
+journal = "Journal of Computational and Applied Mathematics",
+volume = "168",
+number = "1",
+pages = "403 - 412",
+year = "2004",
+note = "Selected Papers from the Second International Conference on Advanced Computational Methods in Engineering (ACOMEN 2002)",
+issn = "0377-0427",
+doi = "https://doi.org/10.1016/j.cam.2003.12.011",
+url = "http://www.sciencedirect.com/science/article/pii/S0377042703009841",
+author = "R.V. Sabariego and J. Gyselinck and C. Geuzaine and P. Dular and W. Legros",
+keywords = "Fast multipole method, Finite element method, Boundary element method, Hybrid method, Laplace function",
+abstract = "This paper focuses on the acceleration of the hybrid finite element–boundary element analysis of 2D eddy current problems by means of the fast multipole method. An adaptive truncation scheme for the expansion of the 2D Laplace Green function is proposed. A linear time harmonic test case is considered. The results obtained with the hybrid model, with and without fast multipole acceleration, agree well with those obtained with a finite element model. The computational cost of the three calculations is compared and discussed. The proposed adaptive truncation scheme significantly contributes to the computation time savings achieved with the fast multipole method, particularly when dealing with moderate sized problems."
+}
+
+

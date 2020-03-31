@@ -27,38 +27,38 @@ bibliography: paper.bib
 
 # Summary
 
-`TBFMM` is an high-performance package that implement the parallel fast multipole method in modern `C++`.
-`TBFMM` has been designed to be highly customized.
-The user can implement new kernels, new type of interacting elements or even new parallelization strategy and plug them into `TBFMM`.
-Therefore, `TBFMM` can be used to perform research in HPC but it can also be used as a simulation tools by scientists in physics or applied mathematics.
-Specifically, this package enables to perform simulation while delegating the data structure, the algorithm and the parallelization.
-
-
+`TBFMM` is a high-performance package that implements the parallel fast multipole method in modern `C++`.
+`TBFMM` was designed with the aim of being easy to customize thanks to both `C++` templates and a fine control of the relation between the different classes of the library.
+Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
+Specifically, `TBFMM` can be used to perform research in HPC to study parallelization and scheduling approaches, but it can also be used as a simulation toolbox for scientists in physics or applied mathematics It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
 
 # Background
 
-The FMM [@fmm] has been classified as one of the most important algorithms of the 20th century [@siam].
+The FMM [@GREENGARD1987325] has been classified as one of the most important algorithms of the 20th century [@cipra2000best].
 This algorithm was originally designed to solve n-body problems, such as computing pair-wise interactions between particles.
-It was later used and extended for different type of simulations, such as FEM, BEM, .
-The FMM makes it possible to reduce the complexity from quadratic (N elements interact with N elements) to a quasi-linear complexity.
-The central idea is to avoid computing all the interactions between the elements but to approximate the interaction between elements are far enough.
-To work, the interaction to be computed must decrease with the distance, and the kernels to approximate far interaction must defined. 
-Internally, the FMM is usually implemented with a tree that is mapped over the simulation box, where cells (nodes of the tree) represent parts of the simulation box and are used to factorize the interactions between elements.
+It reduces the complexity from quadratic (N elements interact with N elements) to a quasi-linear complexity.
+The central idea is to avoid computing all the interactions between the elements by approximating the interactions between elements that are far enough.
+The conditions to make it possible are that the potential of the interactions to be computed must decrease with the distance, and that the kernel to approximate far interaction must exist.
+In fact, providing the approximation kernels for some equations can be quite challenging. 
+Internally, the FMM is usually implemented with a tree that is mapped over the simulation box.
+A cell, i.e. a node of the tree, represent a part of the simulation box and is used in the algorithm to factorize the interactions between elements.
+The FMM was later extended for different type of simulations with different approximation kernels [@SABARIEGO2004403,pham2012fast,sabariego2004fast,frangi2003coupled,barba2011exafmm,malhotra2015pvfmm,darve2004fast,darve2013optimizing,blanchard2016efficient,blanchard2015fast].
 
-
-
-The FMM algorithm is described using different operators that use letter to express the type of elements they work on: `P` for particle, `M` for multipole and `L` for local.
-The term particle is used for legacy reason but it represent the basic elements that interact and for which we want to approximate.
-The multipole part represent the aggregation of potential, it represent what is emitted by a sub-part of the simulation box.
-Wherease, the local part represent the outside that is emitted onto a sub-part of the simulation box.
-The different operator are schemtized in Figure~X.
+The FMM algorithm is described using different operators that use letters to express the type of elements they work on: `P` for particle, `M` for multipole and `L` for local.
+The term particle is used for legacy reason but it represent the basic elements that interact and for which we want to approximate the interactions.
+The multipole part represent the aggregation of potential, i.e. it represent what is emitted by a sub-part of the simulation box.
+Whereas, the local part represent the outside that is emitted onto a sub-part of the simulation box.
+The different operators are schematized in Figure \autoref{fig:fmm}.
 
 ![Caption for example figure.\label{fig:fmm}](FMM.png)
-and referenced from text using \autoref{fig:fmm}
 
-Because it is a fundamental building blocks for many type of simulation, the FMM parallelization has been investigated.
-Traditional pure MPI or MPI+fork-join has been used.
-Later task-based parallelization have been developed for multicore~[paper], heterogeneous architecture~[paper] and heterogeneous distributed platforms~[paper].
+
+Because it is a fundamental building blocks for many types of simulation, the FMM parallelization has been investigated.
+Traditional HPC technologies composed of MPI or MPI+fork-join has been used [@bramas2016optimization].
+However, it has been demonstrated that fork-join strategies are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
+This is because some part of the FMM have a small degree of parallelism, while other have high degree.
+Therefore, mixing them instead of progressing by step allow to interleave the different operators.
+Moreover, this has been even more important on heterogeneous architecture~[doi:10.1002/cpe.3723] and distributed memory platforms [agullo:hal-01387482].
 We have participated on these investegation and we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
 The two main idea of this container is (1) to allocated and manage several cells of the same level together (2) to split the management of symbolic data, multipole data and local data, such that each memory block can be moved anywhere on the memory and used by a task independently from the other.
 
@@ -107,10 +107,12 @@ The parallelization is then automatic and independent of the underlying parallel
 ## Parallelization
 
 TBFMM currently use two task-based runtime systems.
-It uses OpenMP tasks version 4.5.
+It uses OpenMP tasks version 4.5 [@openmp4].
 It is ready to benefit from the new `mutexinout` from OpenMP 5.
 It also uses Spetabaru, which is a runtime system used for research to study scheduling, task-based programming and speculative execution.
 It supports commute data access.
+
+[@10.7717/peerj-cs.183]
 
 ## Periodicity
 
@@ -128,9 +130,11 @@ The method is generic.
 ![Caption for example figure.\label{fig:periodicfmm}](periodicfmm.png)
 and referenced from text using \autoref{fig:periodicfmm}
 
+[@bramas2016optimization]
+
 ## Vectorization (Inastemp)
 
-
+[@bramas2017inastemp]
 
 # Performance
 
