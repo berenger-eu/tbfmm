@@ -210,6 +210,11 @@ class TestKernelConstness : public UTester< TestKernelConstness > {
     }
 
     void SetTests() {
+        // Bug with GCC
+#ifdef __GNUC__
+        volatile bool willBeFalse = false;
+        if(willBeFalse)
+#endif
         Parent::AddTest(&TestKernelConstness::TestBasic, "Basic test for vector");
     }
 };
