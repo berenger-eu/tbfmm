@@ -54,29 +54,32 @@ The different operators are schematized in Figure \autoref{fig:fmm}.
 
 
 Because it is a fundamental building blocks for many types of simulation, the FMM parallelization has been investigated.
-Traditional HPC technologies composed of MPI or MPI+fork-join has been used [@bramas2016optimization].
+Traditional HPC approaches composed of MPI [@10.5555/898758] or MPI together with a fork-join paradigm to parallelize over the shared memory [@bramas2016optimization].
 However, it has been demonstrated that fork-join strategies are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
-This is because some part of the FMM have a small degree of parallelism, while other have high degree.
-Therefore, mixing them instead of progressing by step allow to interleave the different operators.
-Moreover, this has been even more important on heterogeneous architecture~[doi:10.1002/cpe.3723] and distributed memory platforms [agullo:hal-01387482].
-We have participated on these investegation and we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
-The two main idea of this container is (1) to allocated and manage several cells of the same level together (2) to split the management of symbolic data, multipole data and local data, such that each memory block can be moved anywhere on the memory and used by a task independently from the other.
+This is because some part of the FMM have a small degree of parallelism, while other have high degree with a significant workload available from the beginning.
+The task-based method is capable of interleaving the different operators, hence to balance the workload.
+Moreover, this is even more critical on heterogeneous architecture~[doi:10.1002/cpe.3723] and distributed memory platforms [agullo:hal-01387482].
+In a previous project called ScalFMM, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
+The two main ideas behind this container is (1) to allocated and manage several cells of the same level together (2) to split the management of symbolic data, multipole data and local data, such that each memory block can be moved anywhere on the memory and used by a task independently from the other, as illustrated in Figure \autoref{fig:blocktree}.
 
 ![Caption for example figure.\label{fig:blocktree}](grouptree.png)
-and referenced from text using \autoref{fig:blocktree}
 
 # Statement of need
 
-More closer existing package is ScalFMM.
-But is has X lines of code, for only Y for TBFMM.
-It needs several dependencies, does not relies on standard C++ and include lots of old approaches.
-It only works for 3D problems, where TBFMM can work for any dimension.
-But, the interace for the kernel is very similar to ours such that creating a kernel for ScalFMM or TBFMM it is easy to adapt to the other.
+The FMM is one of the major algorithms but it remains rare to have it included in HPC benchmarks when studying runtime systems, schedulers or optimizers.
+The main reason is because it is tedious to implement and requires even more investment to implement when using the task-based method together with the group-tree.
+However, it is an interesting, if not unique, algorithm to study irregular/hierarchical scientific method.
 
-To be used for scientist to create new kernels.
+For the same reason, it is difficult to researchers in physics or applied mathematics to implement a complete FMM library - and to it efficiently - when their objectives is to focus on the study of an approximation kernel.
 To be used for computer scientist to study block-based FMM and task-based parallelization (as benchmark).
 From our size we will apply GPU but with the idea to remain generic.
 We will also use it to study scheduling of irregular applications.
+
+The closer existing package to `TBFMM` is  `ScalFMM`.
+`ScalFMM` has around 170K lines of code, for only 50K for `TBFMM`, because it supports lots of different parallel strategies, including few ones based on the fork-join model and contains several experimental methods.
+Moreover, it needs several external dependencies and does not benefit from the new standard `C++` features.
+In addition, it only works for 3D problems, where `TBFMM` can work for arbitrary dimension.
+However, the interface of the kernels is very similar in both libraries, such that creating a kernel for `ScalFMM` or `TBFMM` and porting it to the other library is convenient.
 
 # Features
 
