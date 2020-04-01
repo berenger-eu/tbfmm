@@ -1,5 +1,5 @@
 ---
-title: 'TBFMM: A generic and parallel fast multipole method library in C++'
+title: 'TBFMM: A C++ generic and parallel fast multipole method library'
 tags:
   - C++
   - FMM
@@ -58,12 +58,12 @@ The different operators are schematized in Figure \autoref{fig:fmm}.
 \label{fig:fmm}](FMM.png)
 
 Because it is a fundamental building blocks for many types of simulation, the FMM parallelization has been investigated.
-Some strategies have been developed using classical HPC technologies such as a MPI [@10.5555/898758], to parallelize over multiple distributed memory nodes, potentially enhanced with a fork-join threaded library [@bramas2016optimization].
+Some strategies have been developed using classical HPC technologies such as a `MPI` [@10.5555/898758], to parallelize over multiple distributed memory nodes, potentially enhanced with a fork-join threaded library [@bramas2016optimization].
 However, it has been demonstrated that fork-join strategies are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
 This is because some part of the FMM have a small degree of parallelism (for instance at the top of the tree), while other have high degree with a significant workload available from the beginning (for instance the `P2P` in the direct pass).
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
 Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and it has demonstrated nice performance on distributed memory platforms too [agullo:hal-01387482].
-In a previous project called ScalFMM, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
+In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
 The two main ideas behind this container are (1) to allocated and manage several cells of the same level together (2) to split the management of symbolic data, multipole data and local data, such that each memory block can be moved anywhere on the memory and used by the task dependency system apart from each other, as illustrated in Figure \autoref{fig:blocktree}.
 
 ![Caption for example figure.\label{fig:blocktree}](grouptree.png)
@@ -87,7 +87,7 @@ However, the interface of the kernels is very similar in both libraries, such th
 
 ## Genericity
 
-TBFMM is designed to be generic thanks to an heavy use of C++ template.
+TBFMM is designed to be generic thanks to an heavy use of `C++` template.
 The tree and the kernel classes are independent from each other and from the algorithm.
 The algorithm has to be templatized to the use the tree and the kernel and bridge the gap between them.
 This is illustrated by the Figure \autoref{fig:design}.
@@ -114,15 +114,15 @@ With this aim, a user has to create a new kernel that respect an interface, as d
 
 ## Parallelization
 
-`TBFMM` currently use two task-based runtime systems: OpenMP version 4 [@openmp4] and SPETABARU [@10.7717/peerj-cs.183]. 
-The data access of the FMM operators in write are usually commutative.
+`TBFMM` currently use two task-based runtime systems: `OpenMP` version 4 [@openmp4] and `SPETABARU` [@10.7717/peerj-cs.183]. 
+The data access of the FMM operators in write are usually commutative [@7912335].
 However, in OpenMP the `mutexinout` data access has been defined in OpenMP 5 and is currently not supported yet (when a compiler that supports it will be used, `TBFMM` will use it automatically).
 
 ## Periodicity
 
 The periodicity consists in considering that the simulation box is repeated unlimited in all direction.
 To compute the potential of the periodic box over the simulation, it is classic to use the X approach.
-In TBFMM we have implemented a different approach, which is a pure algorithmic strategy [cite].
+In `TBFMM` we have implemented a different approach, which is a pure algorithmic strategy [@bramas2016optimization].
 The idea is to consider that the the FMM is a sub-part of a more larger tree.
 Then, instead of stopping the algorithm up to level 2, we continue up to the root where the multipole part of the root represent the complete simulation box.
 We use it by continuing the FMM algorithm partially above the root.
@@ -133,8 +133,6 @@ The method is generic.
 
 ![Caption for example figure.\label{fig:periodicfmm}](periodicfmm.png)
 and referenced from text using \autoref{fig:periodicfmm}
-
-[@bramas2016optimization]
 
 ## Vectorization (Inastemp)
 
@@ -152,9 +150,16 @@ and referenced from text using \autoref{fig:performance}
 
 # Conclusion & Perspective
 
+`TBFMM` is lightweight FMM library that could be use to do research in HPC and applied mathematics.
+We will use it in benchmarks to study scheduling strategy, but also to test new approaches to develop on heterogeneous computing.
+Indeed, we would like to offer an elegant way for users to add GPU kernels while delegating most of the things to `TBFMM` and `SPETABARU`.
+We also plan to use `MPI` to support distributed memory parallelization.
+
+
+
 
 # Acknowledgements
 
-.
+Acknowledgment: Experiments presented in this paper were carried out using the PlaFRIM experimental testbed, supported by Inria, CNRS (LABRI and IMB), Université de Bordeaux, Bordeaux INP and Conseil Régional d'Aquitaine.
 
 # References
