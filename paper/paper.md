@@ -28,9 +28,9 @@ bibliography: paper.bib
 # Summary
 
 `TBFMM` is a high-performance package that implements the parallel fast multipole method in modern `C++17`.
-`TBFMM` was designed with the aim of being easy to customize thanks to `C++` templates and a fine control of the classes inter-dependencies.
+`TBFMM` was designed with the aim of being easy to customize thanks to `C++` templates and a fine control of the `C++` classes inter-dependencies.
 Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
-Specifically, `TBFMM` can be used to perform research in HPC to study parallelization and scheduling, but it can also be used as a simulation toolbox for scientists in physics or applied mathematics.
+Specifically, `TBFMM` can be used to perform research in HPC to study parallelization/optimization and scheduling, but it can also be used as a simulation toolbox for scientists in physics or applied mathematics.
 It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
 
 # Background
@@ -130,21 +130,23 @@ When a compiler that supports this access will be used with `TBFMM`, the `mutexi
 ## Periodicity
 
 The periodicity consists in considering that the simulation box is repeated in all direction, as shown in Figure \autoref{fig:periodicillu}.
-Computing the FMM algorithm with periodicity is done in two steps.
-In the first one, the classical algorithm is used but when we look for the neighbors (or interaction list) of a cell, we take into account periodicity and use the cells at the opposite when we are at the boundary.
-In the second step, we can apply numerical model that compute a potential to apply to the real simulation box, such as the Ewald summation [@407723].
+Computing the FMM algorithm with periodicity is usually done in two steps.
+In the first one, the regular algorithm and tree are used, with the only difference is to takes the cells at the opposite of the simulation box when we look for cells outside the boundaries.
+In the second step, a numerical model is used to compute a potential that represents the world outside the simulation box.
+Such model could be the Ewald summation [@407723].
 
 ![In the periodic FMM, the simulation box is considered to be in the middle of a infinite volume of the same kind.
 \label{fig:periodicillu}](periodicillu.png)
 
 In `TBFMM`, we have implemented a different approach, which is a pure algorithmic strategy [@bramas2016optimization].
-The idea is to consider that the the real simulation is a sub-part of a more simulation box, i.e. that the real tree is a branch of a much larger tree.
+The idea is to consider that the the real simulation box is a sub-part of a larger simulation box, i.e. that the real tree is a branch of a larger tree.
 Then, instead of stopping the FMM algorithm at level 2, we continue up to the root where the multipole part of the root represent the complete simulation box.
 We use it by continuing the FMM algorithm partially above the root by aggregating the cells together multiple times.
 By doing so, we have several advantages.
-This method needs is nothing more than an FMM, hence it simply need an FMM kernel, which is expected to be the same as the one use without periodicity.
-In addition, the accuracy relies on the FMM kernel and the method is generic. 
-Figure \autoref{fig:periodicmerge} shows how the simulation box is repeated.
+This method needs nothing more than an FMM kernel, which is expected to be the same as the one use without periodicity.
+Secondly, the accuracy of the method relies on the FMM kernel.
+Therefore, the method is generic and can work with any FMM kernel. 
+Figure \autoref{fig:periodicmerge} shows how the simulation box is repeated with this method.
 
 ![How the simulation box is repeated when using periodic FMM algorithm.
 \label{fig:periodicmerge}](periodicmerge.png)
