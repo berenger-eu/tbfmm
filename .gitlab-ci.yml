@@ -16,7 +16,7 @@ tbfmm-gcc-no-modules:
     - cd build
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
   stage: nomodules
 
 
@@ -30,7 +30,7 @@ tbfmm-clang-no-modules:
     - cd build
     - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
   stage: nomodules
 
 tbfmm-gcc-inastemp-spetabaru:
@@ -45,7 +45,7 @@ tbfmm-gcc-inastemp-spetabaru:
     - cd build
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
   stage: release
    
 
@@ -61,7 +61,7 @@ tbfmm-clang-inastemp-spetabaru:
     - cd build
     - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
   stage: release
 
 tbfmm-full-coverage:
@@ -76,7 +76,7 @@ tbfmm-full-coverage:
     - cd build
     - CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE make test
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
     - lcov --directory CMakeFiles/ --directory unit-tests/CMakeFiles/ -c -o coverage-rapport.info
     - lcov --list coverage-rapport.info
     - genhtml -o ../coverage -t "Coverage tbfmm" coverage-rapport.info
