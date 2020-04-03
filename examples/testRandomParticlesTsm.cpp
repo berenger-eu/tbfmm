@@ -11,25 +11,40 @@
 #include "kernels/counterkernels/tbfinteractioncounter.hpp"
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
 
+#include "utils/tbfparams.hpp"
+
 
 #include <iostream>
 
 
-int main(){
+int main(int argc, char** argv){
+    if(TbfParams::ExistParameter(argc, argv, {"-h", "--help"})){
+        std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
+        std::cout << "[HELP] where params are:" << std::endl;
+        std::cout << "[HELP]   -h, --help: to get the current text" << std::endl;
+        std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
+        std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        return 1;
+    }
+
     using RealType = double;
     const int Dim = 3;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-    const long int TreeHeight = 8;
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 6);
     const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    const long int NbParticles = 1000;
+    const long int NbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 1000);
+
+    std::cout << "Particles info" << std::endl;
+    std::cout << " - Tree height = " << TreeHeight << std::endl;
+    std::cout << " - Number of particles = " << NbParticles << std::endl;
 
     TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 

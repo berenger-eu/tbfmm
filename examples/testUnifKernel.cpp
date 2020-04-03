@@ -12,6 +12,8 @@
 #include "loader/tbffmaloader.hpp"
 #include "utils/tbfaccuracychecker.hpp"
 
+#include "utils/tbfparams.hpp"
+
 #include <iostream>
 
 // -- DOT NOT REMOVE AS LONG AS LIBS ARE USED --
@@ -19,6 +21,16 @@
 // -- END --
 
 int main(int argc, char** argv){
+    if(TbfParams::ExistParameter(argc, argv, {"-h", "--help"})){
+        std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
+        std::cout << "[HELP] where params are:" << std::endl;
+        std::cout << "[HELP]   -h, --help: to get the current text" << std::endl;
+        std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
+        std::cout << "[HELP]   -f, --file: to pass a particle file (FMA)" << std::endl;
+        std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        return 1;
+    }
+
     using RealType = double;
     const int Dim = 3;
 
@@ -29,11 +41,19 @@ int main(int argc, char** argv){
     std::array<RealType, Dim> BoxWidths;
     std::array<RealType, Dim> BoxCenter;
 
-    if(argc == 2 && std::string(argv[1]) != "--help"){
-        TbfFmaLoader<RealType, Dim, Dim+1> loader(argv[1]);
+    if(TbfParams::ExistParameter(argc, argv, {"-f", "--file"})){
+        std::string filename = TbfParams::GetStr(argc, argv, {"-f", "--file"}, "");
+        if(filename.length() == 0){
+            std::cout << "[ERROR] Cannot pass an empty filename\n" << std::endl;
+            return -1;
+        }
+
+        std::cout << "Will open '" << filename << "' ..." << std::endl;
+
+        TbfFmaLoader<RealType, Dim, Dim+1> loader(filename);
 
         if(!loader.isOpen()){
-            std::cout << "[Error] There is a problem, the given file '" << argv[1] << "' cannot be open." << std::endl;
+            std::cout << "[Error] There is a problem, the given file '" << filename << "' cannot be open." << std::endl;
             return -1;
         }
 
@@ -42,11 +62,11 @@ int main(int argc, char** argv){
         BoxWidths = loader.getBoxWidths();
         BoxCenter = loader.getBoxCenter();
     }
-    else if(argc == 1){
+    else {
         BoxWidths = std::array<RealType, Dim>{{1, 1, 1}};
         BoxCenter = std::array<RealType, Dim>{{0.5, 0.5, 0.5}};
 
-        nbParticles = 1000;
+        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 1000);
 
         TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
 
@@ -60,12 +80,8 @@ int main(int argc, char** argv){
             particlePositions[idxPart][3] = 0.1;
         }
     }
-    else{
-        std::cout << "Only one parameter can be given, and it should be a FMA file." << std::endl;
-        return -1;
-    }
 
-    const long int TreeHeight = 4;
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 4);
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     std::cout << configuration << std::endl;
@@ -73,6 +89,7 @@ int main(int argc, char** argv){
     /////////////////////////////////////////////////////////////////////////////////////////
 
     std::cout << "Particles info" << std::endl;
+    std::cout << " - Tree height = " << TreeHeight << std::endl;
     std::cout << " - Number of particles = " << nbParticles << std::endl;
     std::cout << " - Here are the first particles..." << std::endl;
     for(long int idxPart = 0 ; idxPart < std::min(5L, nbParticles) ; ++idxPart){

@@ -1237,6 +1237,10 @@ We refer to the following documents to know more:
   - Blanchard, P., Coulaud, O., Darve, E., & Bramas, B. (2015, October). Hierarchical Randomized Low-Rank Approximations.
   - Blanchard, P., Coulaud, O.,  Etcheverry, A., Dupuy, L., & Darve, E. (2016, June). An Efficient  Interpolation Based FMM for Dislocation Dynamics Simulations.
 
+## Managing parameters (argc, argv)
+
+We provide utility functions in `utils/tbfparams.hpp` to test and convert values from the command line. One can look at the example to see how to use them.
+
 # Issues
 
 ## Uniform kernel cannot be used

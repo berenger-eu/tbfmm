@@ -12,25 +12,40 @@
 #include "kernels/counterkernels/tbfinteractiontimer.hpp"
 #include "algorithms/periodic/tbfalgorithmperiodictoptree.hpp"
 
+#include "utils/tbfparams.hpp"
+
 
 #include <iostream>
 
 
-int main(){
+int main(int argc, char** argv){
+    if(TbfParams::ExistParameter(argc, argv, {"-h", "--help"})){
+        std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
+        std::cout << "[HELP] where params are:" << std::endl;
+        std::cout << "[HELP]   -h, --help: to get the current text" << std::endl;
+        std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
+        std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        return 1;
+    }
+
     using RealType = double;
     const int Dim = 3;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-    const long int TreeHeight = 5;
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 4);
     const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    const long int NbParticles = 100000;
+    const long int NbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 10000);
+
+    std::cout << "Particles info" << std::endl;
+    std::cout << " - Tree height = " << TreeHeight << std::endl;
+    std::cout << " - Number of particles = " << NbParticles << std::endl;
 
     TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
@@ -72,6 +87,7 @@ int main(){
     /// Compute the FMM with the test kernel with different idxExtraLevel
     //////////////////////////////////////////////////////////////////////////
 
+    // In a real simulation, idxExtraLevel is fixed
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){
         using KernelClass = TbfTestKernel<RealType, SpacialSystemPeriodic>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic>;
@@ -109,6 +125,7 @@ int main(){
     /// we can print the number of interactions at each iteration.
     //////////////////////////////////////////////////////////////////////////
 
+    // In a real simulation, idxExtraLevel is fixed
     for(long int idxExtraLevel = -1 ; idxExtraLevel < 5 ; ++idxExtraLevel){ // Same as above but with interaction counter
         using KernelClass = TbfInteractionCounter<TbfTestKernel<RealType, SpacialSystemPeriodic>>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpacialSystemPeriodic>;
