@@ -166,7 +166,10 @@ In the current version of `TBFMM`,  the `P2P` operator of the two kernels that a
 In Figure \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
 The given results have been computed using the `uniform` kernel on a X CPU.
 
-![Caption for example figure.\label{fig:design}](performance.png)
+![Parallel efficiency for `TBFMM` using the SPETABARU runtime system and the uniform kernel (order = 8).
+Test cases: two simulations of one and ten millions of particles randomly distributed in a cube.
+ Hardware: 2 × Intel Xeon Gold 6240 CPU at 2.60GHz with 16 cores each and cache of sizes L1/32K, L2/1024K, L3/25344K.
+\label{fig:performance}](results_csv.png)
 
 # Conclusion & Perspective
 

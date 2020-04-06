@@ -1270,6 +1270,28 @@ Ensure that no protective keys are in the source file `@TBF_USE_...` or that the
 
 We currently have a bug when using OpenMP and GCC. We get a segmentation fault, and we currently think that it is a bug in the compiler (Versions 7 or 8, we do not know for newer versions). It usually works with Clang.
 
+## Cmake error
+
+If the following error happens during the cmake stage:
+
+```bash
+CMake Error in CMakeLists.txt:
+  Target "exampleEmptyKernel" requires the language dialect "CXX17" , but
+  CMake does not know the compile flags to use to enable it.
+```
+
+This means that the cmake is too old.
+
+In fact, we need to use the CXX standard configuration:
+
+```bash
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+```
+
+
+
 # Pesperctive
 
 TBFMM will be extended with MPI and GPUs.

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function execute(){
-    all_lines="nb_particles,height,nb_threads,block_size,exec_time,build_time,algo_name"
+    all_lines="\"nbparticles\",\"height\",\"nbthreads\",\"blocksize\",\"exectime\",\"buildtime\",\"algoname\""
     
     for nb_particles_height in "1000000:5:128" "10000000:6:256" ; do
         nb_particles=$(echo $nb_particles_height | cut -d':' -f 1)
@@ -18,7 +18,7 @@ function execute(){
             build_time=$(echo "$result" | grep "Build the tree in" | cut -d' ' -f 5 | cut -d's' -f 1)
             algo_name=$(echo "$result" | grep "Algorithm name" | cut -d' ' -f 3)
                         
-            line="$nb_particles,$height,$nb_threads,$block_size,$exec_time,$build_time,$algo_name"
+            line="$nb_particles,$height,$nb_threads,$block_size,$exec_time,$build_time,\"$algo_name\""
             echo "$line"
             all_lines="$all_lines\n$line"
         done
