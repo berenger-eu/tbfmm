@@ -62,6 +62,10 @@ public:
         return treeSource.getNbParticles() + treeTarget.getNbParticles();
     }
 
+    long int getNbElementsPerGroup() const{
+        return nbElementsPerBlock;
+    }
+
     const SpacialConfiguration& getSpacialConfiguration() const{
         return configuration;
     }
@@ -259,13 +263,13 @@ public:
         for (long int idxLevel = 0 ; idxLevel < inAlgo.configuration.getTreeHeight() ; ++idxLevel) {
             inStream << " -- level:" << idxLevel << "\n";
             for(const auto& cellGroup : inAlgo.cellBlocks[idxLevel]){
-                inStream << (*cellGroup) << "\n";
+                inStream << (cellGroup) << "\n";
             }
         }
 
         inStream << " -- Leaf groups:" << "\n";
         for(const auto& leafGroup : inAlgo.particleGroups){
-            inStream << (*leafGroup) << "\n";
+            inStream << (leafGroup) << "\n";
         }
         return inStream;
     }

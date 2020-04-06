@@ -25,6 +25,7 @@ int main(int argc, char** argv){
         std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
         std::cout << "[HELP]   -f, --file: to pass a particle file (FMA)" << std::endl;
         std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        std::cout << "[HELP]   -nc, --no-check: avoid comparing FMM results with direct computation" << std::endl;
         return 1;
     }
 
@@ -118,11 +119,13 @@ int main(int argc, char** argv){
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // Here we put the kernel in the heap to make sure not to overflow the stack
-    std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));
+    std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
+    std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
 
     {
         TbfTimer timerExecute;
@@ -135,7 +138,7 @@ int main(int argc, char** argv){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    {
+    if(!TbfParams::ExistParameter(argc, argv, {"-nc", "--no-check"})){
         std::array<RealType*, 4> particles;
         for(auto& vec : particles){
             vec = new RealType[nbParticles]();

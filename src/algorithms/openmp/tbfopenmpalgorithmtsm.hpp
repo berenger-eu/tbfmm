@@ -373,6 +373,10 @@ public:
     static int GetNbThreads(){
         return omp_get_max_threads();
     }
+
+    static const char* GetName(){
+        return "TbfOpenmpAlgorithmTsm";
+    }
 };
 
 #endif

@@ -254,6 +254,10 @@ public:
     static int GetNbThreads(){
         return 1;
     }
+
+    static const char* GetName(){
+        return "TbfAlgorithmTsm";
+    }
 };
 
 #endif

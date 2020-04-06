@@ -282,6 +282,7 @@ The tree needs four parameters to be instanciated:
 - the positions of the particles, which must be a container that supports `std::size` and which has two dimensions. The first one is the index of the particles, and the second one the index of the positions. For example, we classically use `std::vector<std::array<RealType, Dim>>`. The order of the particles in the array is used as an index that is given every time the particles are used. The first particle has index 0, etc.
 - the size of the blocks (`NbElementsPerBlock`) [optional]
   If no values is passed to the constructor, then the block size is selected based on the particles positions and number of CPU cores (`TbfBlockSizeFinder`).
+  The default value can be override by the `TBFMM_BLOCK_SIZE` environment variable.
 - a Boolean to choose the parent/children blocking strategies (`OneGroupPerParent`). [optional]
   When this value is set to `true` the blocking strategy will try to set one parent group per child group.
   There will be potentially 2 parent groups because the first cells of the child group may have the same parent as the last cell of the previous group.
@@ -498,7 +499,7 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 // TbfTransferStages
 ```
 
-
+Both SPETABARU and OpenMP based algorithm can have the number of threads to use given by the environment variable `OMP_NUM_THREADS` and the binding with `OMP_PROC_BIND`.
 
 # How-to
 

@@ -310,6 +310,10 @@ public:
     static int GetNbThreads(){
         return SpUtils::DefaultNumThreads();
     }
+
+    static const char* GetName(){
+        return "TbfSmSpetabaruAlgorithm";
+    }
 };
 
 #endif

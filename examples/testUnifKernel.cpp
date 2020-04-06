@@ -28,6 +28,7 @@ int main(int argc, char** argv){
         std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
         std::cout << "[HELP]   -f, --file: to pass a particle file (FMA)" << std::endl;
         std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        std::cout << "[HELP]   -nc, --no-check: avoid comparing FMM results with direct computation" << std::endl;
         return 1;
     }
 
@@ -138,22 +139,26 @@ int main(int argc, char** argv){
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
     FInterpMatrixKernelR<RealType> interpolator;
     AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
+    std::cout << "Algorithm name " << algorithm.GetName() << std::endl;
 
     TbfTimer timerExecute;
 
     algorithm.execute(tree);
 
     timerExecute.stop();
-    std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
+    std::cout << "Execute FMM in " << timerExecute.getElapsed() << "s" << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    {
+    if(!TbfParams::ExistParameter(argc, argv, {"-nc", "--no-check"})){
+        std::cout << "Check results..." << std::endl;
+
         std::array<RealType*, 4> particles;
         for(auto& vec : particles){
             vec = new RealType[nbParticles]();

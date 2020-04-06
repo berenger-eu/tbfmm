@@ -5,6 +5,7 @@
 
 #include <thread>
 #include <set>
+#include <sstream>
 
 namespace TbfBlockSizeFinder{
 
@@ -12,6 +13,13 @@ template <class RealType, class ParticleContainer, class SpaceIndexType = TbfDef
 int Estimate(const ParticleContainer& inParticlePositions,
              const TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>& inConfiguration,
              const int inNbThreads = static_cast<int>(std::thread::hardware_concurrency())){
+    if(getenv("TBFMM_BLOCK_SIZE")){
+        std::istringstream iss(getenv("TBFMM_BLOCK_SIZE"),std::istringstream::in);
+        int blockSize = -1;
+        iss >> blockSize;
+        if( /*iss.tellg()*/ iss.eof() ) return blockSize;
+    }
+
     using IndexType = typename SpaceIndexType::IndexType;
 
     SpaceIndexType spaceSystem(inConfiguration);
@@ -31,6 +39,13 @@ int EstimateTsm(const ParticleContainerSource& inParticlePositionsSource,
                 const ParticleContainerTarget& inParticlePositionsTarget,
              const TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>& inConfiguration,
              const int inNbThreads = static_cast<int>(std::thread::hardware_concurrency())){
+    if(getenv("TBFMM_BLOCK_SIZE")){
+        std::istringstream iss(getenv("TBFMM_BLOCK_SIZE"),std::istringstream::in);
+        int blockSize = -1;
+        iss >> blockSize;
+        if( /*iss.tellg()*/ iss.eof() ) return blockSize;
+    }
+
     using IndexType = typename SpaceIndexType::IndexType;
 
     SpaceIndexType spaceSystem(inConfiguration);
