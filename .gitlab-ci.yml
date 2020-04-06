@@ -18,7 +18,7 @@ tbfmm-gcc-inastemp-spetabaru:
     - cd build
     - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 ./unit-tests/utest-testkernel-spetabaru-float
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=1 ./unit-tests/utest-testkernel-spetabaru-float
   stage: release
    
 
@@ -34,7 +34,7 @@ tbfmm-clang-inastemp-spetabaru:
     - cd build
     - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 ./unit-tests/utest-testkernel-spetabaru-float
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=1 ./unit-tests/utest-testkernel-spetabaru-float
   stage: release
 
 tbfmm-full-coverage:
@@ -49,7 +49,7 @@ tbfmm-full-coverage:
     - cd build
     - CXX=g++-7 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON ..
     - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 ./unit-tests/utest-testkernel-spetabaru-float
+    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=1 ./unit-tests/utest-testkernel-spetabaru-float
     - lcov --directory CMakeFiles/ --directory unit-tests/CMakeFiles/ -c -o coverage-rapport.info
     - lcov --list coverage-rapport.info
     - genhtml -o ../coverage -t "Coverage tbfmm" coverage-rapport.info
