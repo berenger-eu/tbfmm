@@ -1,10 +1,9 @@
 #!/bin/bash
 
 function execute(){
-    # "1000000:5" "10000000:6"
     all_lines="nb_particles,height,nb_threads,exec_time,build_time,algo_name"
     
-    for nb_particles_height in "1000:3" ; do
+    for nb_particles_height in "1000000:5" "10000000:6" ; do
         nb_particles=$(echo $nb_particles_height | cut -d':' -f 1)
         height=$(echo $nb_particles_height | cut -d':' -f 2)
         
