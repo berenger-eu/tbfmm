@@ -80,7 +80,7 @@ int main(int argc, char** argv){
     TreeClass tree(configuration, particlePositionsSource, particlePositionsTarget);
 
     timerBuildTree.stop();
-    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -91,7 +91,7 @@ int main(int argc, char** argv){
     algorithm.execute(tree);
 
     timerExecute.stop();
-    std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+    std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
 
     return 0;
 }

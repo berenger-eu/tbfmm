@@ -77,7 +77,7 @@ int main(int argc, char** argv){
     TreeClass tree(configuration, particlePositions);
 
     timerBuildTree.stop();
-    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
 
     {
         using KernelClass = TbfTestKernel<RealType>;
@@ -89,7 +89,7 @@ int main(int argc, char** argv){
         algorithm.execute(tree);
 
         timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+        std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
     }
     /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter
@@ -103,7 +103,7 @@ int main(int argc, char** argv){
         algorithm.execute(tree);
 
         timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+        std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
 
         // Print the counter's result
         auto counters = typename KernelClass::ReduceType();
@@ -126,7 +126,7 @@ int main(int argc, char** argv){
         algorithm.execute(tree);
 
         timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+        std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
 
         // Print the counter's result
         auto timers = typename KernelClass::ReduceType();
@@ -149,7 +149,7 @@ int main(int argc, char** argv){
         algorithm.execute(tree);
 
         timerExecute.stop();
-        std::cout << "Execute in " << timerExecute.getElapsed() << std::endl;
+        std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
 
         // Print the counter's result
         auto counters = typename KernelClass::TbfInteractionCounter::ReduceType();

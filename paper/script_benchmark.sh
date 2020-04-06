@@ -10,7 +10,9 @@ function execute(){
         
         for nb_threads in 1 2 4 8 16 ; do
             echo "$nb_threads"
-            OMP_PROC_BIND=true OMP_NUM_THREADS=$nb_threads ./testUnifKernel -nb $nb_particles -th $height -nc
+            OMP_PROC_BIND=true OMP_NUM_THREADS=$nb_threads result=$(./testUnifKernel -nb $nb_particles -th $height -nc)
+            exec_time=$(echo "$result" | grep "Execute in")
+            build_time=$(echo "$result" | grep "Build the tree in")
         done
     done
 }

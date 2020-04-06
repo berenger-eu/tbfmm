@@ -118,7 +118,7 @@ int main(int argc, char** argv){
     TreeClass tree(configuration, TbfUtils::make_const(particlePositions));
 
     timerBuildTree.stop();
-    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
+    std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
     std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
