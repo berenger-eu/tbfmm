@@ -62,8 +62,12 @@ public:
         return treeSource.getNbParticles() + treeTarget.getNbParticles();
     }
 
-    long int getNbElementsPerGroup() const{
-        return nbElementsPerBlock;
+    long int getNbElementsPerGroupSource() const{
+        return treeSource.getNbElementsPerGroup();
+    }
+
+    long int getNbElementsPerGroupTarget() const{
+        return treeTarget.getNbElementsPerGroup();
     }
 
     const SpacialConfiguration& getSpacialConfiguration() const{
