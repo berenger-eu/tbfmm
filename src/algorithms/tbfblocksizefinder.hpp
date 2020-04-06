@@ -31,7 +31,7 @@ int Estimate(const ParticleContainer& inParticlePositions,
         allIndexes.insert(index);
     }
 
-    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*inNbThreads)));
+    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*2)));
 }
 
 template <class RealType, class ParticleContainerSource, class ParticleContainerTarget, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
@@ -62,7 +62,7 @@ int EstimateTsm(const ParticleContainerSource& inParticlePositionsSource,
         allIndexes.insert(index);
     }
 
-    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*inNbThreads)));
+    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*2)));
 }
 
 }
