@@ -10,9 +10,9 @@ function execute(){
         echo "nb_particles $nb_particles"
         echo "height $height"
         
-        for nb_threads in 1 2 4 8 16 ; do
+        for nb_threads in 1 2 4 8 16 32 ; do
             echo "$nb_threads"
-            OMP_PROC_BIND=true OMP_NUM_THREADS=$nb_threads result=$(./testUnifKernel -nb $nb_particles -th $height -nc)
+            result=$(OMP_PROC_BIND=true OMP_NUM_THREADS=$nb_threads ./testUnifKernel -nb $nb_particles -th $height -nc)
             exec_time=$(echo "$result" | grep "Execute FMM in" | cut -d' ' -f 4 | cut -d's' -f 1)
             build_time=$(echo "$result" | grep "Build the tree in" | cut -d' ' -f 5 | cut -d's' -f 1)
             algo_name=$(echo "$result" | grep "Algorithm name" | cut -d' ' -f 3)
