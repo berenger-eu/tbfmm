@@ -39,7 +39,7 @@ cd build
 # Run cmake with default options
 cmake ..
 # To enable testing
-cmake cmake -DBUILD_TESTS=ON ..
+cmake -DBUILD_TESTS=ON ..
 # To set FFTW directory from cmake config (or set one of the environement variables FFTW_DIR or FFTWDIR)
 cmake -DFFTW_ROOT=path-to-fftw ..
 # To build in debug
