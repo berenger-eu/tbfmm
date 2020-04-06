@@ -6,33 +6,6 @@ stages:
   - coverage
   - deploy
 
-tbfmm-gcc-no-modules:
-  tags:
-    - medium
-  script:
-    - g++-7 --version
-    - cmake --version
-    - mkdir build
-    - cd build
-    - CXX=g++-7 cmake -DBUILD_TESTS=ON ..
-    - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 ./unit-tests/utest-testkernel-spetabaru-float
-  stage: nomodules
-
-
-tbfmm-clang-no-modules:
-  tags:
-    - medium
-  script:
-    - clang++-8 --version
-    - cmake --version
-    - mkdir build
-    - cd build
-    - CXX=clang++-8 cmake -DBUILD_TESTS=ON ..
-    - make -j 2
-    - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 ./unit-tests/utest-testkernel-spetabaru-float
-  stage: nomodules
-
 tbfmm-gcc-inastemp-spetabaru:
   tags:
     - large
