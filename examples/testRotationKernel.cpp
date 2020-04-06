@@ -126,6 +126,7 @@ int main(int argc, char** argv){
     // Here we put the kernel in the heap to make sure not to overflow the stack
     std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
     std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
+    std::cout << "Number of threads " << algorithm.GetNbThreads() << std::endl;
 
     {
         TbfTimer timerExecute;

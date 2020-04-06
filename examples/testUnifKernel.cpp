@@ -146,6 +146,7 @@ int main(int argc, char** argv){
     FInterpMatrixKernelR<RealType> interpolator;
     AlgorithmClass algorithm(configuration, KernelClass(configuration, &interpolator));
     std::cout << "Algorithm name " << algorithm.GetName() << std::endl;
+    std::cout << "Number of threads " << algorithm.GetNbThreads() << std::endl;
 
     TbfTimer timerExecute;
 
