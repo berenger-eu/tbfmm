@@ -28,18 +28,22 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
         const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
         std::vector<std::array<RealType, Dim>> particlePositions(NbParticles);
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
             particlePositions[idxPart] = randomGenerator.getNewItem();
         }
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         /////////////////////////////////////////////////////////////////////////////////////////
 
         constexpr long int NbDataValuesPerParticle = Dim;
@@ -57,28 +61,37 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         TbfDefaultSpaceIndexType<RealType> spacialSystem(configuration);
 
         {
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             TbfParticlesContainer<RealType, RealType, NbDataValuesPerParticle, long int, NbRhsValuesPerParticle> particles(spacialSystem, particlePositions);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             std::vector<typename TbfDefaultSpaceIndexType<RealType>::IndexType> leafIndexes(particles.getNbLeaves());
 
             for(long int idxLeaf = 0 ; idxLeaf < particles.getNbLeaves() ; ++idxLeaf){
                 leafIndexes[idxLeaf] = particles.getLeafSpacialIndex(idxLeaf);
             }
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
 
             TbfCellsContainer<RealType, MultipoleClass, LocalClass> cells(leafIndexes, spacialSystem);
         }
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
         if(TreeHeight > 2){
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             AlgorithmClass algorithm(configuration);
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2M | TbfAlgorithmUtils::TbfM2M | TbfAlgorithmUtils::TbfM2L);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             tree.applyToAllLeaves([this, &tree, NbParticles, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> /*particleRhsPtr*/){
                 auto groupForCell = tree.findGroupWithCell(TreeHeight-1, leafHeader.spaceIndex);
@@ -93,6 +106,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
 
                 UASSERTEEQUAL(multipoleData[0], leafHeader.nbParticles);
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
 
             tree.applyToAllCells([this, &spacialSystem,&tree, TreeHeight](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> cellMultipole,
@@ -114,6 +128,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                     UASSERTEEQUAL((*cellMultipole).get()[0], totalSum);
                 }
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
 
             tree.applyToAllCells([this, &spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> /*cellMultipole*/,
@@ -129,14 +144,19 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                 }
                 UASSERTEEQUAL((*cellLocalr).get()[0], totalSum);
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
         }
 
         {
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             AlgorithmClass algorithm(configuration);
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             tree.applyToAllLeaves([this, &tree, &spacialSystem, TreeHeight](auto&& leafHeader, const long int* /*particleIndexes*/,
                                   const std::array<RealType*, Dim> /*particleDataPtr*/, const std::array<long int*, 1> particleRhsPtr){
                 auto indexes = spacialSystem.getNeighborListForIndex(leafHeader.spaceIndex, TreeHeight-1);
@@ -155,13 +175,18 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                     UASSERTEEQUAL(particleRhsPtr[0][idxPart], totalSum);
                 }
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
         }
 
         {
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
 
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             AlgorithmClass algorithm(configuration);
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             algorithm.execute(tree);
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
 
             tree.applyToAllCells([this, &spacialSystem,&tree](const long int inLevel, auto&& cellHeader,
                                  const std::optional<std::reference_wrapper<MultipoleClass>> /*cellMultipole*/,
@@ -187,6 +212,7 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                 }
                 UASSERTEEQUAL((*cellLocalr).get()[0], totalSum);
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
 
 
             tree.applyToAllLeaves([this, NbParticles](auto&& leafHeader, const long int* /*particleIndexes*/,
@@ -195,14 +221,19 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                     UASSERTEEQUAL(particleRhsPtr[0][idxPart], NbParticles-1);
                 }
             });
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
         }
     }
 
     void TestBasic() {
         for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
+            std::cout << "[INFO] line " << __LINE__ << std::endl;
             for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+                std::cout << "[INFO] line " << __LINE__ << std::endl;
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
+                    std::cout << "[INFO] line " << __LINE__ << std::endl;
                     for(long int idxTreeHeight = 1 ; idxTreeHeight < 5 ; ++idxTreeHeight){
+                        std::cout << "[INFO] line " << __LINE__ << std::endl;
                         CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                     }
                 }
