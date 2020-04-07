@@ -117,6 +117,7 @@ Also, the tree class provides different methods to iterate on the cells/leaves a
 As stated in the objectives, `TBFMM` is a tool for scientists from physics and applied mathematics to create new kernels.
 `TBFMM` offers a convenient way to customize the kernel and to benefit from the underlying parallelization engine automatically.
 With this aim, a user has to create a new kernel that respects an interface, as described by the package documentation.
+The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548,doi:10.1063/1.468354,doi:10.1063/1.472369,haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast,blanchard2015hierarchical,blanchard2016efficient].
 
 
 ## Parallelization
