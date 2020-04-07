@@ -122,7 +122,7 @@ class TestTestKernelPeriodic : public UTester< TestTestKernelPeriodic<AlgorithmC
         }
 
 
-        for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
+        for(long int idxNbParticles = 1 ; idxNbParticles <= 1000 ; idxNbParticles *= 10){
             for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
                     const long int idxTreeHeight = 3;
