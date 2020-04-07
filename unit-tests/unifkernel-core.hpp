@@ -28,15 +28,21 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
         const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
         const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
+        
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
 
         const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         /////////////////////////////////////////////////////////////////////////////////////////
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         TbfRandom<RealType, Dim> randomGenerator(configuration.getBoxWidths());
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         std::vector<std::array<RealType, Dim+1>> particlePositions(NbParticles);
 
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
         for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
             auto pos = randomGenerator.getNewItem();
             particlePositions[idxPart][0] = pos[0];
@@ -44,6 +50,7 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
             particlePositions[idxPart][2] = pos[2];
             particlePositions[idxPart][3] = RealType(0.01);
         }
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
 
         /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -80,8 +87,10 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
         /////////////////////////////////////////////////////////////////////////////////////////
 
         TbfTimer timerBuildTree;
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
 
         TreeClass tree(configuration, TbfUtils::make_const(particlePositions), NbElementsPerBlock, OneGroupPerParent);
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
 
         timerBuildTree.stop();
         std::cout << "Build the tree in " << timerBuildTree.getElapsed() << std::endl;
@@ -173,9 +182,13 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
 
     void TestBasic() {
         for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
             for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
                     for(long int idxTreeHeight = 1 ; idxTreeHeight < 4 ; ++idxTreeHeight){
+        std::cout << "[INFO] line " << __LINE__ << std::endl;
                         CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                     }
                 }
