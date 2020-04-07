@@ -200,11 +200,21 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
 
     void TestBasic() {
         for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
-            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+            for(const long int idxNbElementsPerBlock : std::vector<long int>{{100, 10000000}}){
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
                     for(long int idxTreeHeight = 1 ; idxTreeHeight < 5 ; ++idxTreeHeight){
                         CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                     }
+                }
+            }
+        }
+
+
+        for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
+            for(const long int idxNbElementsPerBlock : std::vector<long int>{{1, 100, 10000000}}){
+                for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
+                    const long int idxTreeHeight = 3;
+                    CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
                 }
             }
         }
