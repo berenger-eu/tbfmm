@@ -66,7 +66,7 @@ This is because some stages of the FMM have a small degree of parallelism (for i
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
 Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and it has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
 
-In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method.
+In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
 This allows us to move each block anywhere on the memory nodes and to declare the dependencies on each sub-part.
 A schematic view of the group-tree is given in Figure \autoref{fig:blocktree}.
@@ -165,7 +165,7 @@ In the current version of `TBFMM`,  the `P2P` operator of the two kernels that a
 # Performance
 
 In Figure \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
-The given results have been computed using the `uniform` kernel on a X CPU.
+The given results have been computed using the `uniform` kernel.
 
 ![Parallel efficiency for `TBFMM` using the SPETABARU runtime system and the uniform kernel (order = 8).
 Test cases: two simulations of one and ten millions of particles randomly distributed in a cube.
