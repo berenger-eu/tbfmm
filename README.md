@@ -1292,6 +1292,17 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 
 
+Same if one sees the following error:
+
+```bash
+CMake Error at CMakeLists.txt:4 (cmake_policy):
+  Policy "CMP0074" is not known to this version of CMake.
+```
+
+This would mean that the cmake used is too old.
+
+
+
 # Pesperctive
 
 TBFMM will be extended with MPI and GPUs.
