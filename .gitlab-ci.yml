@@ -86,7 +86,7 @@ tbfmm-full-coverage:
   stage: coverage
   only:
     - master
-  timeout: 2 hours
+  timeout: 3 hours
 
 pages:
   stage: deploy
