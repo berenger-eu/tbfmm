@@ -194,6 +194,7 @@ class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, TestAlgori
     }
 
     void TestBasic() {
+#ifndef TBF_USE_COVERAGE // Too slow on the CI
         for(long int idxNbParticles = 1 ; idxNbParticles <= 10000 ; idxNbParticles *= 10){
             for(const long int idxNbElementsPerBlock : std::vector<long int>{{100, 10000000}}){
                 for(const bool idxOneGroupPerParent : std::vector<bool>{{true, false}}){
@@ -212,6 +213,13 @@ class TestUnifKernelTsm : public UTester< TestUnifKernelTsm<RealType, TestAlgori
                 }
             }
         }
+#else
+        const long int idxNbParticles = 1000;
+        const long int idxNbElementsPerBlock = 100;
+        const bool idxOneGroupPerParent = false;
+        const long int idxTreeHeight = 3;
+        CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
+#endif
     }
 
     void SetTests() {

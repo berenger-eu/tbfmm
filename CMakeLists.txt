@@ -34,7 +34,10 @@ if( USE_COVERAGE )
     # Then one can use these commande:
     # lcov --directory CMakeFiles/ -c -o coverage-rapport.info
     # genhtml -o ./coverage -t "Coverage example" coverage-rapport.info
+    list(APPEND TBF_USE_LIST COVERAGE)
 endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE COVERAGE)
 
 #################################################
 
