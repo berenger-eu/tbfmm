@@ -122,7 +122,7 @@ private:
             M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             // widthAtLevel represents half of the size of a box
-            RealType widthAtLevel = boxWidth/2;
+            RealType widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
             for( int idxLevel = 0 ; idxLevel < treeHeight - 1 ; ++idxLevel){
                 // b is the parent-child distance = norm( vec(widthAtLevel,widthAtLevel,widthAtLevel))
