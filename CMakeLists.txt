@@ -25,6 +25,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TBFMM_EXTRA_FLAG}")
 
 #################################################
 
+set(TBF_USE_LIST "")
+set(TBF_USE_LIST_AVAILABLE "")
+
+#################################################
+
 option(USE_COVERAGE "Should be ON to enable code coverage" OFF)
 
 if( USE_COVERAGE )
@@ -38,11 +43,6 @@ if( USE_COVERAGE )
 endif()
 
 list(APPEND TBF_USE_LIST_AVAILABLE COVERAGE)
-
-#################################################
-
-set(TBF_USE_LIST "")
-set(TBF_USE_LIST_AVAILABLE "")
 
 #################################################
 
