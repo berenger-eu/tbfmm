@@ -437,11 +437,6 @@ class TestUnifKernel : public UTester< TestUnifKernel<RealType, TestAlgorithmCla
             }
         }
 #else
-        const long int idxNbParticles = 1000;
-        const long int idxNbElementsPerBlock = 10;
-        const bool idxOneGroupPerParent = false;
-        const long int idxTreeHeight = 2;
-        CorePart(idxNbParticles, idxNbElementsPerBlock, idxOneGroupPerParent, idxTreeHeight);
 #endif
     }
 
