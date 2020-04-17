@@ -27,12 +27,12 @@ bibliography: paper.bib
 
 # Summary
 
-`TBFMM` is a high-performance package that implements the parallel fast multipole method in modern `C++17`.
+`TBFMM` is a high-performance package that implements the parallel fast multipole method in modern `C++17`. 
+
+[comment]: détailler "l'acronyme, je devine (`TBFMM` , for *Template Based* FMM, is a high-performance ..."
+
 `TBFMM` was designed to be easily customized thanks to `C++` templates and fine control of the `C++` classes inter-dependencies.
-Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
-Specifically, `TBFMM` can be used to accelerate research in HPC to study parallelization/optimization and scheduling.
-However, it can also effectively be used as a simulation toolbox for scientists in physics or applied mathematics.
-It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
+Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies. As such, it can effectively be used as a simulation toolbox for scientists in physics or applied mathematics. It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library. Besides, `TBFMM` can also provide an interesting use case for the HPC research community regarding parallelization, optimization and scheduling of applications handling irregular data structures.
 
 # Background
 
@@ -50,8 +50,7 @@ The FMM was later extended for different types of physical simulations and diffe
 The FMM algorithm is based on six operators with names that respect the format `X2Y`, where `X` represents the source of the operator and `Y` the destination.
 The operators are `P2M`, `M2M`, `M2L`, `L2L`, `L2P` and `P2P`, where `P` means particle, `M` multipole and `L` local.
 The term particle is used for a legacy reason, but it represents the basic interaction elements that interact and for which we want to approximate the interactions.
-The multipole part represents the aggregation of potential, i.e. it represents what is emitted by a sub-part of the simulation box.
-Whereas the local part represents the outside that is emitted onto a sub-part of the simulation box.
+The multipole part represents the aggregation of potential, i.e. it represents what is emitted by a sub-part of the simulation box, whereas the local part represents the outside that is emitted onto a sub-part of the simulation box.
 The different operators are schematized in Figure \autoref{fig:fmm}.
 
 ![Illustration of the FMM algorithm.
@@ -64,11 +63,16 @@ Some strategies for parallelizing over multiple distributed memory nodes have be
 However, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism with a significant workload available from the early beginning of each iteration (for instance the `P2P` in the direct pass).
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
-Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and it has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
+Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
+
+[comment] # (A ce moment là, je pense qu'il n'a pas encore été dit que task-based ca doit faire penser à multi-threading, par opposition a distributed computing sur plusieurs hosts. Il faudrait peut être poser ça avant? une ref à une implémentation MPI est donnée avant mais il n'est pas dit comment TBFMM va se positionner)
 
 In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
 This allows us to move each block anywhere on the memory nodes and to declare the dependencies on each sub-part.
+
+[comment] # (memory nodes: qu'est ce que c'est ? cela fait penser à du distribué. )
+
 A schematic view of the group-tree is given in Figure \autoref{fig:blocktree}.
 
 ![Caption for example figure.\label{fig:blocktree}](grouptree.png)
