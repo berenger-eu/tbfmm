@@ -57,10 +57,10 @@ The different operators are schematized in Figure \autoref{fig:fmm}.
 
 Because the FMM is a fundamental building block for many types of simulation, its parallelization has already been investigated.
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
-However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
+However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism with a significant workload available from the early beginning of each iteration (for instance the `P2P` in the direct pass).
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
-Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
+Moreover, the task-based method is well designed for handling heterogeneous architecture [doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
 
 In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
@@ -86,7 +86,11 @@ These have been the main motivations to re-implement a lightweight FMM library f
 
 However, the interface of the kernels is very similar in both libraries, such that creating a kernel for `ScalFMM` or `TBFMM` and porting it to the other library is straightforward.
 
+
+
 # Features
+
+
 
 ## Genericity
 
@@ -103,11 +107,15 @@ The algorithm has to be selected among different variants (sequential, parallel 
 
 
 
+
+
 ## Tree
 
 `TBFMM` uses the group-tree where several cells of the same level are managed together.
 Users can select the size of the groups, which impacts the size of the tasks, however, `TBFMM` also provides a simple heuristic to automatically find a size, which should provide efficient executions.
 Also, the tree class provides different methods to iterate on the cells/leaves as any container, such that it is possible to work on the elements of the tree with an abstraction mechanism and without knowing how it is implemented internally.
+
+
 
 ## Kernel
 
@@ -115,6 +123,7 @@ As stated in the objectives, `TBFMM` is a tool for scientists from physics and a
 `TBFMM` offers a convenient way to customize the kernel and to benefit from the underlying parallelization engine automatically.
 With this aim, a user has to create a new kernel that respects an interface, as described by the package documentation.
 The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548,doi:10.1063/1.468354,doi:10.1063/1.472369,haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast,blanchard2015hierarchical,blanchard2016efficient].
+
 
 
 ## Parallelization
@@ -126,6 +135,8 @@ On the other hand, `SPETABARU` is our task-based runtime system that we use for 
 The data accesses of the FMM operators in `write` are usually commutative [@7912335].
 While `SPETABARU` supports commutative `write` access, `OpenMP` only supports it from version 5 with the `mutexinout` data access.
 `OpenMP` version 5 is currently not fully supported by the compilers, however, when a compiler that supports this access will be used with `TBFMM`, the `mutexinout` will be activated automatically.
+
+
 
 ## Periodicity
 
@@ -151,6 +162,8 @@ Figure \autoref{fig:periodicmerge} shows how the simulation box is repeated with
 ![How the simulation box is repeated when using a periodic FMM algorithm.
 \label{fig:periodicmerge}](periodicmerge.png)
 
+
+
 ## Vectorization (Inastemp)
 
 When implementing a kernel, some parts can rely on well-optimized numerical libraries, such as BLAS or FFTW, however, others might be implemented directly in `C/C++`.
@@ -158,6 +171,8 @@ In this case, it usually provides a significant improvement in performance to ve
 With this aim, `TBFMM` can include a vectorization library called `Inastemp` [@bramas2017inastemp] by simply cloning the corresponding `Git` sub-module.
 Using `Inastemp`, it is possible to write a single code with an abstract vector data type and to select at compile time the desired instruction set depending on the CPU (`SSE`, `AVX`, `SVE`, etc.).
 In the current version of `TBFMM`,  the `P2P` operator of the two kernels that are provided for demonstration is vectorized with `Inastemp`.
+
+
 
 # Performance
 
@@ -169,6 +184,8 @@ Test cases: two simulations of one and ten millions of particles randomly distri
  Hardware: 2 × Intel Xeon Gold 6240 CPU at 2.60GHz with 16 cores each and cache of sizes L1/32K, L2/1024K, L3/25344K.
 \label{fig:performance}](results_csv.png)
 
+
+
 # Conclusion & Perspective
 
 `TBFMM` is a lightweight FMM library that could be used for research in HPC and applied mathematics.
@@ -177,8 +194,11 @@ Indeed, we would like to offer an elegant way for users to add GPU kernels while
 We also plan to provide an `MPI` version to support distributed memory parallelization shortly.
 
 
+
 # Acknowledgements
 
 Acknowledgment: Experiments presented in this paper were carried out using the PlaFRIM experimental testbed, supported by Inria, CNRS (LABRI and IMB), Université de Bordeaux, Bordeaux INP and Conseil Régional d'Aquitaine.
+
+
 
 # References
