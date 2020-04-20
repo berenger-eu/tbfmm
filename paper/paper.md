@@ -10,8 +10,6 @@ authors:
   - name: Berenger Bramas
     orcid: 0000-0003-0281-9709
     affiliation: "1, 2, 3"
-  - name: Stephane Genaud
-    affiliation: "2, 3, 4"
 affiliations:
  - name: CAMUS Team, Inria Nancy
    index: 1
@@ -19,20 +17,19 @@ affiliations:
    index: 2
  - name: ICPS Team, ICube
    index: 3
- - name: Enseeiht
-   index: 4
 date: 26 march 2020
 bibliography: paper.bib
 ---
 
 # Summary
 
-`TBFMM` is a high-performance package that implements the parallel fast multipole method in modern `C++17`. 
-
-[comment]: détailler "l'acronyme, je devine (`TBFMM` , for *Template Based* FMM, is a high-performance ..."
-
+`TBFMM`, for task-based FMM, is a high-performance package that implements the parallel fast multipole method (FMM) in modern `C++17`. 
+It implements parallel strategies for multicore architectures, i.e. to run on a single computing node.
 `TBFMM` was designed to be easily customized thanks to `C++` templates and fine control of the `C++` classes inter-dependencies.
-Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies. As such, it can effectively be used as a simulation toolbox for scientists in physics or applied mathematics. It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library. Besides, `TBFMM` can also provide an interesting use case for the HPC research community regarding parallelization, optimization and scheduling of applications handling irregular data structures.
+Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
+As such, it can effectively be used as a simulation toolbox for scientists in physics or applied mathematics.
+It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
+Besides, `TBFMM` can also provide an interesting use case for the HPC research community regarding parallelization, optimization and scheduling of applications handling irregular data structures.
 
 # Background
 
@@ -60,18 +57,14 @@ The different operators are schematized in Figure \autoref{fig:fmm}.
 
 Because the FMM is a fundamental building block for many types of simulation, its parallelization has already been investigated.
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
-However, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
+However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs~[doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism with a significant workload available from the early beginning of each iteration (for instance the `P2P` in the direct pass).
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
 Moreover, the task-based method is well designed for handling heterogeneous architecture~[doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
 
-[comment] # (A ce moment là, je pense qu'il n'a pas encore été dit que task-based ca doit faire penser à multi-threading, par opposition a distributed computing sur plusieurs hosts. Il faudrait peut être poser ça avant? une ref à une implémentation MPI est donnée avant mais il n'est pas dit comment TBFMM va se positionner)
-
 In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
 This allows us to move each block anywhere on the memory nodes and to declare the dependencies on each sub-part.
-
-[comment] # (memory nodes: qu'est ce que c'est ? cela fait penser à du distribué. )
 
 A schematic view of the group-tree is given in Figure \autoref{fig:blocktree}.
 
