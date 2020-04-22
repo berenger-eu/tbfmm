@@ -86,11 +86,7 @@ These have been the main motivations to re-implement a lightweight FMM library f
 
 However, the interface of the kernels is very similar in both libraries, such that creating a kernel for `ScalFMM` or `TBFMM` and porting it to the other library is straightforward.
 
-
-
 # Features
-
-
 
 ## Genericity
 
@@ -105,17 +101,11 @@ The `Types` of each class should be templatized, at the exception of the types o
 The algorithm has to be selected among different variants (sequential, parallel OpenMP or parallel SPETABARU).
 \label{fig:design}](./design.png)
 
-
-
-
-
 ## Tree
 
 `TBFMM` uses the group-tree where several cells of the same level are managed together.
 Users can select the size of the groups, which impacts the size of the tasks, however, `TBFMM` also provides a simple heuristic to automatically find a size, which should provide efficient executions.
 Also, the tree class provides different methods to iterate on the cells/leaves as any container, such that it is possible to work on the elements of the tree with an abstraction mechanism and without knowing how it is implemented internally.
-
-
 
 ## Kernel
 
@@ -123,8 +113,6 @@ As stated in the objectives, `TBFMM` is a tool for scientists from physics and a
 `TBFMM` offers a convenient way to customize the kernel and to benefit from the underlying parallelization engine automatically.
 With this aim, a user has to create a new kernel that respects an interface, as described by the package documentation.
 The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548,doi:10.1063/1.468354,doi:10.1063/1.472369,haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast,blanchard2015hierarchical,blanchard2016efficient].
-
-
 
 ## Parallelization
 
@@ -135,8 +123,6 @@ On the other hand, `SPETABARU` is our task-based runtime system that we use for 
 The data accesses of the FMM operators in `write` are usually commutative [@7912335].
 While `SPETABARU` supports commutative `write` access, `OpenMP` only supports it from version 5 with the `mutexinout` data access.
 `OpenMP` version 5 is currently not fully supported by the compilers, however, when a compiler that supports this access will be used with `TBFMM`, the `mutexinout` will be activated automatically.
-
-
 
 ## Periodicity
 
@@ -162,8 +148,6 @@ Figure \autoref{fig:periodicmerge} shows how the simulation box is repeated with
 ![How the simulation box is repeated when using a periodic FMM algorithm.
 \label{fig:periodicmerge}](periodicmerge.png)
 
-
-
 ## Vectorization (Inastemp)
 
 When implementing a kernel, some parts can rely on well-optimized numerical libraries, such as BLAS or FFTW, however, others might be implemented directly in `C/C++`.
@@ -171,8 +155,6 @@ In this case, it usually provides a significant improvement in performance to ve
 With this aim, `TBFMM` can include a vectorization library called `Inastemp` [@bramas2017inastemp] by simply cloning the corresponding `Git` sub-module.
 Using `Inastemp`, it is possible to write a single code with an abstract vector data type and to select at compile time the desired instruction set depending on the CPU (`SSE`, `AVX`, `SVE`, etc.).
 In the current version of `TBFMM`,  the `P2P` operator of the two kernels that are provided for demonstration is vectorized with `Inastemp`.
-
-
 
 # Performance
 
@@ -184,8 +166,6 @@ Test cases: two simulations of one and ten millions of particles randomly distri
  Hardware: 2 × Intel Xeon Gold 6240 CPU at 2.60GHz with 16 cores each and cache of sizes L1/32K, L2/1024K, L3/25344K.
 \label{fig:performance}](results_csv.png)
 
-
-
 # Conclusion & Perspective
 
 `TBFMM` is a lightweight FMM library that could be used for research in HPC and applied mathematics.
@@ -193,12 +173,8 @@ We will include it in our benchmarks to evaluate scheduling strategies, but also
 Indeed, we would like to offer an elegant way for users to add GPU kernels while delegating most of the complexity to `TBFMM` and `SPETABARU`.
 We also plan to provide an `MPI` version to support distributed memory parallelization shortly.
 
-
-
 # Acknowledgements
 
 Acknowledgment: Experiments presented in this paper were carried out using the PlaFRIM experimental testbed, supported by Inria, CNRS (LABRI and IMB), Université de Bordeaux, Bordeaux INP and Conseil Régional d'Aquitaine.
-
-
 
 # References
