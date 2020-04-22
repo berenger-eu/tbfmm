@@ -9,6 +9,8 @@ TBFMM uses C++ templates heavily. It is not required to master templates in orde
 
 TBFMM is under MIT license, however, some code related to the rotation and the uniform kernels (src/kernels/[rotation|uniform]), are under CeCILL-C license. Using TBFMM without one of these two kernels is under MIT, as zero part of these kernels will be involved.
 
+A preprint to cite TBFMM is available here: https://hal.inria.fr/hal-02550688
+
 # Compilation
 
 TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM has been tested with the following compilers:
