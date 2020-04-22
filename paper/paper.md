@@ -42,7 +42,7 @@ In addition, the algorithm also requires that the kernel to approximate far inte
 Providing an approximation kernel for a given physical equation can be challenging. 
 Internally, the FMM is usually implemented with a tree that is mapped over the simulation box.
 A cell, i.e. a node of the tree, represents a part of the simulation box and is used by the algorithm to factorize the interactions between elements.
-The FMM was later extended for different types of physical simulations and different approximation kernels [@SABARIEGO2004403,pham2012fast,sabariego2004fast,frangi2003coupled,barba2011exafmm,malhotra2015pvfmm,darve2004fast,darve2013optimizing,blanchard2016efficient,blanchard2015fast].
+The FMM was later extended for different types of physical simulations and different approximation kernels [@SABARIEGO2004403,@pham2012fast,@sabariego2004fast,@frangi2003coupled,@barba2011exafmm,@malhotra2015pvfmm,@darve2004fast,@darve2013optimizing,@blanchard2016efficient,@blanchard2015fast].
 
 The FMM algorithm is based on six operators with names that respect the format `X2Y`, where `X` represents the source of the operator and `Y` the destination.
 The operators are `P2M`, `M2M`, `M2L`, `L2L`, `L2P` and `P2P`, where `P` means particle, `M` multipole and `L` local.
@@ -57,10 +57,10 @@ The different operators are schematized in Figure \autoref{fig:fmm}.
 
 Because the FMM is a fundamental building block for many types of simulation, its parallelization has already been investigated.
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
-However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [doi:10.1137/130915662].
+However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [@doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism with a significant workload available from the early beginning of each iteration (for instance the `P2P` in the direct pass).
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
-Moreover, the task-based method is well designed for handling heterogeneous architecture [doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [agullo:hal-01387482].
+Moreover, the task-based method is well designed for handling heterogeneous architecture [@doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [@agullo:hal-01387482].
 
 In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
@@ -112,7 +112,7 @@ Also, the tree class provides different methods to iterate on the cells/leaves a
 As stated in the objectives, `TBFMM` is a tool for scientists from physics and applied mathematics to create new kernels.
 `TBFMM` offers a convenient way to customize the kernel and to benefit from the underlying parallelization engine automatically.
 With this aim, a user has to create a new kernel that respects an interface, as described by the package documentation.
-The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548,doi:10.1063/1.468354,doi:10.1063/1.472369,haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast,blanchard2015hierarchical,blanchard2016efficient].
+The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548,@doi:10.1063/1.468354,@doi:10.1063/1.472369,@haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast,@blanchard2015hierarchical,@blanchard2016efficient].
 
 ## Parallelization
 
