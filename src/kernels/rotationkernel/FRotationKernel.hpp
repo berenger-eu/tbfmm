@@ -66,9 +66,9 @@ private:
 
     ///////////// Translation /////////////////////////////
  #ifdef __NEC__
-    std::shared_ptr<RealType[]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
-    std::shared_ptr<RealType[]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
-    std::shared_ptr<RealType[]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
+    std::shared_ptr<RealType>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
+    std::shared_ptr<RealType> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
+    std::shared_ptr<RealType>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
  #else
     std::shared_ptr<RealType[][P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
     std::shared_ptr<RealType[][343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
@@ -144,9 +144,9 @@ private:
                 for(int idx = 0 ; idx <= P ; ++idx){
 #ifdef __NEC__
                     // coef m2m = (-b)^j/j!
-                    M2MTranslationCoef.get()[idxLevel*(P+1)+idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
+                    ((RealType*)M2MTranslationCoef.get())[idxLevel*(P+1)+idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
                     // coef l2l = b^j/j!
-                    L2LTranslationCoef.get()[idxLevel*(P+1)+idx] = bPowIdx / factorials[idx];
+                    ((RealType*)L2LTranslationCoef.get())[idxLevel*(P+1)+idx] = bPowIdx / factorials[idx];
 
 #else
                     // coef m2m = (-b)^j/j!
@@ -194,7 +194,7 @@ private:
                                 for(int idx = 0 ; idx <= P ; ++idx){
                                     // factorials[j+l] / FMath::pow(b,j+l+1)
 #ifdef __NEC__
-                                    M2LTranslationCoef.get()[(idxLevel*343+position)*(P+1)+idx] = factorials[idx] / bPowIdx1;
+                                    ((RealType*)M2LTranslationCoef.get())[(idxLevel*343+position)*(P+1)+idx] = factorials[idx] / bPowIdx1;
 #else
                                     M2LTranslationCoef[idxLevel][position][idx] = factorials[idx] / bPowIdx1;
 #endif
