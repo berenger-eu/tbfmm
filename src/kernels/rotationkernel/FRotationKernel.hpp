@@ -65,10 +65,15 @@ private:
     RealType factorials[P2+1];             //< This contains the factorial until 2*P+1
 
     ///////////// Translation /////////////////////////////
+ #ifdef __NEC__
+    std::shared_ptr<RealType[]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
+    std::shared_ptr<RealType[]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
+    std::shared_ptr<RealType[]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
+ #else
     std::shared_ptr<RealType[][P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
     std::shared_ptr<RealType[][343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
     std::shared_ptr<RealType[][P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
-
+#endif
     ///////////// Rotation    /////////////////////////////
     std::complex<RealType> rotationExpMinusImPhi[8][SizeArray];  //< This is the vector use for the rotation around z for the M2M (multipole)
     std::complex<RealType> rotationExpImPhi[8][SizeArray];       //< This is the vector use for the rotation around z for the L2L (taylor)
@@ -119,8 +124,13 @@ private:
     void precomputeTranslationCoef(){
         {// M2M & L2L
             // Allocate
+#ifdef __NEC__
+            M2MTranslationCoef.reset(new RealType[(treeHeight-1)*(P+1)]);
+            L2LTranslationCoef.reset(new RealType[(treeHeight-1)*(P+1)]);
+#else
             M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
+#endif
             // widthAtLevel represents half of the size of a box
             RealType widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
@@ -132,10 +142,18 @@ private:
                 // we compute -1^idx iteratively
                 RealType minus_1_pow_idx = 1.0;
                 for(int idx = 0 ; idx <= P ; ++idx){
+#ifdef __NEC__
+                    // coef m2m = (-b)^j/j!
+                    M2MTranslationCoef[idxLevel*(P+1)+idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
+                    // coef l2l = b^j/j!
+                    L2LTranslationCoef[idxLevel*(P+1)+idx] = bPowIdx / factorials[idx];
+
+#else
                     // coef m2m = (-b)^j/j!
                     M2MTranslationCoef[idxLevel][idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
                     // coef l2l = b^j/j!
                     L2LTranslationCoef[idxLevel][idx] = bPowIdx / factorials[idx];
+#endif
                     // increase
                     bPowIdx *= b;
                     minus_1_pow_idx = -minus_1_pow_idx;
@@ -146,7 +164,11 @@ private:
         }
         {// M2L
             // Allocate
+#ifdef __NEC__
             M2LTranslationCoef.reset(new RealType[treeHeight][343][P+1]);
+#else
+            M2LTranslationCoef.reset(new RealType[treeHeight*343*(P+1)]);
+#endif
             // This is the width of a box at each level
             RealType boxWidthAtLevel = widthAtLeafLevel;
             // from leaf level to the root
@@ -171,7 +193,11 @@ private:
                                 RealType bPowIdx1 = b;
                                 for(int idx = 0 ; idx <= P ; ++idx){
                                     // factorials[j+l] / FMath::pow(b,j+l+1)
+#ifdef __NEC__
+                                    M2LTranslationCoef[(idxLevel*343+position)*(P+1)+idx] = factorials[idx] / bPowIdx1;
+#else
                                     M2LTranslationCoef[idxLevel][position][idx] = factorials[idx] / bPowIdx1;
+#endif
                                     bPowIdx1 *= b;
                                 }
                             }
