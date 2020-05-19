@@ -125,8 +125,8 @@ private:
         {// M2M & L2L
             // Allocate
 #ifdef __NEC__
-            M2MTranslationCoef.reset(new RealType[(treeHeight-1)*(P+1)]);
-            L2LTranslationCoef.reset(new RealType[(treeHeight-1)*(P+1)]);
+            M2MTranslationCoef.reset((RealType*)(new RealType[(treeHeight-1)*(P+1)]));
+            L2LTranslationCoef.reset((RealType*)(new RealType[(treeHeight-1)*(P+1)]));
 #else
             M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
@@ -144,9 +144,9 @@ private:
                 for(int idx = 0 ; idx <= P ; ++idx){
 #ifdef __NEC__
                     // coef m2m = (-b)^j/j!
-                    M2MTranslationCoef[idxLevel*(P+1)+idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
+                    M2MTranslationCoef.get()[idxLevel*(P+1)+idx] = minus_1_pow_idx * bPowIdx / factorials[idx];
                     // coef l2l = b^j/j!
-                    L2LTranslationCoef[idxLevel*(P+1)+idx] = bPowIdx / factorials[idx];
+                    L2LTranslationCoef.get()[idxLevel*(P+1)+idx] = bPowIdx / factorials[idx];
 
 #else
                     // coef m2m = (-b)^j/j!
@@ -165,9 +165,9 @@ private:
         {// M2L
             // Allocate
 #ifdef __NEC__
-            M2LTranslationCoef.reset(new RealType[treeHeight][343][P+1]);
+            M2LTranslationCoef.reset((RealType*)(new RealType[treeHeight*343*(P+1)]));
 #else
-            M2LTranslationCoef.reset(new RealType[treeHeight*343*(P+1)]);
+            M2LTranslationCoef.reset(new RealType[treeHeight][343][P+1]);
 #endif
             // This is the width of a box at each level
             RealType boxWidthAtLevel = widthAtLeafLevel;
@@ -194,7 +194,7 @@ private:
                                 for(int idx = 0 ; idx <= P ; ++idx){
                                     // factorials[j+l] / FMath::pow(b,j+l+1)
 #ifdef __NEC__
-                                    M2LTranslationCoef[(idxLevel*343+position)*(P+1)+idx] = factorials[idx] / bPowIdx1;
+                                    M2LTranslationCoef.get()[(idxLevel*343+position)*(P+1)+idx] = factorials[idx] / bPowIdx1;
 #else
                                     M2LTranslationCoef[idxLevel][position][idx] = factorials[idx] / bPowIdx1;
 #endif
