@@ -999,7 +999,7 @@ public:
              const long int inLevel, const CellClassContainer& inLowerCell, CellClass& inOutUpperCell,
              const long int childrenPos[], const long int inNbChildren) const {
         // Get the translation coef for this level (same for all child)
-        const RealType*const coef = M2MTranslationCoef.get()[inLevel];
+        const RealType (&coef)[P+1] = ((RealType(*)[P+1])M2MTranslationCoef.get())[inLevel];
         // A buffer to copy the source w allocated once
         std::complex<RealType> source_w[SizeArray];
         // For all children
@@ -1058,7 +1058,7 @@ public:
         std::complex<RealType> source_w[SizeArray];
         // For all children
         for(int idxNeigh = 0 ; idxNeigh < inNbNeighbors ; ++idxNeigh){
-            const RealType*const coef = M2LTranslationCoef.get()[inLevel][neighPos[idxNeigh]];
+            const RealType (&coef)[P+1] = ((RealType(*)[343][P+1])M2LTranslationCoef.get())[inLevel][neighPos[idxNeigh]];
             // Copy multipole data into buffer
             FMemUtils::copyall(source_w, inInteractingCells[idxNeigh].get(), SizeArray);
 
@@ -1113,7 +1113,7 @@ public:
              const long int inLevel, const CellClass& inUpperCell, CellClassContainer& inOutLowerCell,
              const long int childrenPos[], const long int inNbChildren) {
         // Get the translation coef for this level (same for all chidl)
-        const RealType*const coef = L2LTranslationCoef.get()[inLevel];
+        const RealType (&coef)[P+1] = ((RealType(*)[P+1])L2LTranslationCoef.get())[inLevel];
         // To copy the source local allocated once
         std::complex<RealType> source_u[SizeArray];
         // For all children
