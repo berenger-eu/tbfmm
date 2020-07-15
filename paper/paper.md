@@ -58,7 +58,8 @@ The different operators are schematized in \autoref{fig:fmm}.
 Because the FMM is a fundamental building block for many types of simulation, its parallelization has already been investigated.
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
 However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [@doi:10.1137/130915662].
-This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism with a significant workload available from the early beginning of each iteration (for instance the `P2P` in the direct pass).
+This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism.
+Moreover, the `P2P` in the direct pass has a significant workload available from the early beginning of each iteration.
 The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
 Moreover, the task-based method is well designed for handling heterogeneous architecture [@doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [@agullo:hal-01387482].
 
@@ -68,7 +69,7 @@ This allows us to move each block anywhere on the memory nodes and to declare th
 
 A schematic view of the group-tree is given in \autoref{fig:blocktree}.
 
-![Caption for example figure.\label{fig:blocktree}](grouptree.png)
+![Group-tree schematic view. Several cells/leaves are managed together inside a block. Also, the symbolic, multipole and local data are allocated separately to allow declaring the data accesses on each sub-part.\label{fig:blocktree}](grouptree.png)
 
 # Statement of need
 
@@ -79,7 +80,8 @@ For the same reason, it is difficult for researchers in physics or applied mathe
 Therefore, `TBFMM` can be useful for both communities.
 
 Among the few existing FMM libraries, `ScalFMM` is the closer package to `TBFMM`.
-`ScalFMM` has around 170K lines of code, for only 50K for `TBFMM`, as it supports lots of different parallel strategies, including fork-join implementations, and it contains several experimental methods.
+`ScalFMM` supports lots of different parallel strategies, including fork-join implementations, and it contains several experimental methods.
+Consequently, `ScalFMM` has around 170K lines of code, for only 50K for `TBFMM`.
 Moreover, it needs several external dependencies and does not benefit from the new standard `C++` features that could improve code readability.
 Besides, it only works for 3D problems, whereas `TBFMM` can work for an arbitrary dimension.
 These have been the main motivations to re-implement a lightweight FMM library from scratch that only supports task-based parallelization.
@@ -92,7 +94,7 @@ However, the interface of the kernels is very similar in both libraries, such th
 
 `TBFMM` has a generic design thanks to the heavy use of `C++` templates.
 The tree and the kernel classes are independent of each other and from the algorithm.
-The algorithm has to be templatized in order to know the type of the kernel, and its  `execute`  method has to be templatized with the type of the tree. 
+The algorithm class has to be templatized in order to know the type of the kernel, and its core `execute`  method has to be templatized with the type of the tree. 
 The algorithm takes the elements from the tree and passes it to the kernel, such that a kernel itself never accesses the tree.
 This is illustrated by \autoref{fig:design}.
 
@@ -159,9 +161,11 @@ In the current version of `TBFMM`,  the `P2P` operator of the two kernels that a
 # Performance
 
 In \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
-The given results have been computed using the `uniform` kernel.
+The given results have been computed using the `uniform` kernel and the two runtime systems OpenMP (GNU libomp) and SPETABARU.
+With OpenMP, there is no reduction in the execution time with more than 8 threads, which appears as a significant drop in the parallel efficiency.
+This happens because we use OpenMP 4.5 that does not support `mutexinout`, the commutative data access, hence the resulting degree of parallelism is too limited to feed all the cores available. 
 
-![Parallel efficiency for `TBFMM` using the SPETABARU runtime system and the uniform kernel (order = 8).
+![Parallel efficiency for `TBFMM` using the OpenMP and SPETABARU runtime systems, and the uniform kernel (order = 8).
 Test cases: two simulations of one and ten millions of particles randomly distributed in a cube.
  Hardware: 2 × Intel Xeon Gold 6240 CPU at 2.60GHz with 16 cores each and cache of sizes L1/32K, L2/1024K, L3/25344K.
 \label{fig:performance}](results_csv.png)
