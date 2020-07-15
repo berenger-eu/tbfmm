@@ -48,7 +48,7 @@ The FMM algorithm is based on six operators with names that respect the format `
 The operators are `P2M`, `M2M`, `M2L`, `L2L`, `L2P` and `P2P`, where `P` means particle, `M` multipole and `L` local.
 The term particle is used for a legacy reason, but it represents the basic interaction elements that interact and for which we want to approximate the interactions.
 The multipole part represents the aggregation of potential, i.e. it represents what is emitted by a sub-part of the simulation box, whereas the local part represents the outside that is emitted onto a sub-part of the simulation box.
-The different operators are schematized in Figure \autoref{fig:fmm}.
+The different operators are schematized in \autoref{fig:fmm}.
 
 ![Illustration of the FMM algorithm.
 (a,b,c) The building of the octree.
@@ -66,7 +66,7 @@ In a previous project called `ScalFMM`, we have provided a new hierarchical data
 The two main ideas behind this container are (1) to allocate and manage several cells of the same level together to control the granularity of the tasks, and (2) to store the symbolic data, the multipole data, and the local data in a different memory blocks.
 This allows us to move each block anywhere on the memory nodes and to declare the dependencies on each sub-part.
 
-A schematic view of the group-tree is given in Figure \autoref{fig:blocktree}.
+A schematic view of the group-tree is given in \autoref{fig:blocktree}.
 
 ![Caption for example figure.\label{fig:blocktree}](grouptree.png)
 
@@ -94,7 +94,7 @@ However, the interface of the kernels is very similar in both libraries, such th
 The tree and the kernel classes are independent of each other and from the algorithm.
 The algorithm has to be templatized in order to know the type of the kernel, and its  `execute`  method has to be templatized with the type of the tree. 
 The algorithm takes the elements from the tree and passes it to the kernel, such that a kernel itself never accesses the tree.
-This is illustrated by Figure \autoref{fig:design}.
+This is illustrated by \autoref{fig:design}.
 
 ![`TBFMM` design overview.
 The `Types` of each class should be templatized, at the exception of the types of the kernel where it is optional.
@@ -126,7 +126,7 @@ While `SPETABARU` supports commutative `write` access, `OpenMP` only supports it
 
 ## Periodicity
 
-The periodicity consists of considering that the simulation box is repeated in all directions, as shown by Figure \autoref{fig:periodicillu}.
+The periodicity consists of considering that the simulation box is repeated in all directions, as shown by \autoref{fig:periodicillu}.
 Computing the FMM algorithm with periodicity is usually done in two steps.
 In the first one, the regular algorithm and tree are used, however, when the algorithm needs cells outside of the boundaries, it selects cells at the opposite side of the simulation box.
 In the second step, a numerical model is used to compute a potential that represents the world outside the simulation box.
@@ -143,7 +143,7 @@ By doing so, we have several advantages.
 This method needs nothing more than a FMM kernel, which is expected to be the same as the one used without periodicity.
 Therefore, the method is generic and can work with any FMM kernel.
 Moreover, the accuracy of the method relies fully on the FMM kernel. 
-Figure \autoref{fig:periodicmerge} shows how the simulation box is repeated with this method.
+\autoref{fig:periodicmerge} shows how the simulation box is repeated with this method.
 
 ![How the simulation box is repeated when using a periodic FMM algorithm.
 \label{fig:periodicmerge}](periodicmerge.png)
@@ -158,7 +158,7 @@ In the current version of `TBFMM`,  the `P2P` operator of the two kernels that a
 
 # Performance
 
-In Figure \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
+In \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
 The given results have been computed using the `uniform` kernel.
 
 ![Parallel efficiency for `TBFMM` using the SPETABARU runtime system and the uniform kernel (order = 8).
