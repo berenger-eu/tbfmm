@@ -49,6 +49,10 @@ cmake -DCMAKE_BUILD_TYPE=DEBUG ..
 # Or to build in release
 cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 
+# If a package has been found but should be disabled, this can be done
+# with -DTBFMM_ENABLE_[PACKAGE]=OFF, where PACKAGE can be:
+# SPETABARU, INASTEMP, FFTW, OPENMP
+
 # Update an existing configuration by calling again cmake -D[an option]=[a value] ..
 # or using ccmake ..
 
