@@ -33,7 +33,7 @@ markers = ['o', '^', 's', 'x', 'p', '*', 'd']
 
 bar_width = 0.1
 space_width = 0.25
-figsize=(4, 4)
+figsize=(8, 4)
 maxvaloffset=1
 
 file_extension= ['.pdf', '.png']
@@ -66,8 +66,7 @@ for idx_algoname, algoname in enumerate(all_algoname):
         all_timings = res[(res.algoname == algoname) & (res.nbparticles == nbparticles)].exectime
         all_eff = reference/(all_timings*all_nbthreads)
         
-        ax.plot(all_nbthreads, all_eff, marker=markers[global_config_idx], color=colors[global_config_idx], label='N = ' + str(nbparticles).replace('10000000','10M').replace('1000000','1M'))
-        global_config_idx = global_config_idx + 1
+        ax.plot(all_nbthreads, all_eff, marker=markers[idx_nbparticles], color=colors[idx_algoname], label=str(algoname).replace('TbfSmSpetabaruAlgorithm','SPETABARU').replace('TbfOpenmpAlgorithm','OpenMP 4.5') + ' - N = ' + str(nbparticles).replace('10000000','10M').replace('1000000','1M'))
 
 ax.set_ylabel('Parallel efficiency')
 ax.set_xlabel('Number of threads')
