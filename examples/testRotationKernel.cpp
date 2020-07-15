@@ -26,6 +26,7 @@ int main(int argc, char** argv){
         std::cout << "[HELP]   -f, --file: to pass a particle file (FMA)" << std::endl;
         std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
         std::cout << "[HELP]   -nc, --no-check: avoid comparing FMM results with direct computation" << std::endl;
+        std::cout << "[HELP]   -nbl, --nb-loops: the number of extra loops (FMM iterations)" << std::endl;
         return 1;
     }
 
@@ -205,7 +206,9 @@ int main(int argc, char** argv){
 
     //////////////////////////////////////////////////////////////////////
 
-    for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
+    const long int NbLoops = TbfParams::GetValue<long int>(argc, argv, {"-nbl", "--nb-loops"}, 4);
+
+    for(long int idxLoop = 0 ; idxLoop < NbLoops ; ++idxLoop){
         std::cout << " -- Loop " << idxLoop << std::endl;
 
         TbfTimer timerRebuildTree;
