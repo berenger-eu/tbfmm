@@ -25,21 +25,20 @@ bibliography: paper.bib
 
 `TBFMM`, for task-based FMM, is a high-performance package that implements the parallel fast multipole method (FMM) in modern `C++17`. 
 It implements parallel strategies for multicore architectures, i.e. to run on a single computing node.
-`TBFMM` was designed to be easily customized thanks to `C++` templates and fine control of the `C++` classes inter-dependencies.
+`TBFMM` was designed to be easily customized thanks to `C++` templates and fine control of the `C++` classes' inter-dependencies.
 Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
-As such, it can effectively be used as a simulation toolbox for scientists in physics or applied mathematics.
+As such, it can be used as a simulation toolbox for scientists in physics or applied mathematics.
 It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
 Besides, `TBFMM` can also provide an interesting use case for the HPC research community regarding parallelization, optimization and scheduling of applications handling irregular data structures.
 
 # Background
 
 The fast multipole method [@GREENGARD1987325] has been classified as one of the most important algorithms of the 20th century [@cipra2000best].
-This algorithm was originally designed to compute pair-wise interactions between `N` particles, which belong to the class of n-body problems.
+The FMM algorithm was designed to compute pair-wise interactions between `N` particles, which belong to the class of n-body problems.
 It reduces the complexity from a quadratic (`N` elements interact with `N` elements) to a quasi-linear complexity.
 The central idea of the FMM is to avoid computing the interactions between all the elements by approximating the interactions between elements that are far enough.
 To make this possible, the algorithm requires the potential of the interactions to decrease as the distance between interacting elements increases.
-In addition, the algorithm also requires that the kernel to approximate far interaction exists.
-Providing an approximation kernel for a given physical equation can be challenging. 
+In addition, the algorithm also requires that the kernel to approximate far interaction exists as providing an approximation kernel for a physical equation can be challenging. 
 Internally, the FMM is usually implemented with a tree that is mapped over the simulation box.
 A cell, i.e. a node of the tree, represents a part of the simulation box and is used by the algorithm to factorize the interactions between elements.
 The FMM was later extended for different types of physical simulations and different approximation kernels [@SABARIEGO2004403;@pham2012fast;@sabariego2004fast;@frangi2003coupled;@barba2011exafmm;@malhotra2015pvfmm;@darve2004fast;@darve2013optimizing;@blanchard2016efficient;@blanchard2015fast].
@@ -59,8 +58,8 @@ Because the FMM is a fundamental building block for many types of simulation, it
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
 However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [@doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism.
-Moreover, the `P2P` in the direct pass has a significant workload available from the early beginning of each iteration.
-The task-based method is capable of interleaving the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
+For instance, the `P2P` in the direct pass has a significant workload available from the early beginning of each iteration.
+The task-based method can interleave the different operators, hence to balance the workload across the processing units and to spread the critical parts over time.
 Moreover, the task-based method is well designed for handling heterogeneous architecture [@doi:10.1002/cpe.3723] and has demonstrated a promising performance on distributed memory platforms too [@agullo:hal-01387482].
 
 In a previous project called `ScalFMM`, we have provided a new hierarchical data structure called group-tree (or block-tree), which is an octree designed for the task-based method [@bramas2016optimization].
@@ -74,9 +73,9 @@ A schematic view of the group-tree is given in \autoref{fig:blocktree}.
 # Statement of need
 
 The FMM is a major algorithm but it remains rare to have it included in HPC benchmarks when studying runtime systems, schedulers or optimizers.
-The main reason is that it is tedious to implement and requires a significant programming effort when using the task-based method together with the group-tree.
+The principal reason is that it is tedious to implement and requires a significant programming effort when using the task-based method together with the group-tree.
 However, it is an interesting, if not unique, algorithm to study irregular/hierarchical scientific method.
-For the same reason, it is difficult for researchers in physics or applied mathematics to implement a complete FMM library and to optimize it for modern hardware, especially if their objective is to focus on approximation kernels.
+For the same reason, it is difficult for researchers in physics or applied mathematics to implement a complete FMM library and to optimize it for modern hardware, especially if their aim is to focus on approximation kernels.
 Therefore, `TBFMM` can be useful for both communities.
 
 Among the few existing FMM libraries, `ScalFMM` is the closer package to `TBFMM`.
@@ -88,7 +87,7 @@ These have been the main motivations to re-implement a lightweight FMM library f
 
 However, the interface of the kernels is very similar in both libraries, such that creating a kernel for `ScalFMM` or `TBFMM` and porting it to the other library is straightforward.
 
-# Features
+# Features
 
 ## Genericity
 
@@ -116,7 +115,7 @@ As stated in the objectives, `TBFMM` is a tool for scientists from physics and a
 With this aim, a user has to create a new kernel that respects an interface, as described by the package documentation.
 The current package contains two FMM kernels, the `rotation` kernel based on the rotation-based operators and the spherical harmonics [@doi:10.1063/1.2194548;@doi:10.1063/1.468354;@doi:10.1063/1.472369;@haigh2011implementation], and the `uniform` kernel based on Lagrange interpolation [@blanchard2015fast;@blanchard2015hierarchical;@blanchard2016efficient].
 
-## Parallelization
+## Parallelization
 
 `TBFMM` has two  task-based parallel algorithms based on two runtime systems: `OpenMP` version 4 [@openmp4] and `SPETABARU` [@10.7717/peerj-cs.183]. 
 Both are optional, such that the library can be compiled even if the compiler does not support `OpenMP` or if the `Git` sub-module for `SPETABARU` has not been activated.
@@ -126,12 +125,12 @@ The data accesses of the FMM operators in `write` are usually commutative [@7912
 While `SPETABARU` supports commutative `write` access, `OpenMP` only supports it from version 5 with the `mutexinout` data access.
 `OpenMP` version 5 is currently not fully supported by the compilers, however, when a compiler that supports this access will be used with `TBFMM`, the `mutexinout` will be activated automatically.
 
-## Periodicity
+## Periodicity
 
 The periodicity consists of considering that the simulation box is repeated in all directions, as shown by \autoref{fig:periodicillu}.
 Computing the FMM algorithm with periodicity is usually done in two steps.
 In the first one, the regular algorithm and tree are used, however, when the algorithm needs cells outside of the boundaries, it selects cells at the opposite side of the simulation box.
-In the second step, a numerical model is used to compute a potential that represents the world outside the simulation box.
+While in the second step, a numerical model is used to compute a potential that represents the world outside the simulation box.
 Such a model could be the Ewald summation [@407723].
 
 ![In the periodic FMM, the simulation box is considered to be in the middle of an infinite volume of the same kind.
@@ -140,7 +139,7 @@ Such a model could be the Ewald summation [@407723].
 In `TBFMM`, we have implemented a different approach, which is a pure algorithmic strategy [@bramas2016optimization].
 The idea is to consider that the real simulation box is a sub-part of a larger simulation box, i.e. that the real tree is a branch of a larger tree.
 Then, instead of stopping the FMM algorithm at level 2, we continue up until the root where the multipole part of the root represents the complete simulation box.
-We use it by continuing the FMM algorithm partially above the root by aggregating the cells together multiple times.
+We use it by continuing the FMM algorithm partially above the root, by aggregating the cells together multiple times.
 By doing so, we have several advantages.
 This method needs nothing more than a FMM kernel, which is expected to be the same as the one used without periodicity.
 Therefore, the method is generic and can work with any FMM kernel.
