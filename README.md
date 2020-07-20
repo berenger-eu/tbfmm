@@ -1,7 +1,14 @@
 [![pipeline status](https://gitlab.inria.fr/bramas/tbfmm/badges/master/pipeline.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 [![coverage report](https://gitlab.inria.fr/bramas/tbfmm/badges/master/coverage.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 
+# Introduction 
+
 TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
+
+Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
+As such, it can be used as a simulation toolbox for **scientists in physics or applied mathematics**.
+It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
+Besides, `TBFMM` can also provide an interesting use case for the **HPC research community** regarding parallelization, optimization and scheduling of applications handling irregular data structures.
 
 The current document is at the same time a classic README but also the main documentation of TBFMM (a copy is available in the Wiki https://gitlab.inria.fr/bramas/tbfmm/-/wikis/home). We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issue if they find a bug or have any question about TBFMM.
 
