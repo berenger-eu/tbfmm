@@ -15,13 +15,21 @@ A preprint to cite TBFMM is available here: https://hal.inria.fr/hal-02550688
 
 [[_TOC_]]
 
-# Compilation
+# Installation instruction
 
 TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM has been tested with the following compilers:
 - GNU g++ (7 and 8) https://gcc.gnu.org/
 - Clang/LLVM (8 and 10) https://llvm.org/
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
+
+## Dependency list
+
+All the dependencies are optional:
+- OpenMP (for parallelization)
+- Inastemp (for P2P vectorization)
+- Spetabaru (for parallelization)
+- FFTW (for the uniform kernel)
 
 ## How to compile
 
@@ -108,7 +116,7 @@ To avoid having to manage external dependencies, SPETABARU is shipped as a git s
 git submodule init deps/spetabaru && git submodule update
 ```
 
-## Files organization
+## Code organization
 
 - CMakeLists.txt: the build configuration
 - deps: the dependencies (inastemp/spetabaru)
