@@ -3,13 +3,17 @@
 
 TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
 
-The current document is at the same time a classic README but also the main documentation of TBFMM. We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issue if they find a bug or have any question about TBFMM.
+The current document is at the same time a classic README but also the main documentation of TBFMM (a copy is available in the Wiki https://gitlab.inria.fr/bramas/tbfmm/-/wikis/home). We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issue if they find a bug or have any question about TBFMM.
 
 TBFMM uses C++ templates heavily. It is not required to master templates in order to use TBFMM but it helps to better understand how things work internally.
 
 TBFMM is under MIT license, however, some code related to the rotation and the uniform kernels (src/kernels/[rotation|uniform]), are under CeCILL-C license. Using TBFMM without one of these two kernels is under MIT, as zero part of these kernels will be involved.
 
 A preprint to cite TBFMM is available here: https://hal.inria.fr/hal-02550688
+
+# Table of contents
+
+[[_TOC_]]
 
 # Compilation
 
@@ -118,7 +122,7 @@ git submodule init deps/spetabaru && git submodule update
 - examples: some examples to use TBFMM
 - unit-tests: tests and stuff for the continuous integration
 
-# TBFMM design
+# TBFMM design and data structures
 
 ## Dimension (DIM)
 
@@ -507,7 +511,7 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 
 Both SPETABARU and OpenMP based algorithm can have the number of threads to use given by the environment variable `OMP_NUM_THREADS` and the binding with `OMP_PROC_BIND`.
 
-# How-to
+# How-to and examples
 
 ## Basic example
 
