@@ -19,7 +19,7 @@ TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM 
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
 
-## How to compile
+## How to compile
 
 TBFMM uses CMake as build system https://cmake.org/
 
@@ -76,11 +76,11 @@ CTEST_OUTPUT_ON_FAILURE=TRUE make test
 
 Can be found here: https://bramas.gitlabpages.inria.fr/tbfmm/
 
-## OpenMP
+## OpenMP
 
 CMake will try to check if OpenMP is supported by the system. If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPETABARU).
 
-## Inastemp
+## Inastemp
 
 Inatemp is a vectorization library that makes it possible to implement a single kernel with an abstract vector data type, which is then compiled for most vectorization instruction sets. It supports SSE, AVX(2), AVX512, ARM SVE, etc. To know more, we refer to https://gitlab.inria.fr/bramas/inastemp
 
@@ -92,7 +92,7 @@ To avoid having to manage external dependencies, Inastemp is shipped as a git su
 git submodule init deps/inastemp && git submodule update
 ```
 
-## SPETABARU
+## SPETABARU
 
 SPETABARU is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, one can have a look at https://gitlab.inria.fr/bramas/spetabaru
 
@@ -104,7 +104,7 @@ To avoid having to manage external dependencies, SPETABARU is shipped as a git s
 git submodule init deps/spetabaru && git submodule update
 ```
 
-## Files organization
+## Files organization
 
 - CMakeLists.txt: the build configuration
 - deps: the dependencies (inastemp/spetabaru)
@@ -135,7 +135,7 @@ The data type used for the spacial configuration and the position should be spec
 using RealType = double;
 ```
 
-## Spacial configuration (TbfSpacialConfiguration)
+## Spacial configuration (TbfSpacialConfiguration)
 
 The description of the spacial environment is saved into the `TbfSpacialConfiguration` class. This class stored the desired height of the tree, the simulation box's width and center.
 ```cpp
@@ -147,7 +147,7 @@ const std::array<RealType, Dim> BoxCenter{{0.5, 0.5, 0.5}};
 const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 ```
 
-## Block/group tree organization
+## Block/group tree organization
 
 TBFMM uses the block/group tree, which is an octree where several cells of the same level are allocated and managed together as a group of cells (or as a memory block). This data structure is described here http://berenger.eu/blog/wp-content/uploads/2016/07/BerengerBramas-thesis.pdf
 
@@ -297,7 +297,7 @@ The tree needs four parameters to be instanciated:
 
 In order to know how to iterate on the tree's elements or how to find a cell/leaf, we refer to the corresponding section of the current document.
 
-## Kernel
+## Kernel
 
 In TBFMM, the kernels must have a specific interface with different methods where the type of the parameters is strict. However, we recommended to use template to facilitate the implementation of a kernel. More precisely, the data types given to the tree (`TbfTree`) could be used directly in the prototype of the kernel, but we advise to use template instead and to create generic kernels. For instance, if one set the multipole part of the cell as being of type `X`, it is clear that `X` will be passed to the P2M/M2M/M2L when the FMM algorithm will be executed. But it is better to use a template to accept `X` as parameter, such that future modifications will not impact the methods' prototypes.
 
@@ -946,7 +946,7 @@ algorithm.execute(tree);
 
 
 
-## Rebuilding the tree
+## Rebuilding the tree
 
 In most applications, the particles move at each iteration (usually their forces are updated during the FMM, and the move happen just after). Therefore, some particles are no longer in the appropriate leaves. In TBFMM, it then requires to rebuild the tree.
 
@@ -1064,11 +1064,11 @@ There is no magical formula to know the perfect height of the tree (the one for 
 
 What could be done is to perform several test and try attempts to find the best tree height: adding one level will add work on the far field (the work above the leaves) and decrease the work at leaf level, while removing one level will do the opposite. Therefore, one should find a good balance between both.
 
-## Select the block size (blocksize)
+## Select the block size (blocksize)
 
 We are currently trying to create a method to find a good blocksize, which is a balance between good granularity of the parallel tasks and the degree of parallelism.
 
-## Creating a new kernel
+## Creating a new kernel
 
 To create a new kernel, we refer to the file `examples/exampleEmptyKernel.cpp` that provides an empty kernel and many comments.
 
@@ -1268,7 +1268,7 @@ This is likely that FFTW has not been found on the system. This could be check b
 
 Considering the test is performed in sequential, one has to make sure the correct height of the tree is used (and try to find the best value) and that there are enough particles.
 
-## Make command builds nothing
+## Make command builds nothing
 
 Ensure that no protective keys are in the source file `@TBF_USE_...` or that they are correct.
 
@@ -1276,7 +1276,7 @@ Ensure that no protective keys are in the source file `@TBF_USE_...` or that the
 
 We currently have a bug when using OpenMP and GCC. We get a segmentation fault, and we currently think that it is a bug in the compiler (Versions 7 or 8, we do not know for newer versions). It usually works with Clang.
 
-## Cmake error
+## Cmake error
 
 If the following error happens during the cmake stage:
 
