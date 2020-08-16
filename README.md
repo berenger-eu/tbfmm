@@ -10,7 +10,7 @@ As such, it can be used as a simulation toolbox for **scientists in physics or a
 It enables users to perform simulations while delegating the data structure, the algorithm and the parallelization to the library.
 Besides, `TBFMM` can also provide an interesting use case for the **HPC research community** regarding parallelization, optimization and scheduling of applications handling irregular data structures.
 
-The current document is at the same time a classic README but also the main documentation of TBFMM (a copy is available in the Wiki https://gitlab.inria.fr/bramas/tbfmm/-/wikis/home). We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issue if they find a bug or have any question about TBFMM.
+The current document is at the same time a classic README but also the main documentation of TBFMM (a copy is available in the Wiki https://gitlab.inria.fr/bramas/tbfmm/-/wikis/home). We try to answer all the questions that users could have regarding implementation and the use of the library. Of course, we invite users to post an issue if they find a bug or have any question about TBFMM. Opening an issue can be done on the gitlab repository (https://gitlab.inria.fr/bramas/tbfmm/) or on the github repository (https://github.com/berenger-eu/tbfmm/).
 
 TBFMM uses C++ templates heavily. It is not required to master templates in order to use TBFMM but it helps to better understand how things work internally.
 
@@ -42,9 +42,14 @@ All the dependencies are optional:
 
 TBFMM uses CMake as build system https://cmake.org/
 
-The build process consists in the following steps: adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to activate them, it is needed to clone their repository before running cmake.
+The build process consists in the following steps: cloning the repository and moving to the corresponding folder, adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to activate them, it is needed to clone their repository before running cmake.
 
 ```bash
+# Cloning the repository
+git clone https://gitlab.inria.fr/bramas/tbfmm.git
+# Moving to the newly created "tbfmm" directory
+cd tbfmm
+
 # To enable SPETABARU and Inastemp
 git submodule init && git submodule update
 # To enable only SPETABARU (run from the main directory)
