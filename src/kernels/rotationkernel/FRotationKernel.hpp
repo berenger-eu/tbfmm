@@ -119,8 +119,10 @@ private:
     void precomputeTranslationCoef(){
         {// M2M & L2L
             // Allocate
-            M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
-            L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
+            typedef RealType  (*M2MTC_Type)[P+1];
+            M2MTranslationCoef.reset(reinterpret_cast<M2MTC_Type>(new RealType[(treeHeight-1)*(P+1)]));
+            typedef RealType  (*L2LTC_Type)[P+1];
+            L2LTranslationCoef.reset(reinterpret_cast<L2LTC_Type>(new RealType[(treeHeight-1)*(P+1)]));
             // widthAtLevel represents half of the size of a box
             RealType widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
@@ -145,8 +147,9 @@ private:
             }
         }
         {// M2L
-            // Allocate
-            M2LTranslationCoef.reset(new RealType[treeHeight][343][P+1]);
+            // Allocate            
+            typedef RealType  (*M2LTC_Type)[343][P+1];
+            M2LTranslationCoef.reset(reinterpret_cast<M2LTC_Type>(new RealType[treeHeight*343*(P+1)]));
             // This is the width of a box at each level
             RealType boxWidthAtLevel = widthAtLeafLevel;
             // from leaf level to the root
