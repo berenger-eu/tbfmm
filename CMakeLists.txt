@@ -12,15 +12,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if(APPLE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+endif(APPLE)
+
 try_compile(COMPILE_RESULT  ${CMAKE_CURRENT_BINARY_DIR}
       "${PROJECT_SOURCE_DIR}/deps/CMakeModules/cppversion.cpp"
       COMPILE_DEFINITIONS "${CMAKE_CXX_FLAGS}"
       OUTPUT_VARIABLE COMPILE_OUTPUT)
 
 if(NOT ${COMPILE_RESULT})
-    message(STATUS "Cannot compile C++17, output is : ${COMPILE_OUTPUT}")
-    message(STATUS "Will add -std=c++17 to the flags and continue anyway")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+    message(STATUS "Cannot compile C++17, output when compiling simple example is :")
+    message(STATUS "${COMPILE_OUTPUT}")
+    message(STATUS "Will continue anyway...")
 endif()
 
 #################################################
