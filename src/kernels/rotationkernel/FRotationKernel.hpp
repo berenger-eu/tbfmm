@@ -6,6 +6,7 @@
 #include <complex>
 
 #include "FSpherical.hpp"
+#include "FSmartPointer.hpp"
 #include "FMemUtils.hpp"
 #include "kernels/unifkernel/FP2PR.hpp"
 
@@ -65,9 +66,11 @@ private:
     RealType factorials[P2+1];             //< This contains the factorial until 2*P+1
 
     ///////////// Translation /////////////////////////////
-    std::shared_ptr<RealType[][P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
-    std::shared_ptr<RealType[][343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
-    std::shared_ptr<RealType[][P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
+    // FSmartPointer should be replaced by shared_ptr when LLVM
+    // will be fixed on Mac OS.
+    FSmartPointer<RealType[P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
+    FSmartPointer<RealType[343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
+    FSmartPointer<RealType[P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
 
     ///////////// Rotation    /////////////////////////////
     std::complex<RealType> rotationExpMinusImPhi[8][SizeArray];  //< This is the vector use for the rotation around z for the M2M (multipole)
