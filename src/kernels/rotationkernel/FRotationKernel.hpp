@@ -6,6 +6,7 @@
 #include <complex>
 
 #include "FSpherical.hpp"
+#include "FSmartPointer.hpp"
 #include "FMemUtils.hpp"
 #include "kernels/unifkernel/FP2PR.hpp"
 
@@ -65,9 +66,11 @@ private:
     RealType factorials[P2+1];             //< This contains the factorial until 2*P+1
 
     ///////////// Translation /////////////////////////////
-    std::shared_ptr<RealType[][P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
-    std::shared_ptr<RealType[][343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
-    std::shared_ptr<RealType[][P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
+    // FSmartPointer should be replaced by shared_ptr when LLVM
+    // will be fixed on Mac OS.
+    FSmartPointer<RealType[P+1]>      M2MTranslationCoef;  //< This contains some precalculated values for M2M translation
+    FSmartPointer<RealType[343][P+1]> M2LTranslationCoef;  //< This contains some precalculated values for M2L translation
+    FSmartPointer<RealType[P+1]>      L2LTranslationCoef;  //< This contains some precalculated values for L2L translation
 
     ///////////// Rotation    /////////////////////////////
     std::complex<RealType> rotationExpMinusImPhi[8][SizeArray];  //< This is the vector use for the rotation around z for the M2M (multipole)
@@ -119,10 +122,8 @@ private:
     void precomputeTranslationCoef(){
         {// M2M & L2L
             // Allocate
-            typedef RealType  (*M2MTC_Type)[P+1];
-            M2MTranslationCoef.reset(reinterpret_cast<M2MTC_Type>(new RealType[(treeHeight-1)*(P+1)]));
-            typedef RealType  (*L2LTC_Type)[P+1];
-            L2LTranslationCoef.reset(reinterpret_cast<L2LTC_Type>(new RealType[(treeHeight-1)*(P+1)]));
+            M2MTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
+            L2LTranslationCoef.reset(new RealType[treeHeight-1][P+1]);
             // widthAtLevel represents half of the size of a box
             RealType widthAtLevel = boxWidth/4;
             // we go from the root to the leaf-1
@@ -147,9 +148,8 @@ private:
             }
         }
         {// M2L
-            // Allocate            
-            typedef RealType  (*M2LTC_Type)[343][P+1];
-            M2LTranslationCoef.reset(reinterpret_cast<M2LTC_Type>(new RealType[treeHeight*343*(P+1)]));
+            // Allocate
+            M2LTranslationCoef.reset(new RealType[treeHeight][343][P+1]);
             // This is the width of a box at each level
             RealType boxWidthAtLevel = widthAtLeafLevel;
             // from leaf level to the root
