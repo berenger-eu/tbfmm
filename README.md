@@ -29,6 +29,7 @@ TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM 
 - Clang/LLVM (8 and 10) https://llvm.org/
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
+SPETABARU needs GNU g++ version 8 or above.
 
 ## Dependency list
 

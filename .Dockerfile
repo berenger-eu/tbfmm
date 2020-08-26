@@ -5,6 +5,7 @@ RUN apt-get update \
     && apt-get install -y apt-transport-https \
     && apt-get install -y wget \
     && apt-get install -y g++-7 \
+    && apt-get install -y g++-8 \
     && apt-get install -y git \
     && apt-get install -y make \
     && wget https://github.com/Kitware/CMake/releases/download/v3.15.6/cmake-3.15.6-Linux-x86_64.sh && chmod +x cmake-3.15.6-Linux-x86_64.sh \
