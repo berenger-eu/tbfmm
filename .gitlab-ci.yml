@@ -68,6 +68,12 @@ tbfmm-full-coverage:
   tags:
     - large
   script:
+    - cd ..
+    - git clone https://github.com/linux-test-project/lcov.git
+    - cd lcov
+    - git checkout v1.14
+    - make install
+    - cd ../tbfmm/
     - g++-8 --version
     - cmake --version
     - git submodule init
@@ -77,9 +83,9 @@ tbfmm-full-coverage:
     - CXX=g++-8 cmake -DCMAKE_BUILD_TYPE=Debug -DUSE_COVERAGE=ON -DBUILD_TESTS=ON ..
     - make -j 2
     - CTEST_OUTPUT_ON_FAILURE=TRUE OMP_PROC_BIND=FALSE OMP_NUM_THREADS=3 make test
-    - lcov --directory CMakeFiles/ --directory unit-tests/CMakeFiles/ -c -o coverage-rapport.info
-    - lcov --list coverage-rapport.info
-    - genhtml -o ../coverage -t "Coverage tbfmm" coverage-rapport.info
+    - /usr/local/bin/lcov --gcov-tool /usr/bin/gcov-8 --directory ./ -c -o coverage-rapport.info
+    - /usr/local/bin/lcov --gcov-tool /usr/bin/gcov-8 --list coverage-rapport.info
+    - /usr/local/bin/genhtml -o ../coverage -t "Coverage example" coverage-rapport.info
   artifacts:
     paths:
       - coverage/
