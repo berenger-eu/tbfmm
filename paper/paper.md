@@ -161,8 +161,12 @@ In the current version of `TBFMM`,  the `P2P` operator of the two kernels that a
 
 In \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for a set of particles that are randomly distributed in a square simulation box.
 The given results have been computed using the `uniform` kernel and the two runtime systems OpenMP (GNU libomp) and SPETABARU.
-With OpenMP, there is no reduction in the execution time with more than 8 threads, which appears as a significant drop in the parallel efficiency.
-This happens because we use OpenMP 4.5 that does not support `mutexinout`, the commutative data access, hence the resulting degree of parallelism is too limited to feed all the cores available. 
+Both implementation are similar; they use the same input data, the same tasks, the same priorities. 
+The only differences are coming from the implementation of the runtime systems, which impact the overhead, and the type of data access they support.
+We remind that OpenMP 4.5 does not support `mutexinout`, the commutative data access.
+In our case, the resulting degree of parallelism is then too limited to feed all the cores available. 
+This is already a problem with 2 threads, and there is even no reduction in the execution time with more than 8 threads, which appears as a significant drop in the parallel efficiency.
+Even so, we believe that it would be possible to improve our OpenMP-based implementation by inserting the tasks differently, instead, we will wait that the OpenMP library implementations support `mutexinout`.
 
 ![Parallel efficiency for `TBFMM` using the OpenMP and SPETABARU runtime systems, and the uniform kernel (order = 8).
 Test cases: two simulations of one and ten millions of particles randomly distributed in a cube.
