@@ -56,6 +56,7 @@ The different operators are schematized in \autoref{fig:fmm}.
 
 Because the FMM is a fundamental building block for many types of simulation, its parallelization has already been investigated.
 Some strategies for parallelizing over multiple distributed memory nodes have been developed using classical HPC technologies like `MPI` [@10.5555/898758] and fork-join threaded libraries [@bramas2016optimization].
+Using these technologies, different projects have created FMM implementations that scale on thousands of computing nodes [@6375552;@malhotra2015pvfmm;@doi:10.1137/18M1173599].
 However, when using a single node, it has been demonstrated that fork-join schemes are less efficient than task-based parallelization on multicore CPUs [@doi:10.1137/130915662].
 This is because some stages of the FMM have a small degree of parallelism (for instance at the top of the tree), while others have a high degree of parallelism.
 For instance, the `P2P` in the direct pass has a significant workload available from the early beginning of each iteration.
