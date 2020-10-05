@@ -30,6 +30,7 @@ TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM 
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
 SPETABARU needs GNU g++ version 8 or above.
+Intel compiler (icpc) can be used to compile the code, however, its OpenMP library is currently not compatible with TBFMM (tested on version `19.0.4.243`).
 
 ## Dependency list
 
