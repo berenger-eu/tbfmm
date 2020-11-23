@@ -18,6 +18,7 @@
 
 
 int main(int argc, char** argv){
+    // Manage the arguments, and print the help if needed
     if(TbfParams::ExistParameter(argc, argv, {"-h", "--help"})){
         std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
         std::cout << "[HELP] where params are:" << std::endl;
@@ -30,16 +31,21 @@ int main(int argc, char** argv){
         return 1;
     }
 
+    // The data type used for the positions and in the computation
+    // (could have been different but it is not the case here)
     using RealType = double;
+    // In 3D
     const int Dim = 3;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    // We store the positions + a physical value in a vector
     std::vector<std::array<RealType, Dim+1>> particlePositions;
     long int nbParticles;
     std::array<RealType, Dim> BoxWidths;
     std::array<RealType, Dim> BoxCenter;
 
+    // We load a file if "-f" is given
     if(TbfParams::ExistParameter(argc, argv, {"-f", "--file"})){
         std::string filename = TbfParams::GetStr(argc, argv, {"-f", "--file"}, "");
         TbfFmaLoader<RealType, Dim, Dim+1> loader(filename);
@@ -54,6 +60,7 @@ int main(int argc, char** argv){
         BoxWidths = loader.getBoxWidths();
         BoxCenter = loader.getBoxCenter();
     }
+    // Otherwise we generate random positions
     else {
         BoxWidths = std::array<RealType, Dim>{{1, 1, 1}};
         BoxCenter = std::array<RealType, Dim>{{0.5, 0.5, 0.5}};
@@ -73,13 +80,16 @@ int main(int argc, char** argv){
         }
     }
 
+    // The height of the tree
     const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 4);
+    // The spacial configuration of our system
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
     std::cout << configuration << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    // Simply print some data
     std::cout << "Particles info" << std::endl;
     std::cout << " - Tree height = " << TreeHeight << std::endl;
     std::cout << " - Number of particles = " << nbParticles << std::endl;
@@ -91,6 +101,7 @@ int main(int argc, char** argv){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    // Fix our templates
     const unsigned int P = 12;
     using ParticleDataType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim+1;
@@ -116,6 +127,7 @@ int main(int argc, char** argv){
 
     TbfTimer timerBuildTree;
 
+    // Build the tree
     TreeClass tree(configuration, TbfUtils::make_const(particlePositions));
 
     timerBuildTree.stop();
@@ -132,6 +144,7 @@ int main(int argc, char** argv){
     {
         TbfTimer timerExecute;
 
+        // Execute a full FMM (near + far fields)
         algorithm->execute(tree);
 
         timerExecute.stop();
@@ -140,6 +153,7 @@ int main(int argc, char** argv){
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
+    // Check the results against direct computation
     if(!TbfParams::ExistParameter(argc, argv, {"-nc", "--no-check"})){
         std::array<RealType*, 4> particles;
         for(auto& vec : particles){

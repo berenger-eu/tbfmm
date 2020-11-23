@@ -604,6 +604,8 @@ for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
 }
 ```
 
+The file `examples/testRotationKernel.cpp` includes some comments related to these different stages/operations.
+
 ## Changing the cells
 
 If someone follows the design with a full template specification of the classes, then changing the type of the cells simply requires to change the corresponding templates. Potentially, if the methods of the kernel are not template-based, it might be needed to update them to match the new cell type.
@@ -1333,7 +1335,22 @@ CMake Error at CMakeLists.txt:4 (cmake_policy):
 
 This would mean that the cmake used is too old.
 
+# Contribution, issues and support
 
+## How to contribute
+
+Contributions are accepted either on Inria's Gitlab (but creating an account there can only be done with an invitation) or on Github.
+Fork the `TBFMM` repository and open a merge request (https://gitlab.inria.fr/bramas/tbfmm/-/merge_requests) or a pull request (https://github.com/berenger-eu/tbfmm/pulls).
+Any contribution should take into account that we try to minimize the external dependencies' footprint.
+
+## Reporting issues or problems
+
+We track issues at https://gitlab.inria.fr/bramas/tbfmm/-/issues and https://github.com/berenger-eu/tbfmm/issues.
+
+## Seeking support
+
+It is perfectly fine to open an issue to get support.
+Otherwise, one should directly contact the author at Berenger.Bramas[[@]]inria.fr
 
 # Pesperctive
 

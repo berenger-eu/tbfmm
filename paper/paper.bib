@@ -12,13 +12,13 @@ author = "L Greengard and V Rokhlin",
 abstract = "An algorithm is presented for the rapid evaluation of the potential and force fields in systems involving large numbers of particles whose interactions are Coulombic or gravitational in nature. For a system of N particles, an amount of work of the order O(N2) has traditionally been required to evaluate all pairwise interactions, unless some approximation or truncation method is used. The algorithm of the present paper requires an amount of work proportional to N to evaluate all interactions to within roundoff error, making it considerably more practical for large-scale problems encountered in plasma physics, fluid dynamics, molecular dynamics, and celestial mechanics."
 }
 
-@INPROCEEDINGS{407723,  author={V. {Rokhlin} and S. {Wandzura}},  booktitle={Proceedings of IEEE Antennas and Propagation Society International Symposium and URSI National Radio Science Meeting},  title={The fast multipole method for periodic structures},   year={1994},  volume={1},  number={},  pages={424-426 vol.1}, doi="10.1109/aps.1994.407723"}
+@INPROCEEDINGS{407723,  author={V. {Rokhlin} and S. {Wandzura}},  booktitle={{Proceedings of IEEE Antennas and Propagation Society International Symposium and URSI National Radio Science Meeting}},  title={The fast multipole method for periodic structures},   year={1994},  volume={1},  number={},  pages={424-426 vol.1}, doi="10.1109/aps.1994.407723"}
 
-@ARTICLE{7912335,  author={E. {Agullo} and O. {Aumage} and B. {Bramas} and O. {Coulaud} and S. {Pitoiset}},  journal={IEEE Transactions on Parallel and Distributed Systems},  title={Bridging the Gap Between OpenMP and Task-Based Runtime Systems for the Fast Multipole Method},   year={2017},  volume={28},  number={10},  pages={2794-2807}, doi="10.1109/tpds.2017.2697857"}
+@ARTICLE{7912335,  author={E. {Agullo} and O. {Aumage} and B. {Bramas} and O. {Coulaud} and S. {Pitoiset}},  journal={{IEEE Transactions on Parallel and Distributed Systems}},  title={{Bridging the Gap Between OpenMP and Task-Based Runtime Systems for the Fast Multipole Method}},   year={2017},  volume={28},  number={10},  pages={2794-2807}, doi="10.1109/tpds.2017.2697857"}
 
 @misc {openmp4,
-    author = "OpenMP Architecture Review Board",
-    title  = "OpenMP Application Program Interface",
+    author = {{OpenMP Architecture Review Board}},
+    title  = {{OpenMP Application Program Interface}},
     month  = "jul",
     year   = "2013",
     url    = "https://www.openmp.org/wp-content/uploads/OpenMP4.0.0.pdf"
@@ -26,7 +26,7 @@ abstract = "An algorithm is presented for the rapid evaluation of the potential 
 
 @techreport{10.5555/898758,
 author = {Forum, Message P},
-title = {MPI: A Message-Passing Interface Standard},
+title = {{MPI: A Message-Passing Interface Standard}},
 year = {1994},
 publisher = {University of Tennessee},
 address = {USA}
@@ -97,7 +97,7 @@ year = {2016}
 
 @article{doi:10.1137/130915662,
 author = {Agullo, Emmanuel and Bramas, BÃ©renger and Coulaud, Olivier and Darve, Eric and Messner, Matthias and Takahashi, Toru},
-title = {Task-Based FMM for Multicore Architectures},
+title = {{Task-Based FMM for Multicore Architectures}},
 journal = {SIAM Journal on Scientific Computing},
 volume = {36},
 number = {1},
@@ -134,29 +134,51 @@ eprint = {
   year={2000}
 }
 
-@article{blanchard2015fast,
-  title={Fast hierarchical algorithms for generating Gaussian random fields},
-  author={Blanchard, Pierre and Coulaud, Olivier and Darve, Eric},
-  year={2015}
+@techreport{blanchard2015fast,
+  TITLE = {{Fast hierarchical algorithms for generating Gaussian random fields}},
+  AUTHOR = {Blanchard, Pierre and Coulaud, Olivier and Darve, Eric},
+  URL = {https://hal.inria.fr/hal-01228519},
+  TYPE = {Research Report},
+  INSTITUTION = {{Inria Bordeaux Sud-Ouest}},
+  YEAR = {2015},
+  MONTH = Nov,
+  KEYWORDS = {H 2 -methods ; FMM ; FFT ; randomized SVD ; covariance kernel matrices ; multivariate Gaussian random variables},
+  PDF = {https://hal.inria.fr/hal-01228519v1/file/RR-8811.pdf},
+  HAL_ID = {hal-01228519},
+  HAL_VERSION = {v1},
 }
 
 
 @inproceedings{blanchard2016efficient,
-  title={An Efficient Interpolation Based FMM for Dislocation Dynamics Simulations},
-  author={Blanchard, Pierre and Coulaud, Olivier and Etcheverry, Arnaud and Dupuy, Laurent and Darve, Eric},
-  year={2016}
+  TITLE = {{An Efficient Interpolation Based FMM for Dislocation Dynamics Simulations}},
+  AUTHOR = {Blanchard, Pierre and Coulaud, Olivier and Etcheverry, Arnaud and Dupuy, Laurent and Darve, Eric},
+  URL = {https://hal.archives-ouvertes.fr/hal-01334842},
+  BOOKTITLE = {{Platform for Advanced Scientific Computing}},
+  ADDRESS = {Lausanne, Switzerland},
+  ORGANIZATION = {{USI and CSCS and EPFL}},
+  YEAR = {2016},
+  MONTH = Jun,
+  HAL_ID = {hal-01334842},
+  HAL_VERSION = {v1},
 }
 
 
 @inproceedings{darve2013optimizing,
-  title={Optimizing the Black-box FMM for Smooth and Oscillatory Kernels},
-  author={Darve, Eric and Messner, Matthias and Schanz, Martin and Coulaud, Olivier},
-  year={2013}
+  TITLE = {{Optimizing the Black-box FMM for Smooth and Oscillatory Kernels}},
+  AUTHOR = {Darve, Eric and Messner, Matthias and Schanz, Martin and Coulaud, Olivier},
+  URL = {https://hal.inria.fr/hal-00799885},
+  BOOKTITLE = {{SIAM Conference on Computational Science and Engineering (SIAM CSE 2013)}},
+  ADDRESS = {Boston, United States},
+  YEAR = {2013},
+  MONTH = Feb,
+  KEYWORDS = {optimisation ; Fast multipole method ; symmetry ; BLAS},
+  HAL_ID = {hal-00799885},
+  HAL_VERSION = {v1},
 }
 
 
 @article{darve2004fast,
-  title={A fast multipole method for Maxwell equations stable at all frequencies},
+  title={{A fast multipole method for Maxwell equations stable at all frequencies}},
   author={Darve, Eric and Hav{\'e}, Pascal},
   journal={Philosophical Transactions of the Royal Society of London. Series A: Mathematical, Physical and Engineering Sciences},
   volume={362},
@@ -168,7 +190,7 @@ eprint = {
 
 
 @article{malhotra2015pvfmm,
-  title={PVFMM: A parallel kernel independent FMM for particle and volume potentials},
+  title={{PVFMM: A parallel kernel independent FMM for particle and volume potentials}},
   author={Malhotra, Dhairya and Biros, George},
   journal={Communications in Computational Physics},
   volume={18},
@@ -197,15 +219,16 @@ eprint = {
 }
 
 
-@article{sabariego2004fast,
+@phdthesis{sabariego2004fast,
   title={The fast multipole method for electromagnetic field computation in numerical and physical hybrid systems},
-  author={Sabariego, Ruth},
-  year={2004}
+  author={Vazquez Sabariego, Ruth},
+  year={2004},
+  school={Universit{\'e} de Li{\`e}ge}
 }
 
 
 @article{pham2012fast,
-  title={Fast multipole method applied to Symmetric Galerkin boundary element method for 3D elasticity and fracture problems},
+  title={{Fast multipole method applied to Symmetric Galerkin boundary element method for 3D elasticity and fracture problems}},
   author={Pham, Anh Duc and Mouhoubi, Saida and Bonnet, Marc and Chazallon, Cyrille},
   journal={Engineering analysis with boundary elements},
   volume={36},
@@ -216,33 +239,27 @@ eprint = {
   doi="10.1016/j.enganabound.2012.07.004"
 }
 
-@article{blanchard2015fast,
-  title={Fast hierarchical algorithms for generating Gaussian random fields},
-  author={Blanchard, Pierre and Coulaud, Olivier and Darve, Eric},
-  year={2015}
-}
 
 @inproceedings{blanchard2015hierarchical,
-  title={Hierarchical Randomized Low-Rank Approximations},
-  author={Blanchard, Pierre and Coulaud, Olivier and Darve, E and Bramas, B},
-  year={2015}
-}
-
-@inproceedings{blanchard2016efficient,
-  title={An Efficient Interpolation Based FMM for Dislocation Dynamics Simulations},
-  author={Blanchard, Pierre and Coulaud, Olivier and Etcheverry, Arnaud and Dupuy, Laurent and Darve, Eric},
-  year={2016}
+  TITLE = {{Hierarchical Randomized Low-Rank Approximations}},
+  AUTHOR = {Blanchard, Pierre and Coulaud, Olivier and Darve, E and Bramas, B},
+  URL = {https://hal.archives-ouvertes.fr/hal-01255724},
+  BOOKTITLE = {{SIAM Conference on Applied Linear Algebra (SIAM LA)}},
+  ADDRESS = {Atlanta, United States},
+  ORGANIZATION = {{SIAM}},
+  YEAR = {2015},
+  MONTH = Oct,
+  HAL_ID = {hal-01255724},
+  HAL_VERSION = {v1},
 }
 
 
 @misc{haigh2011implementation,
-  title={Implementation of rotation-based operators for Fast Multipole Method in X10},
+  title={{Implementation of rotation-based operators for fast multipole method in X10}},
   author={Haigh, Andrew},
   year={2011},
   publisher={Austrailian National University}
 }
-
-
 
 
 @article{doi:10.1063/1.472369,
@@ -300,7 +317,7 @@ eprint = {
 
 @article{doi:10.1063/1.2194548,
 author = {Dachsel,Holger },
-title = {Fast and accurate determination of the Wigner rotation matrices in the fast multipole method},
+title = {{Fast and accurate determination of the Wigner rotation matrices in the fast multipole method}},
 journal = {The Journal of Chemical Physics},
 volume = {124},
 number = {14},
@@ -343,7 +360,7 @@ abstract = "This paper focuses on the acceleration of the hybrid finite elementâ
 
 @article{doi:10.1137/18M1173599,
 author = {Abduljabbar, Mustafa and Farhan, Mohammed Al and Al-Harthi, Noha and Chen, Rui and Yokota, Rio and Bagci, Hakan and Keyes, David},
-title = {Extreme Scale FMM-Accelerated Boundary Integral Equation Solver for Wave Scattering},
+title = {{Extreme Scale FMM-Accelerated Boundary Integral Equation Solver for Wave Scattering}},
 journal = {SIAM Journal on Scientific Computing},
 volume = {41},
 number = {3},
@@ -362,5 +379,24 @@ eprint = {
 
 }
 
+
+
+@InProceedings{10.1007/978-3-319-10705-9_60,
+author="Cecka, Cris
+and Layton, Simon",
+editor="Abdulle, Assyr
+and Deparis, Simone
+and Kressner, Daniel
+and Nobile, Fabio
+and Picasso, Marco",
+title={{FMMTL: FMM Template Library A Generalized Framework for Kernel Matrices}},
+booktitle="Numerical Mathematics and Advanced  Applications - ENUMATH 2013",
+year="2015",
+publisher="Springer International Publishing",
+address="Cham",
+pages="611--620",
+abstract="In response to two decades of development in structured dense matrix algorithms and a vast number of research codes, we present designs and progress towards a codebase that is abstracted over the primary domains of research. In the domain of mathematics, this includes the development of interaction kernels and their low-rank expansions. In the domain of high performance computing, this includes the optimized construction, traversal, and scheduling algorithms for the appropriate operations. We present a versatile system that can encompass the design decisions made over a decade of research while providing an abstracted, intuitive, and usable front-end that can integrated into existing linear algebra libraries.",
+isbn="978-3-319-10705-9"
+}
 
 

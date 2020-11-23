@@ -83,30 +83,36 @@ Among the few existing FMM libraries, `ScalFMM` is the closer package to `TBFMM`
 `ScalFMM` supports lots of different parallel strategies, including fork-join implementations, and it contains several experimental methods.
 Consequently, `ScalFMM` has around 170K lines of code, for only 50K for `TBFMM`.
 Moreover, it needs several external dependencies and does not benefit from the new standard `C++` features that could improve code readability.
-Besides, it only works for 3D problems, whereas `TBFMM` can work for an arbitrary dimension.
+Besides, it only works for 3D problems, whereas `TBFMM`'s tree and algorithms supports any number of dimensions.
 These have been the main motivations to re-implement a lightweight FMM library from scratch that only supports task-based parallelization.
 
 However, the interface of the kernels is very similar in both libraries, such that creating a kernel for `ScalFMM` or `TBFMM` and porting it to the other library is straightforward.
+
+`FMMTL` [@10.1007/978-3-319-10705-9_60] is another existing FMM library with a generic `C++` design.
+Similar to `TBFMM`, `FMMTL` works with various types of kernels.
+However, it relies on a fork-join parallelization strategy on top of `OpenMP` and on the `Thrust` library to support GPUs.
+While this approach is elegant and makes the code clean, it is also more complex to fine tune the scheduling, the load balancing, and the data movement.
 
 # Features
 
 ## Genericity
 
 `TBFMM` has a generic design thanks to the heavy use of `C++` templates.
+Users must provide arguments for the various template parameters of the main classes.
 The tree and the kernel classes are independent of each other and from the algorithm.
-The algorithm class has to be templatized in order to know the type of the kernel, and its core `execute`  method has to be templatized with the type of the tree. 
-The algorithm takes the elements from the tree and passes it to the kernel, such that a kernel itself never accesses the tree.
+The algorithm class needs the type of the kernel as a template argument, and its core `execute`  method has to be templatized with the type of the tree. 
+The algorithm takes the elements from the tree and passes them to the kernel, such that a kernel itself never accesses the tree.
 This is illustrated by \autoref{fig:design}.
 
 ![`TBFMM` design overview.
-The `Types` of each class should be templatized, at the exception of the types of the kernel where it is optional.
-The algorithm has to be selected among different variants (sequential, parallel OpenMP or parallel SPETABARU).
+Template arguments must be used to ensure that the algorithm knows the types of the tree and the kernel, and that the tree knows the types of the cells/particles.
+The algorithm has to be selected among different variants (sequential, parallel OpenMP, or parallel SPETABARU).
 \label{fig:design}](./design.png)
 
 ## Tree
 
 `TBFMM` uses the group-tree where several cells of the same level are managed together.
-Users can select the size of the groups, which impacts the size of the tasks, however, `TBFMM` also provides a simple heuristic to automatically find a size, which should provide efficient executions.
+Users can select the size of the groups, which impacts the size of the tasks, however, `TBFMM` also provides a simple heuristic to automatically find a size that should provide efficient executions.
 Also, the tree class provides different methods to iterate on the cells/leaves as any container, such that it is possible to work on the elements of the tree with an abstraction mechanism and without knowing how it is implemented internally.
 
 ## Kernel
