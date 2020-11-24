@@ -1280,7 +1280,7 @@ We provide utility functions in `utils/tbfparams.hpp` to test and convert values
 
 ## Uniform kernel cannot be used
 
-This is likely that FFTW has not been found on the system. This could be check by running `cmake ..` in the build directory.
+This is likely that FFTW has not been found on the system. It is possible to verify by running `cmake ..` in the build directory.
 
 ```bash
 # Example of falling build will have:
