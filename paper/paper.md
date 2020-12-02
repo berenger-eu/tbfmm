@@ -38,7 +38,7 @@ The FMM algorithm was designed to compute pair-wise interactions between `N` par
 It reduces the complexity from a quadratic (`N` elements interact with `N` elements) to a quasi-linear complexity.
 The central idea of the FMM is to avoid computing the interactions between all the elements by approximating the interactions between elements that are far enough.
 To make this possible, the algorithm requires the potential of the interactions to decrease as the distance between interacting elements increases.
-In addition, the algorithm also requires that the kernel to approximate far interaction exists as providing an approximation kernel for a physical equation can be challenging. 
+The algorithm also requires that the kernel to approximate far interactions exists; providing an approximation kernel for a physical equation can be challenging. 
 Internally, the FMM is usually implemented with a tree that is mapped over the simulation box.
 A cell, i.e. a node of the tree, represents a part of the simulation box and is used by the algorithm to factorize the interactions between elements.
 The FMM was later extended for different types of physical simulations and different approximation kernels [@SABARIEGO2004403;@pham2012fast;@sabariego2004fast;@frangi2003coupled;@barba2011exafmm;@malhotra2015pvfmm;@darve2004fast;@darve2013optimizing;@blanchard2016efficient;@blanchard2015fast].
@@ -136,7 +136,8 @@ While `SPETABARU` supports commutative `write` access, `OpenMP` only supports it
 
 The periodicity consists of considering that the simulation box is repeated in all directions, as shown by \autoref{fig:periodicillu}.
 Computing the FMM algorithm with periodicity is usually done in two steps.
-In the first one, the regular algorithm and tree are used, however, when the algorithm needs cells outside of the boundaries, it selects cells at the opposite side of the simulation box.
+In the first one, the regular algorithm and tree are used.
+When the algorithm needs cells outside of the boundaries, it selects cells at the opposite side of the simulation box.
 While in the second step, a numerical model is used to compute a potential that represents the world outside the simulation box.
 Such a model could be the Ewald summation [@407723].
 
@@ -148,7 +149,7 @@ The idea is to consider that the real simulation box is a sub-part of a larger s
 Then, instead of stopping the FMM algorithm at level 2, we continue up until the root where the multipole part of the root represents the complete simulation box.
 We use it by continuing the FMM algorithm partially above the root, by aggregating the cells together multiple times.
 By doing so, we have several advantages.
-This method needs nothing more than a FMM kernel, which is expected to be the same as the one used without periodicity.
+This method needs nothing more than an FMM kernel, which is expected to be the same as the one used without periodicity.
 Therefore, the method is generic and can work with any FMM kernel.
 Moreover, the accuracy of the method relies fully on the FMM kernel. 
 \autoref{fig:periodicmerge} shows how the simulation box is repeated with this method.
@@ -170,13 +171,14 @@ In \autoref{fig:performance}, we provide the parallel efficiency of `TBFMM` for 
 The given results have been computed using the `uniform` kernel and the two runtime systems OpenMP (GNU libomp) and SPETABARU.
 Both implementation are similar; they use the same input data, the same tasks, the same priorities. 
 The only differences are coming from the implementation of the runtime systems, which impact the overhead, and the type of data access they support.
-We remind that OpenMP 4.5 does not support `mutexinout`, the commutative data access.
-In our case, the resulting degree of parallelism is then too limited to feed all the cores available. 
+We recall that OpenMP 4.5 does not support `mutexinout` for commutative data access.
+In our case, the resulting degree of parallelism is then too limited to feed all the available cores. 
 This is already a problem with 2 threads, and there is even no reduction in the execution time with more than 8 threads, which appears as a significant drop in the parallel efficiency.
-Even so, we believe that it would be possible to improve our OpenMP-based implementation by inserting the tasks differently, instead, we will wait that the OpenMP library implementations support `mutexinout`.
+Even so, we believe that it would be possible to improve our OpenMP-based implementation by inserting the tasks differently.
+Instead, we will wait that the OpenMP library implementations support `mutexinout`.
 
 ![Parallel efficiency for `TBFMM` using the OpenMP and SPETABARU runtime systems, and the uniform kernel (order = 8).
-Test cases: two simulations of one and ten millions of particles randomly distributed in a cube.
+Test cases: two simulations, of one and ten million particles, randomly distributed in a cube.
  Hardware: 2 × Intel Xeon Gold 6240 CPU at 2.60GHz with 16 cores each and cache of sizes L1/32K, L2/1024K, L3/25344K.
 \label{fig:performance}](results_csv.png)
 
