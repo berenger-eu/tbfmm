@@ -1,5 +1,6 @@
 [![pipeline status](https://gitlab.inria.fr/bramas/tbfmm/badges/master/pipeline.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
 [![coverage report](https://gitlab.inria.fr/bramas/tbfmm/badges/master/coverage.svg)](https://gitlab.inria.fr/bramas/tbfmm/commits/master)
+[![DOI](https://joss.theoj.org/papers/10.21105/joss.02444/status.svg)](https://doi.org/10.21105/joss.02444)
 
 # Introduction 
 
@@ -16,7 +17,7 @@ TBFMM uses C++ templates heavily. It is not required to master templates in orde
 
 TBFMM is under MIT license, however, some code related to the rotation and the uniform kernels (src/kernels/[rotation|uniform]), are under CeCILL-C license. Using TBFMM without one of these two kernels is under MIT, as zero part of these kernels will be involved.
 
-A preprint to cite TBFMM is available here: https://hal.inria.fr/hal-02550688
+A paper to cite TBFMM is available here: https://joss.theoj.org/papers/10.21105/joss.02444
 
 # Table of contents
 
