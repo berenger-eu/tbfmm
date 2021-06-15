@@ -311,14 +311,15 @@ public:
         applyToAllLeaves([&data, &rhs](auto&& leafHeader, const long int* particleIndexes,
                              const std::array<DataType*, NbDataValuesPerParticle> particleDataPtr,
                              const std::array<RhsType*, NbRhsValuesPerParticle> particleRhsPtr){
+
             for(int idxValue = 0 ; idxValue < NbDataValuesPerParticle ; ++idxValue){
                 for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                    data[idxValue][particleIndexes[idxPart]] = particleDataPtr[idxValue][idxPart];
+                    data[particleIndexes[idxPart]][idxValue] = particleDataPtr[idxValue][idxPart];
                 }
             }
             for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
                 for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                    rhs[idxValue][particleIndexes[idxPart]] = particleRhsPtr[idxValue][idxPart];
+                    rhs[particleIndexes[idxPart]][idxValue] = particleRhsPtr[idxValue][idxPart];
                 }
             }
         });
