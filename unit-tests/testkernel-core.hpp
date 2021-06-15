@@ -196,6 +196,48 @@ class TestTestKernel : public UTester< TestTestKernel<AlgorithmClass> > {
                 }
             });
         }
+
+        {
+            TreeClass tree(configuration, particlePositions, NbElementsPerBlock, OneGroupPerParent);
+
+            std::set<long int> indexExist;
+
+            tree.applyToAllLeaves([this, NbParticles, &indexExist, &particlePositions](auto&& leafHeader, const long int* particleIndexes,
+                                  const std::array<RealType*, Dim> particleDataPtr, const std::array<long int*, 1> /*particleRhsPtr*/){
+                for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                    UASSERTETRUE(0 <= particleIndexes[idxPart] && particleIndexes[idxPart] < NbParticles);
+                    UASSERTETRUE(indexExist.find(particleIndexes[idxPart]) == indexExist.end());
+                    indexExist.insert(particleIndexes[idxPart]);
+                    std::array<RealType, Dim> pos;
+                    for(int idxData = 0 ; idxData < Dim ; ++idxData){
+                        pos[idxData] = particleDataPtr[idxData][idxPart];
+                    }
+                    UASSERTETRUE(particlePositions[particleIndexes[idxPart]] == pos);
+                }
+            });
+
+            UASSERTETRUE(int(indexExist.size()) == NbParticles);
+
+            tree.rebuild();
+
+            indexExist.clear();
+
+            tree.applyToAllLeaves([this, NbParticles, &indexExist, &particlePositions](auto&& leafHeader, const long int* particleIndexes,
+                                  const std::array<RealType*, Dim> particleDataPtr, const std::array<long int*, 1> /*particleRhsPtr*/){
+                for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                    UASSERTETRUE(0 <= particleIndexes[idxPart] && particleIndexes[idxPart] < NbParticles);
+                    UASSERTETRUE(indexExist.find(particleIndexes[idxPart]) == indexExist.end());
+                    indexExist.insert(particleIndexes[idxPart]);
+                    std::array<RealType, Dim> pos;
+                    for(int idxData = 0 ; idxData < Dim ; ++idxData){
+                        pos[idxData] = particleDataPtr[idxData][idxPart];
+                    }
+                    UASSERTETRUE(particlePositions[particleIndexes[idxPart]] == pos);
+                }
+            });
+
+            UASSERTETRUE(int(indexExist.size()) == NbParticles);
+        }
     }
 
     void TestBasic() {
