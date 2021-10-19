@@ -4,7 +4,7 @@
 
 # Introduction 
 
-TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
+TBFMM is a Fast Multipole Method (FMM) library (header-only) parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
 
 Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
 As such, it can be used as a simulation toolbox for **scientists in physics or applied mathematics**.
