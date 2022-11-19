@@ -106,7 +106,7 @@ pacman -S mingw64/mingw-w64-x86_64-cmake
 ```
 
 # To build in VS Code using gcc
-You need to open the settings.json by Ctrl + Shift + P and serach-select Preference: Open settings (JSON),
+You need to open the settings.json by Ctrl + Shift + P and search-select Preference: Open settings (JSON),
 and then add the lines below:
 ```bash
   "cmake.cmakePath": "C:\\msys64\\mingw64\\bin\\cmake.exe",
@@ -115,8 +115,23 @@ and then add the lines below:
    ],
    "cmake.generator": "MinGW Makefiles"
 ```
-
-
+and then open the CMake: Edit User-Local CMake Kits which opens the cmake-tools-kits.json file where you need to have:
+```bash
+  {
+    "name": "Mingw64 GCC 9.3.0",
+    "compilers": {
+      "C": "C:\\msys64\\mingw64\\bin\\gcc.exe",
+      "CXX": "C:\\msys64\\mingw64\\bin\\g++.exe"
+    },
+    "preferredGenerator": {
+      "name": "MinGW Makefiles",
+      "platform": "x64"
+    },
+    "environmentVariables": {
+      "PATH": "C:/msys64/mingw64/bin/"
+    }
+  }
+```
 
 ## Running the tests
 
