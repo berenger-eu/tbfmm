@@ -87,6 +87,37 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 make
 ```
 
+## How to Compile on Windows
+First, you need to install a MSYS2 MinGW build envirnment following extensive instructions provided in the links below
+
+```bash
+# Follow the article to install MinGW-x64
+# https://code.visualstudio.com/docs/languages/cpp
+
+# Particularly follow the article
+# https://www.msys2.org/
+# and update guide
+# https://www.msys2.org/docs/updating/
+
+# Make sure the following packages are installed
+pacman -S mingw64/mingw-w64-x86_64-gcc
+pacman -S mingw64/mingw-w64-x86_64-make
+pacman -S mingw64/mingw-w64-x86_64-cmake
+```
+
+# To build in VS Code using gcc
+You need to open the settings.json by Ctrl + Shift + P and serach-select Preference: Open settings (JSON),
+and then add the lines below:
+```bash
+  "cmake.cmakePath": "C:\\msys64\\mingw64\\bin\\cmake.exe",
+    "cmake.mingwSearchDirs": [
+      "C:\\msys64\\mingw64\\bin"
+   ],
+   "cmake.generator": "MinGW Makefiles"
+```
+
+
+
 ## Running the tests
 
 If the test are enabled in the cmake configuration, one could run the tests with:
