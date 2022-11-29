@@ -4,7 +4,7 @@
 
 # Introduction 
 
-TBFMM is a Fast Multipole Method (FMM) library parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
+TBFMM is a Fast Multipole Method (FMM) library (header-only) parallelized with the task-based method. It is designed to be easy to customize by creating new FMM kernels or new parallelization strategies. It uses the block-tree hierarchical data structure (also known as the group-tree), which is well designed for the task-based parallelization, and can be easily extended to heterogeneous architectures (not yet supported but WIP).
 
 Users can implement new FMM kernels, new types of interacting elements or even new parallelization strategies.
 As such, it can be used as a simulation toolbox for **scientists in physics or applied mathematics**.
@@ -86,6 +86,54 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 # Build everything
 make
 ```
+
+## How to Compile on Windows
+First, you need to install a MSYS2 MinGW build envirnment following extensive instructions provided in the links below
+
+```bash
+# Follow the article to install MinGW-x64
+# https://code.visualstudio.com/docs/languages/cpp
+
+# Particularly follow the article
+# https://www.msys2.org/
+# and update guide
+# https://www.msys2.org/docs/updating/
+
+# Make sure the following packages are installed
+pacman -S mingw64/mingw-w64-x86_64-gcc
+pacman -S mingw64/mingw-w64-x86_64-make
+pacman -S mingw64/mingw-w64-x86_64-cmake
+```
+
+# Build in VS Code using gcc
+You need to open the ```settings.json``` by ```Ctrl + Shift + P``` and search-select ```Preference: Open User settings (JSON)```,
+and then add the lines below:
+```bash
+  "cmake.cmakePath": "C:\\msys64\\mingw64\\bin\\cmake.exe",
+    "cmake.mingwSearchDirs": [
+      "C:\\msys64\\mingw64\\bin"
+   ],
+   "cmake.generator": "MinGW Makefiles"
+```
+and then open the ```CMake: Edit User-Local CMake Kits``` which opens the ```cmake-tools-kits.json``` file where you need to have:
+```bash
+  {
+    "name": "GCC 12.2.0 x86_64-w64-mingw32",
+    "compilers": {
+      "C": "C:\\msys64\\mingw64\\bin\\gcc.exe",
+      "CXX": "C:\\msys64\\mingw64\\bin\\g++.exe"
+    },
+    "preferredGenerator": {
+      "name": "MinGW Makefiles",
+      "platform": "x64"
+    },
+    "environmentVariables": {
+      "PATH": "C:/msys64/mingw64/bin/"
+    }
+  },
+```
+Be sure, to set a correct ```PATH``` value.
+
 
 ## Running the tests
 

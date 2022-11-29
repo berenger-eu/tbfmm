@@ -184,7 +184,7 @@ int main(int argc, char** argv){
         std::array<TbfAccuracyChecker<RealType>, 4> partcilesAccuracy;
         std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
-        tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy]
+        tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy,NbRhsValuesPerParticle]
                               (auto&& leafHeader, const long int* particleIndexes,
                               const std::array<ParticleDataType*, 4> particleDataPtr,
                               const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){

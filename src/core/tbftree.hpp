@@ -423,7 +423,7 @@ public:
                                   const std::array<RhsType*, NbRhsValuesPerParticle> particleRhsPtr){
              for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
                  for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                     particleRhsPtr[idxValue][idxPart] = rhs[idxValue][particleIndexes[idxPart]];
+                     particleRhsPtr[idxValue][idxPart] = rhs[particleIndexes[idxPart]][idxValue];
                  }
              }
          });
