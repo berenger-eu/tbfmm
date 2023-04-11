@@ -64,29 +64,29 @@ list(APPEND TBF_USE_LIST_AVAILABLE COVERAGE)
 
 #################################################
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru/CMakeLists.txt")
-    message(STATUS "SPETABARU Found")
-    if(NOT ${TBFMM_ENABLE_SPETABARU})
-        message(STATUS "SPETABARU Disabled")   
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/specx/CMakeLists.txt")
+    message(STATUS "SPECX Found")
+    if(NOT ${TBFMM_ENABLE_SPECX})
+        message(STATUS "SPECX Disabled")   
     else() 
-	    set(SPETABARU_JUST_LIB TRUE)
-	    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
+	    set(SPECX_JUST_LIB TRUE)
+	    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/specx")
 	    INCLUDE_DIRECTORIES(
-		     ${SPETABARU_BINARY_DIR}/Src
-		     ${SPETABARU_SOURCE_DIR}/Src
-		     ${SPETABARU_INCLUDE_DIR}
+		     ${SPECX_BINARY_DIR}/Src
+		     ${SPECX_SOURCE_DIR}/Src
+		     ${SPECX_INCLUDE_DIR}
 		)
-	    link_directories("${SPETABARU_DIR}/lib/")
-	    list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
-	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+	    link_directories("${SPECX_DIR}/lib/")
+	    list(APPEND TBFMM_LIBRARIES ${SPECX_LIBRARIES} specx)
+	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPECX_CXX_FLAGS}")
 
-	    list(APPEND TBF_USE_LIST SPETABARU)
+	    list(APPEND TBF_USE_LIST SPECX)
     endif()
 else()
-    message(STATUS "SPETABARU Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru (please use git submodule init && git submodule update)")
+    message(STATUS "SPECX Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/specx (please use git submodule init && git submodule update)")
 endif()
 
-list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
+list(APPEND TBF_USE_LIST_AVAILABLE SPECX)
 
 #################################################
 

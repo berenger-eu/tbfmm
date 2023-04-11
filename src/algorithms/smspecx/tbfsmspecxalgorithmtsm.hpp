@@ -1,5 +1,5 @@
-#ifndef TBFSMSPETABARUALGORITHMTSM_HPP
-#define TBFSMSPETABARUALGORITHMTSM_HPP
+#ifndef TBFSMSPECXALGORITHMTSM_HPP
+#define TBFSMSPECXALGORITHMTSM_HPP
 
 #include "tbfglobal.hpp"
 
@@ -14,7 +14,7 @@
 #include <iterator>
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfSmSpetabaruAlgorithmTsm {
+class TbfSmSpecxAlgorithmTsm {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -243,7 +243,7 @@ protected:
     }
 
 public:
-    explicit TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    explicit TbfSmSpecxAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -253,7 +253,7 @@ public:
     template <class SourceKernelClass,
               typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
                                                  && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
-    TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    TbfSmSpecxAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -298,8 +298,8 @@ public:
     }
 
     template <class StreamClass>
-    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpetabaruAlgorithmTsm& inAlgo) {
-        inStream << "TbfSmSpetabaruAlgorithmTsm @ " << &inAlgo << "\n";
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpecxAlgorithmTsm& inAlgo) {
+        inStream << "TbfSmSpecxAlgorithmTsm @ " << &inAlgo << "\n";
         inStream << " - Configuration: " << "\n";
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
@@ -312,7 +312,7 @@ public:
     }
 
     static const char* GetName(){
-        return "TbfSmSpetabaruAlgorithmTsm";
+        return "TbfSmSpecxAlgorithmTsm";
     }
 };
 

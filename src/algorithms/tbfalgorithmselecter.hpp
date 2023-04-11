@@ -5,9 +5,9 @@
 
 #include "algorithms/sequential/tbfalgorithm.hpp"
 #include "algorithms/sequential/tbfalgorithmtsm.hpp"
-#ifdef TBF_USE_SPETABARU
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithmtsm.hpp"
+#ifdef TBF_USE_SPECX
+#include "algorithms/smspecx/tbfsmspecxalgorithm.hpp"
+#include "algorithms/smspecx/tbfsmspecxalgorithmtsm.hpp"
 #endif
 #ifdef TBF_USE_OPENMP
 #include "algorithms/openmp/tbfopenmpalgorithm.hpp"
@@ -16,8 +16,8 @@
 
 struct TbfAlgorithmSelecter{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
-#ifdef TBF_USE_SPETABARU
-    using type = TbfSmSpetabaruAlgorithm<RealType, KernelClass, SpaceIndexType>;
+#ifdef TBF_USE_SPECX
+    using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else
@@ -27,8 +27,8 @@ struct TbfAlgorithmSelecter{
 
 struct TbfAlgorithmSelecterTsm{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
-#ifdef TBF_USE_SPETABARU
-    using type = TbfSmSpetabaruAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
+#ifdef TBF_USE_SPECX
+    using type = TbfSmSpecxAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #else
