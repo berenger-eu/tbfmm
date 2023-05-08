@@ -69,6 +69,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/specx/CMakeLists.txt")
     if(NOT ${TBFMM_ENABLE_SPECX})
         message(STATUS "SPECX Disabled")   
     else() 
+    	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
+    	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
+	    
 	    set(SPECX_JUST_LIB TRUE)
 	    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/specx")
 	    INCLUDE_DIRECTORIES(
@@ -76,11 +79,25 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/specx/CMakeLists.txt")
 		     ${SPECX_SOURCE_DIR}/Src
 		     ${SPECX_INCLUDE_DIR}
 		)
+		
+        message(STATUS "SPECX_DIR = ${SPECX_DIR}")
+        message(STATUS "SPECX_LIBRARIES = ${SPECX_LIBRARIES}")
+        message(STATUS "SPECX_CXX_FLAGS = ${SPECX_CXX_FLAGS}")
+		
 	    link_directories("${SPECX_DIR}/lib/")
 	    list(APPEND TBFMM_LIBRARIES ${SPECX_LIBRARIES} specx)
 	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPECX_CXX_FLAGS}")
 
 	    list(APPEND TBF_USE_LIST SPECX)
+	    if(TBFMM_USE_CUDA)
+	        enable_language(CUDA)
+		            
+            if(NOT CMAKE_CUDA_ARCHITECTURES)
+              set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
+                  "Set CUDA target architecture" FORCE)
+            endif()
+	        list(APPEND TBF_USE_LIST CUDA)	    
+	    endif()
     endif()
 else()
     message(STATUS "SPECX Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/specx (please use git submodule init && git submodule update)")
@@ -179,6 +196,7 @@ if(cpp_for_lib)
     list(APPEND TBFMM_LIBRARIES TBFMM)
 endif()
 
+message(STATUS "TBFMM_LIBRARIES = ${TBFMM_LIBRARIES}")
 
 #################################################
 

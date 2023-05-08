@@ -8,6 +8,9 @@
 #ifdef TBF_USE_SPECX
 #include "algorithms/smspecx/tbfsmspecxalgorithm.hpp"
 #include "algorithms/smspecx/tbfsmspecxalgorithmtsm.hpp"
+#ifdef TBF_USE_CUDA
+#include "algorithms/smspecx/tbfsmspecxalgorithmcuda.hpp"
+#endif
 #endif
 #ifdef TBF_USE_OPENMP
 #include "algorithms/openmp/tbfopenmpalgorithm.hpp"
@@ -17,7 +20,11 @@
 struct TbfAlgorithmSelecter{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_SPECX
+#ifdef TBF_USE_CUDA
     using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
+#else
+    using type = TbfSmSpecxAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
+#endif
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else
