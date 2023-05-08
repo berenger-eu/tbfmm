@@ -1,5 +1,5 @@
-#ifndef TBFSMSPECXALGORITHM_HPP
-#define TBFSMSPECXALGORITHM_HPP
+#ifndef TBFSMSPECXALGORITHMCUDA_HPP
+#define TBFSMSPECXALGORITHMCUDA_HPP
 
 #include "tbfglobal.hpp"
 
@@ -10,12 +10,22 @@
 
 #include <Legacy/SpRuntime.hpp>
 
-
 #include <cassert>
 #include <iterator>
 
+
+template <const bool>
+class BoolSelecter;
+
+template <>
+class BoolSelecter<true> : public std::true_type {};
+
+template <>
+class BoolSelecter<false> : public std::false_type {};
+
+
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfSmSpecxAlgorithm {
+class TbfSmSpecxAlgorithmCuda {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -36,14 +46,6 @@ protected:
 
     /////////////////////////////////////////////////////////////////
 
-    template <const bool>
-    class BoolSelecter;
-
-    template <>
-    class BoolSelecter<true> : public std::true_type {};
-
-    template <>
-    class BoolSelecter<false> : public std::false_type {};
 
     // See http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf.
     template <typename...>
@@ -479,9 +481,9 @@ protected:
     }
 
 public:
-    explicit TbfSmSpecxAlgorithm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    explicit TbfSmSpecxAlgorithmCuda(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
-          kernelWrapper(configuration),
+          kernelWrapper(configuration), kernelWrapperCuda(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(configuration);
     }
@@ -489,9 +491,9 @@ public:
     template <class SourceKernelClass,
               typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
                                                  && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
-    TbfSmSpecxAlgorithm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    TbfSmSpecxAlgorithmCuda(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
-          kernelWrapper(configuration),
+          kernelWrapper(configuration), kernelWrapperCuda(configuration),
           priorities(configuration.getTreeHeight()){
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
     }
@@ -534,8 +536,8 @@ public:
     }
 
     template <class StreamClass>
-    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpecxAlgorithm& inAlgo) {
-        inStream << "TbfSmSpecxAlgorithm @ " << &inAlgo << "\n";
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpecxAlgorithmCuda& inAlgo) {
+        inStream << "TbfSmSpecxAlgorithmCuda @ " << &inAlgo << "\n";
         inStream << " - Configuration: " << "\n";
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
@@ -548,7 +550,7 @@ public:
     }
 
     static const char* GetName(){
-        return "TbfSmSpecxAlgorithm";
+        return "TbfSmSpecxAlgorithmCuda";
     }
 };
 

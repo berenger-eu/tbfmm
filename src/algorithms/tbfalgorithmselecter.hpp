@@ -20,7 +20,7 @@
 struct TbfAlgorithmSelecter{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_SPECX
-#ifdef TBF_USE_CUDA
+#ifndef TBF_USE_CUDA
     using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else
     using type = TbfSmSpecxAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
