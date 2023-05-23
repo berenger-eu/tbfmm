@@ -10,21 +10,50 @@ template <class SpaceIndexType>
 class TbfGroupKernelInterfaceCuda{
     const SpaceIndexType spaceSystem;
 
+    static int GetThreadId(){
+        return idxThread.x + blockIdx.x*blockDim.x;
+    }
+
+    static int GetBlockId(){
+        return blockIdx.x;
+    }
+
+    static int GetNbThreads(){
+        return blockDim.x*gridSize.x;
+    }
+
+    static int GetNbBlocks(){
+        return gridSize.x;
+    }
+
 public:
     TbfGroupKernelInterfaceCuda(SpaceIndexType inSpaceIndex) : spaceSystem(std::move(inSpaceIndex)){}
 
     template <class KernelClass, class ParticleGroupClass, class LeafGroupClass>
-    void P2M(KernelClass& inKernel, const ParticleGroupClass& inParticleGroup,
-             LeafGroupClass& inLeafGroup) const {
+    __global__ static void P2M_core(KernelClass& inKernel, const ParticleGroupClass& inParticleGroup,
+             LeafGroupClass& inLeafGroup) {
         assert(inParticleGroup.getNbLeaves() == inLeafGroup.getNbCells());
-        for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
+        for(long int idxLeaf = GetBlockId() ; idxLeaf < inParticleGroup.getNbLeaves() ; idxLeaf += GetNbBlocks()){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
             const auto& symbData = TbfUtils::make_const(inLeafGroup).getCellSymbData(idxLeaf);
             const auto& particlesData = inParticleGroup.getParticleData(idxLeaf);
             auto&& leafData = inLeafGroup.getCellMultipole(idxLeaf);
-            inKernel.P2M(symbData, inParticleGroup.getParticleIndexes(idxLeaf), particlesData, inParticleGroup.getNbParticlesInLeaf(idxLeaf),
+            inKernel.CudaP2M(symbData, inParticleGroup.getParticleIndexes(idxLeaf), particlesData, inParticleGroup.getNbParticlesInLeaf(idxLeaf),
                          leafData);
         }
+    }
+
+
+    template <class KernelClass, class ParticleGroupClass, class LeafGroupClass>
+    __global__ static void P2M(KernelClass& inKernel, const ParticleGroupClass& inParticleGroup,
+                                    LeafGroupClass& inLeafGroup) {
+        P2M_core<<<1,1>>>(inKernel, inParticleGroup, inLeafGroup);
+    }
+
+    template <class KernelClass, class CellGroupClass>
+    void M2M_core(const long int inLevel, KernelClass& inKernel, const CellGroupClass& inLowerGroup,
+             CellGroupClass& inUpperGroup) const {
+
     }
 
     template <class KernelClass, class CellGroupClass>
@@ -222,10 +251,10 @@ public:
     }
 
     template <class KernelClass, class LeafGroupClass, class ParticleGroupClass>
-    void L2P(KernelClass& inKernel, const LeafGroupClass& inLeafGroup,
+    __global__ void L2P_core(KernelClass& inKernel, const LeafGroupClass& inLeafGroup,
              ParticleGroupClass& inParticleGroup) const {
         assert(inParticleGroup.getNbLeaves() == inLeafGroup.getNbCells());
-        for(long int idxLeaf = 0 ; idxLeaf < inParticleGroup.getNbLeaves() ; ++idxLeaf){
+        for(long int idxLeaf = GetBlockId() ; idxLeaf < inParticleGroup.getNbLeaves() ; idxLeaf += GetNbBlocks()){
             assert(inParticleGroup.getLeafSpacialIndex(idxLeaf) == inLeafGroup.getCellSpacialIndex(idxLeaf));
             const auto& particlesData = TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf);
             auto&& particlesRhs = inParticleGroup.getParticleRhs(idxLeaf);
@@ -236,9 +265,15 @@ public:
         }
     }
 
+    template <class KernelClass, class LeafGroupClass, class ParticleGroupClass>
+    void L2P(KernelClass& inKernel, const LeafGroupClass& inLeafGroup,
+             ParticleGroupClass& inParticleGroup) const {
+        L2P_core<<<1,1,>>>(inKernel, inLeafGroup, inParticleGroup);
+    }
+
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
-    void P2PInGroup(KernelClass& inKernel, ParticleGroupClass& inParticleGroup, const IndexClass& inIndexes) const {
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+    __global__ void P2PInGroup_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup, const IndexClass& inIndexes) const {
+        for(long int idxInteraction = GetBlockId() ; idxInteraction < static_cast<long int>(inIndexes.size()) ; idxInteraction += GetNbBlocks()){
             const auto interaction = inIndexes[idxInteraction];
 
             auto foundSrc = inParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
@@ -265,9 +300,14 @@ public:
         }
     }
 
+    template <class KernelClass, class ParticleGroupClass, class IndexClass>
+    void P2PInGroup(KernelClass& inKernel, ParticleGroupClass& inParticleGroup, const IndexClass& inIndexes) const {
+        P2PInGroup_core<<<1,1>>>(inKernel, inParticleGroup, inIndexes);
+    }
+
     template <class KernelClass, class ParticleGroupClass>
-    void P2PInner(KernelClass& inKernel, ParticleGroupClass& inParticleGroup) const {
-        for(long int idxLeaf = 0 ; idxLeaf < static_cast<long int>(inParticleGroup.getNbLeaves()) ; ++idxLeaf){
+    __global__ void P2PInner_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup) const {
+        for(long int idxLeaf = GetBlockId() ; idxLeaf < static_cast<long int>(inParticleGroup.getNbLeaves()) ; idxLeaf += GetNbBlocks()){
             const auto& particlesData = TbfUtils::make_const(inParticleGroup).getParticleData(idxLeaf);
             auto&& particlesRhs = inParticleGroup.getParticleRhs(idxLeaf);
             inKernel.P2PInner(inParticleGroup.getLeafSymbData(idxLeaf),
@@ -276,10 +316,15 @@ public:
         }
     }
 
+    template <class KernelClass, class ParticleGroupClass>
+    void P2PInner(KernelClass& inKernel, ParticleGroupClass& inParticleGroup) const {
+        P2PInner_core<<<1,1>>>(inKernel, inParticleGroup);
+    }
+
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
-    void P2PBetweenGroups(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
+    __global__ void P2PBetweenGroups_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
                           ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+        for(long int idxInteraction = GetBlockId() ; idxInteraction < static_cast<long int>(inIndexes.size()) ; idxInteraction += GetNbBlocks()){
             const auto interaction = inIndexes[idxInteraction];
 
             auto foundSrc = inOtherParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
@@ -307,10 +352,16 @@ public:
         }
     }
 
+    template <class KernelClass, class ParticleGroupClass, class IndexClass>
+    void P2PBetweenGroups(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
+                          ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
+        P2PBetweenGroups_core<<<1,1>>>(inKernel, inParticleGroup, inOtherParticleGroup, inIndexes);
+    }
+
     template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
-    void P2PBetweenGroupsTsm(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
+    __global__ void P2PBetweenGroupsTsm_core(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
                           ParticleGroupClassSource& inOtherParticleGroup, const IndexClass& inIndexes) const {
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
+        for(long int idxInteraction = GetBlockId() ; idxInteraction < static_cast<long int>(inIndexes.size()) ; idxInteraction += GetNbBlocks()){
             const auto interaction = inIndexes[idxInteraction];
 
             auto foundSrc = inOtherParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
@@ -335,6 +386,12 @@ public:
                              interaction.arrayIndexSrc);
             }
         }
+    }
+
+    template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
+    void P2PBetweenGroupsTsm(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
+                             ParticleGroupClassSource& inOtherParticleGroup, const IndexClass& inIndexes) const {
+        P2PBetweenGroupsTsm<<<1,1,>>>(inKernel, inParticleGroup, inOtherParticleGroup, inIndexes);
     }
 };
 
