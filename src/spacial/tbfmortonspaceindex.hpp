@@ -713,6 +713,16 @@ public:
         return arrayPos;
     }
 
+    auto getColorsIdxAtLeafLevel(const IndexType inLeafIndex) const{
+        const auto leafPos = getBoxPosFromIndex(inLeafIndex);
+        long int colorIdx = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            colorIdx *= 3;
+            colorIdx += (leafPos[idxDim]%3);
+        }
+        return colorIdx;
+    }
+
     template <class StreamClass>
     friend  StreamClass& operator<<(StreamClass& inStream, const TbfMortonSpaceIndex& inSpaceSystem) {
         inStream << "TbfMortonSpaceIndex @ " << &inSpaceSystem << "\n";

@@ -42,6 +42,10 @@ foreach(exec ${source_tests_files})
         endif()
 
         add_executable(${execname} ${exec})
+        
+        if(TBFMM_USE_CUDA)
+            set_source_files_properties(${execname} PROPERTIES LANGUAGE CUDA)
+        endif()
 
         target_link_libraries(${execname} ${TBFMM_LIBRARIES})
         add_test(${execname} ${CMAKE_CURRENT_BINARY_DIR}/${execname})

@@ -123,13 +123,13 @@ protected:
                             kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
                         }));
                 }
-                else if(CpuP2M){
+                else if constexpr(CpuP2M){
                     runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                  [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                         kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
                     });
                 }
-                else if(CudaP2M){
+                else if constexpr(CudaP2M){
                     runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                  SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                         kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
@@ -172,13 +172,13 @@ protected:
                             kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
                         }));
                 }
-                else if(CpuM2M){
+                else if constexpr(CpuM2M){
                     runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                  [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                                      kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
                                  });
                 }
-                else if(CudaM2M){
+                else if constexpr(CudaM2M){
                     runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                  SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                                      kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
