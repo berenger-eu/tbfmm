@@ -97,7 +97,9 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/specx/CMakeLists.txt")
               set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
                   "Set CUDA target architecture" FORCE)
             endif()
-	        list(APPEND TBF_USE_LIST CUDA)	    
+	        list(APPEND TBF_USE_LIST CUDA)	   
+	        
+	        add_definitions("--expt-relaxed-constexpr") 
 	    endif()
     endif()
 else()

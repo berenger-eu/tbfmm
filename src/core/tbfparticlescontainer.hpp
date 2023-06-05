@@ -165,27 +165,27 @@ public:
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).boxCoord;
     }
 
-    const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
+    __device__ __host__ const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf);
     }
 
-    long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
+    __device__ __host__ long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).nbParticles;
     }
 
-    const long int* getParticleIndexes(const long int inIdxLeaf) const {
+    __device__ __host__ const long int* getParticleIndexes(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlockConst<2>().getItem(leafHeader.offSet);
     }
 
-    long int* getParticleIndexes(const long int inIdxLeaf) {
+    __device__ __host__ long int* getParticleIndexes(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlock<2>().getItem(leafHeader.offSet);
     }
 
-    std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
+    __device__ __host__ std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<const DataType*, NbDataValuesPerParticle> particleDataPtr;
@@ -195,7 +195,7 @@ public:
         return particleDataPtr;
     }
 
-    std::array<DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) {
+    __device__ __host__ std::array<DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<DataType*, NbDataValuesPerParticle> particleDataPtr;
@@ -205,7 +205,7 @@ public:
         return particleDataPtr;
     }
 
-    const std::array<const RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) const {
+    __device__ __host__ const std::array<const RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<const RhsType*, NbRhsValuesPerParticle> particleRhsPtr;
@@ -222,7 +222,7 @@ public:
         return particleRhsPtr;
     }
 
-    std::array<RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) {
+    __device__ __host__ std::array<RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<RhsType*, NbRhsValuesPerParticle> particleRhsPtr;

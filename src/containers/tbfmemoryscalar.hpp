@@ -40,12 +40,12 @@ public:
     class Viewer{
         DataType* ptrToData;
     public:
-        explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
+        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
 
-        DataType& getItem(){
+        __device__ __host__ DataType& getItem(){
             return *ptrToData;
         }
     };
@@ -53,12 +53,12 @@ public:
     class ViewerConst{
         const DataType* ptrToData;
     public:
-        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
+        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
 
-        const DataType& getItem() const{
+        __device__ __host__ const DataType& getItem() const{
             return *ptrToData;
         }
     };

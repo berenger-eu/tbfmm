@@ -149,7 +149,7 @@ public:
         constructAllItems();
     }
 
-    bool isEmpty() const {
+    __device__ __host__ bool isEmpty() const {
         return !nbItemsInBlocks;
     }
 
@@ -184,7 +184,7 @@ public:
     }
 
     template <long int IdxBlock>
-    auto getViewerForBlock(){
+    __device__ __host__ auto getViewerForBlock(){
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -220,7 +220,7 @@ public:
     }
 
     template <long int IdxBlock>
-    auto getViewerForBlockConst() const {
+    __device__ __host__ auto getViewerForBlockConst() const {
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;

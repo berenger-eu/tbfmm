@@ -50,16 +50,16 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
-        explicit Viewer(DataType* inPtrToData, const long int inNbItems)
+        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
 
-        DataType& getItem(const long int inIdx, const long int inIdxRow){
+        __device__ __host__ DataType& getItem(const long int inIdx, const long int inIdxRow){
             DataType* ptrToDataCol = reinterpret_cast<DataType*>(reinterpret_cast<unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
 
-        long int getNbItems() const{
+        __device__ __host__ long int getNbItems() const{
             return nbItems;
         }
     };
@@ -69,16 +69,16 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
-        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
+        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
 
-        const DataType& getItem(const long int inIdx, const long int inIdxRow){
+        __device__ __host__ const DataType& getItem(const long int inIdx, const long int inIdxRow){
             const DataType* ptrToDataCol = reinterpret_cast<const DataType*>(reinterpret_cast<const unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
 
-        long int getNbItems() const{
+        __device__ __host__ long int getNbItems() const{
             return nbItems;
         }
     };

@@ -100,7 +100,7 @@ public:
     static constexpr bool CudaP2P = true;
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PCuda(const LeafSymbolicData& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
+    __device__ void P2PCuda(const LeafSymbolicData& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
              const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs& inParticlesNeighborsRhs,
              const long int inNbParticlesNeighbors,
              const LeafSymbolicData& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
@@ -116,7 +116,7 @@ public:
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    void P2PTsmCuda(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
+    __device__ void P2PTsmCuda(const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
                 const ParticlesClassValuesSource& /*inParticlesNeighbors*/,
                 const long int inNbParticlesNeighbors,
                 const LeafSymbolicDataTarget& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
@@ -129,7 +129,7 @@ public:
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    void P2PInnerCuda(const LeafSymbolicData& /*inLeafIndex*/, const long int /*targetIndexes*/[],
+    __device__ void P2PInnerCuda(const LeafSymbolicData& /*inLeafIndex*/, const long int /*targetIndexes*/[],
                   const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
         for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){

@@ -37,26 +37,26 @@ public:
         DataType* ptrToData;
         const long int nbItems;
     public:
-        explicit Viewer(DataType* inPtrToData, const long int inNbItems)
+        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems){}
 
-        DataType& getItem(const long int inIdx){
+        __device__ __host__ DataType& getItem(const long int inIdx){
             return ptrToData[inIdx];
         }
 
-        long int getNbItems() const{
+        __device__ __host__ long int getNbItems() const{
             return nbItems;
         }
 
-        long int size() const{
+        __device__ __host__ long int size() const{
             return getNbItems();
         }
 
-        DataType& front(){
+        __device__ __host__ DataType& front(){
             return ptrToData[0];
         }
 
-        DataType& back(){
+        __device__ __host__ DataType& back(){
             return ptrToData[getNbItems()-1];
         }
     };
@@ -66,26 +66,26 @@ public:
         const DataType* ptrToData;
         const long int nbItems;
     public:
-        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
+        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems){}
 
-        const DataType& getItem(const long int inIdx){
+        __device__ __host__ const DataType& getItem(const long int inIdx){
             return ptrToData[inIdx];
         }
 
-        long int getNbItems() const{
+        __device__ __host__ long int getNbItems() const{
             return nbItems;
         }
 
-        long int size() const{
+        __device__ __host__ long int size() const{
             return getNbItems();
         }
 
-        const DataType& front(){
+        __device__ __host__ const DataType& front(){
             return ptrToData[0];
         }
 
-        const DataType& back(){
+        __device__ __host__ const DataType& back(){
             return ptrToData[getNbItems()-1];
         }
     };
