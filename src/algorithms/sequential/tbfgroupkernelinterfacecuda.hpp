@@ -71,8 +71,9 @@ __global__ void M2M_core(const SpaceIndexType& spaceSystem, const long int inLev
 
 
 template <class SpaceIndexType, class KernelClass, class CellGroupClass, class IndexClass>
-__global__ void M2LInGroup_core(const SpaceIndexType& spaceSystem, const long int inLevel, KernelClass& inKernel, CellGroupClass& inCellGroup,
-                                const IndexClass& inIndexes,
+__global__ void M2LInGroup_core(const SpaceIndexType& spaceSystem, const long int inLevel, KernelClass& inKernel,
+                                CellGroupClass& inCellGroup,
+                                const IndexClass* inIndexes,
                                 const long int inNbInteractionBlocks,
                                 const long int* inInteractionBlocks) {
     using CellMultipoleType = typename std::remove_reference<decltype(inCellGroup.getCellMultipole(0))>::type;
@@ -111,7 +112,7 @@ __global__ void M2LInGroup_core(const SpaceIndexType& spaceSystem, const long in
 
 template <class SpaceIndexType, class KernelClass, class CellGroupClassTarget, class CellGroupClassSource, class IndexClass>
 __global__ void M2LBetweenGroups_core(const SpaceIndexType& spaceSystem, const long int inLevel, KernelClass& inKernel, CellGroupClassTarget& inCellGroup,
-                                      const CellGroupClassSource& inOtherCellGroup, const IndexClass& inIndexes,
+                                      const CellGroupClassSource& inOtherCellGroup, const IndexClass* inIndexes,
                                       const long int inNbInteractionBlocks, const long int* inInteractionBlocksOffset,
                                       const long int* inInteractionBlockIdxs, const long int* inFoundSrcIdxs) {
     using CellMultipoleType = typename std::remove_reference<decltype(inOtherCellGroup.getCellMultipole(0))>::type;
@@ -191,7 +192,7 @@ __global__ void L2P_core(KernelClass& inKernel, const LeafGroupClass& inLeafGrou
 
 
 template <class KernelClass, class ParticleGroupClass, class IndexClass>
-__global__ void P2PInGroup_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup, const IndexClass& inIndexes,
+__global__ void P2PInGroup_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup, const IndexClass* inIndexes,
                                 const long int* intervalSizes, const std::pair<long int,long int>* inBlockIdxs,
                                 const long int inNbBlocks) {
     for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
@@ -225,7 +226,7 @@ __global__ void P2PInGroup_core(KernelClass& inKernel, ParticleGroupClass& inPar
 
 template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
 __global__ void P2PBetweenGroupsTsm_core(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
-                                         ParticleGroupClassSource& inOtherParticleGroup, const IndexClass& inIndexes,
+                                         ParticleGroupClassSource& inOtherParticleGroup, const IndexClass* inIndexes,
                                          const long int* intervalSizes, const std::pair<long int,long int>* inBlockIdxs,
                                          const long int inNbBlocks) {
     for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
@@ -260,7 +261,7 @@ __global__ void P2PBetweenGroupsTsm_core(KernelClass& inKernel, ParticleGroupCla
 
 template <class KernelClass, class ParticleGroupClass, class IndexClass>
 __global__ void P2PBetweenGroups_core(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
-                                      ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes,
+                                      ParticleGroupClass& inOtherParticleGroup, const IndexClass* inIndexes,
                                       const long int* intervalSizes, const std::pair<long int,long int>* inBlockIdxs,
                                       const long int inNbBlocks) {
     for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
@@ -403,7 +404,7 @@ public:
             interactionBlocks.emplace_back(idxInteraction);
         }
 
-        TbfGroupKernelInterfaceCuda_core::M2LInGroup_core<<<1,1>>>(spaceSystem, inLevel, inKernel, inCellGroup, inIndexes,
+        TbfGroupKernelInterfaceCuda_core::M2LInGroup_core<<<1,1>>>(spaceSystem, inLevel, inKernel, inCellGroup, inIndexes.data(),
                                   static_cast<long int>(interactionBlocks.size()), interactionBlocks.data());
     }
 
@@ -448,7 +449,7 @@ public:
             }
         }
 
-        TbfGroupKernelInterfaceCuda_core::M2LBetweenGroups_core(spaceSystem, inLevel, inKernel, inCellGroup, inOtherCellGroup, inIndexes,
+        TbfGroupKernelInterfaceCuda_core::M2LBetweenGroups_core(spaceSystem, inLevel, inKernel, inCellGroup, inOtherCellGroup, inIndexes.data(),
                               offsetInteractionIdxs.size(), offsetInteractionIdxs.data(),
                               interactionIdxs.data(), foundSrcIdxs.data());
     }
@@ -545,7 +546,7 @@ public:
         }
 
         for(long int idxColor = 0 ; idxColor < spaceSystem.getNbNeighborsPerLeaf() ; ++idxColor){
-            TbfGroupKernelInterfaceCuda_core::P2PInGroup_core<<<1,1>>>(inKernel, inParticleGroup, inIndexes,
+            TbfGroupKernelInterfaceCuda_core::P2PInGroup_core<<<1,1>>>(inKernel, inParticleGroup, inIndexes.data(),
                                                                               interactionBlockIntervals[idxColor].data(),
                                                                               interactionBlocks[idxColor].data(),
                                                                               interactionBlockIntervals[idxColor].size()-1);
@@ -592,7 +593,7 @@ public:
         }
 
         for(long int idxColor = 0 ; idxColor < spaceSystem.getNbNeighborsPerLeaf() ; ++idxColor){
-            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroups_core<<<1,1>>>(inKernel, inParticleGroup, inOtherParticleGroup, inIndexes,
+            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroups_core<<<1,1>>>(inKernel, inParticleGroup, inOtherParticleGroup, inIndexes.data(),
                                                                               interactionBlockIntervals[idxColor].data(),
                                                                               interactionBlocks[idxColor].data(),
                                                                               interactionBlockIntervals[idxColor].size()-1);
@@ -633,7 +634,7 @@ public:
         }
 
         TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<<<1,1>>>(inKernel, inParticleGroup, inOtherParticleGroup,
-                                                                             inIndexes, interactionBlockIntervals.data(),
+                                                                             inIndexes.data(), interactionBlockIntervals.data(),
                                                                              interactionBlocks.data(),  interactionBlockIntervals.size()-1);
     }
 };

@@ -151,7 +151,7 @@ public:
         return objectData.template getViewerForBlockConst<0>().getItem().nbParticles;
     }
 
-    long int getNbLeaves() const{
+    __device__ __host__ long int getNbLeaves() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
     }
 
