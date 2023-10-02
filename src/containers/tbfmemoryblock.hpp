@@ -52,6 +52,7 @@ class TbfMemoryBlock{
     long int* nbItemsInBlocks;
     long int* offsetOfBlocksForPtrs;
     std::array<unsigned char*,NbBlocks> blockRawPtrs;
+    bool objectOwnData;
 
     void constructAllItems(){
         applyToAllElements([](auto& inItem){
@@ -62,6 +63,8 @@ class TbfMemoryBlock{
     }
 
     void freeAllItems(){
+        assert(objectOwnData);
+
         applyToAllElements([](auto& inItem){
             static_assert (std::is_reference<decltype(inItem)>::value, "Should be a ref here");
             using ItemType = typename std::decay<decltype(inItem)>::type;
@@ -72,9 +75,18 @@ class TbfMemoryBlock{
 public:
     TbfMemoryBlock()
         : allocatedMemorySizeInByte(0), rawMemoryPtr(nullptr), nbItemsInBlocks(nullptr),
-          offsetOfBlocksForPtrs(nullptr){
+        offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
         for(auto& blockPtr : blockRawPtrs){
             blockPtr = nullptr;
+        }
+    }
+
+    ~TbfMemoryBlock(){
+        if(objectOwnData == false){
+            rawMemoryPtr.release();
+        }
+        else{
+            freeAllItems();
         }
     }
 
@@ -91,6 +103,7 @@ public:
         nbItemsInBlocks = other.nbItemsInBlocks;
         offsetOfBlocksForPtrs = other.offsetOfBlocksForPtrs;
         blockRawPtrs = other.blockRawPtrs;
+        objectOwnData = other.objectOwnData;
 
         other.allocatedMemorySizeInByte = 0;
         other.nbItemsInBlocks = nullptr;
@@ -99,6 +112,7 @@ public:
             blockPtr = nullptr;
         }
         assert(other.rawMemoryPtr.get() == nullptr);
+        other.objectOwnData = false;
 
         return *this;
     }
@@ -110,20 +124,33 @@ public:
 
     explicit TbfMemoryBlock(unsigned char* inRawMemoryPtr, const long int inBlockSizeInByte)
         : allocatedMemorySizeInByte(inBlockSizeInByte), rawMemoryPtr(inRawMemoryPtr), nbItemsInBlocks(nullptr),
-          offsetOfBlocksForPtrs(nullptr){
+        offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
 
-        nbItemsInBlocks = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks));
-        offsetOfBlocksForPtrs = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks)
-                                                        - (sizeof(long int) * NbBlocks));
+        if(rawMemoryPtr == nullptr){
+            assert(allocatedMemorySizeInByte == 0);
+            for(auto& blockPtr : blockRawPtrs){
+                blockPtr = nullptr;
+            }
+        }
+        else{
+            nbItemsInBlocks = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks));
+            offsetOfBlocksForPtrs = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks)
+                                                            - (sizeof(long int) * NbBlocks));
 
-        for(long int idxPtr = 0 ; idxPtr < NbBlocks ; ++idxPtr){
-            blockRawPtrs[idxPtr] = &rawMemoryPtr[offsetOfBlocksForPtrs[idxPtr]];
+            for(long int idxPtr = 0 ; idxPtr < NbBlocks ; ++idxPtr){
+                blockRawPtrs[idxPtr] = &rawMemoryPtr[offsetOfBlocksForPtrs[idxPtr]];
+            }
         }
     }
 
     template <class SizeContainerClass>
     void resetBlocksFromSizes(SizeContainerClass&& inNbItemsInBlocks){
-        freeAllItems();
+        if(objectOwnData){
+            freeAllItems();
+        }
+
+        // We allocate, so we will have to deallocate too
+        objectOwnData = true;
 
         const std::array<std::pair<long int, long int>, NbBlocks + 1> sizeAndOffsetOfBlocks = GetSizeAndOffsetOfBlocks(inNbItemsInBlocks);
         const long int totalMemoryToAlloc = (sizeAndOffsetOfBlocks[NbBlocks].second
@@ -168,6 +195,7 @@ public:
 
     template <class FuncType>
     void applyToAllElements(FuncType&& inFunc){
+        assert(rawMemoryPtr != nullptr);
         if(nbItemsInBlocks){
             TbfUtils::for_each<TupleOfBlockDefinitions>([&](auto structWithBlockType, auto idxBlock){
                 using BlockType = typename decltype(structWithBlockType)::BlockTypeT;

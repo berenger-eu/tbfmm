@@ -47,6 +47,15 @@ private:
     LocalMemoryBlockType objectLocal;
 
 public:
+    explicit TbfCellsContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
+                               unsigned char* inObjectMultipolePtr, const size_t inObjectMultipoleSize,
+                               unsigned char* inObjectLocalPtr, const size_t inObjectLocalSize)
+        : objectData(inObjectDataPtr, inObjectDataSize),
+          objectMultipole(inObjectMultipolePtr, inObjectMultipoleSize),
+          objectLocal(inObjectLocalPtr, inObjectLocalSize){
+
+    }
+
     template <class ContainerClass, class ConverterClass>
     explicit TbfCellsContainer(const ContainerClass& inCellSpatialIndexes, const ConverterClass& inConverter){
         const long int nbCells = static_cast<long int>(std::size(inCellSpatialIndexes));

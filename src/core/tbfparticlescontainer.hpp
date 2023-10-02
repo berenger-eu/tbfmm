@@ -54,6 +54,12 @@ private:
     RhsMemoryBlockType objectRhs;
 
 public:
+    explicit TbfParticlesContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
+                               unsigned char* inObjectRhsPtr, const size_t inObjectRhsSize)
+        : objectData(inObjectDataPtr, inObjectDataSize),
+        objectRhs(inObjectRhsPtr, inObjectRhsSize){
+
+    }
 
     TbfParticlesContainer(const TbfParticlesContainer&) = delete;
     TbfParticlesContainer& operator=(const TbfParticlesContainer&) = delete;
