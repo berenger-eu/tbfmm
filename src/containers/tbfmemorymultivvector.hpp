@@ -50,16 +50,23 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
-        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems)
+#ifdef __NVCC__
+            __device__ __host__
+#endif
+explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
-
-        __device__ __host__ DataType& getItem(const long int inIdx, const long int inIdxRow){
+#ifdef __NVCC__
+        __device__ __host__
+#endif
+DataType& getItem(const long int inIdx, const long int inIdxRow){
             DataType* ptrToDataCol = reinterpret_cast<DataType*>(reinterpret_cast<unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
-
-        __device__ __host__ long int getNbItems() const{
+#ifdef __NVCC__
+        __device__ __host__
+#endif
+long int getNbItems() const{
             return nbItems;
         }
     };
@@ -69,16 +76,23 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
-        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
+        #ifdef __NVCC__
+                    __device__ __host__
+        #endif
+        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
-
-        __device__ __host__ const DataType& getItem(const long int inIdx, const long int inIdxRow){
+        #ifdef __NVCC__
+                            __device__ __host__
+        #endif
+        const DataType& getItem(const long int inIdx, const long int inIdxRow){
             const DataType* ptrToDataCol = reinterpret_cast<const DataType*>(reinterpret_cast<const unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
-
-        __device__ __host__ long int getNbItems() const{
+        #ifdef __NVCC__
+                                    __device__ __host__
+        #endif
+        long int getNbItems() const{
             return nbItems;
         }
     };

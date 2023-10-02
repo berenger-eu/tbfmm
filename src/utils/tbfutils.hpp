@@ -124,7 +124,10 @@ inline constexpr long int lipow(long int val, const long int power){
 }
 
 template <class ObjectType>
-__device__ __host__ static const ObjectType& make_const(ObjectType& obj){
+#ifdef __NVCC__
+__device__ __host__
+#endif
+static const ObjectType& make_const(ObjectType& obj){
     return obj;
 }
 

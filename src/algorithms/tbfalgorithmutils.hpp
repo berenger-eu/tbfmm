@@ -71,6 +71,70 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass&& inIndexes, GroupContain
                            std::forward<FuncType>(inFunc));
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+template <class IndexContainerClass, class GroupContainerClassSource, class GroupContainerClassTarget, class FuncType>
+inline void TbfMapIndexesAndBlocksIndexes(IndexContainerClass inIndexes, GroupContainerClassSource& inGroups, const long int idxWorkingGroup,
+                                   [[maybe_unused]] GroupContainerClassTarget& inGroupsTarget, FuncType&& inFunc){
+    if(std::size(inIndexes) == 0 || std::size(inGroups) == 0){
+        return;
+    }
+
+    std::sort(std::begin(inIndexes), std::end(inIndexes), TbfXtoXInteraction<decltype (inIndexes[0].indexSrc)>::SrcFirst);
+
+    long int idxCurrentIndex = 0;
+    long int idxCurrentGroup = 0;// TODO (idxWorkingGroup == 0 ? 1 : 0);
+
+    while(idxCurrentIndex != static_cast<long int>(std::size(inIndexes))
+           && idxCurrentGroup != static_cast<long int>(std::size(inGroups))){
+        const auto firstItem = std::lower_bound(inIndexes.begin() + idxCurrentIndex, inIndexes.end(),
+                                                inGroups[idxCurrentGroup].getStartingSpacialIndex(),
+                                                [](const auto& element, const auto& value){
+                                                    return element.indexSrc < value;
+                                                });
+        if(firstItem == inIndexes.end()){
+            break;
+        }
+        if(inGroups[idxCurrentGroup].getEndingSpacialIndex() < (*firstItem).indexSrc){
+            const auto firstGroup = std::lower_bound(inGroups.begin() + idxCurrentGroup, inGroups.end(),
+                                                     (*firstItem).indexSrc,
+                                                     [](const auto& element, const auto& value){
+                                                         return element.getEndingSpacialIndex() < value;
+                                                     });
+            if(firstGroup == inGroups.end()){
+                break;
+            }
+            idxCurrentGroup = std::distance(inGroups.begin(), firstGroup);
+        }
+        else{
+            const auto lastItem = std::upper_bound(firstItem, inIndexes.end(),
+                                                   inGroups[idxCurrentGroup].getEndingSpacialIndex(),
+                                                   [](const auto& value, const auto& element){
+                                                       return !(element.indexSrc <= value);
+                                                   });
+
+            assert(inGroups[idxCurrentGroup].getStartingSpacialIndex() <= (*firstItem).indexSrc
+                   && (*firstItem).indexSrc <= inGroups[idxCurrentGroup].getEndingSpacialIndex());
+            assert(inGroups[idxCurrentGroup].getStartingSpacialIndex() <= (*(lastItem-1)).indexSrc
+                   && (*(lastItem-1)).indexSrc <= inGroups[idxCurrentGroup].getEndingSpacialIndex());
+
+            inFunc(idxWorkingGroup, idxCurrentGroup,
+                   TbfMakeVectorView(inIndexes,std::distance(inIndexes.begin(),firstItem),
+                                     std::distance(inIndexes.begin(),lastItem)-std::distance(inIndexes.begin(),firstItem)));
+
+            idxCurrentIndex = std::distance(inIndexes.begin(), lastItem);
+        }
+    }
+}
+
+template <class IndexContainerClass, class GroupContainerClass, class FuncType>
+inline void TbfMapIndexesAndBlocksIndexes(IndexContainerClass&& inIndexes, GroupContainerClass& inGroups, const long int idxWorkingGroup,
+                                   FuncType&& inFunc){
+    TbfMapIndexesAndBlocksIndexes(std::forward<IndexContainerClass>(inIndexes), inGroups, idxWorkingGroup, inGroups,
+                           std::forward<FuncType>(inFunc));
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 enum TbfOperations {
     TbfP2P  = (1 << 0),

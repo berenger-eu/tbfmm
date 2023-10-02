@@ -110,6 +110,30 @@ list(APPEND TBF_USE_LIST_AVAILABLE SPECX)
 
 #################################################
 
+if(DEFINED ENV{STARPU_DIR})
+    message(STATUS "STARPU Found")
+    if(NOT ${TBFMM_ENABLE_STARPU})
+        message(STATUS "STARPU Disabled (but env variable found)")   
+    else()	    		
+        message(STATUS "ENV{STARPU_DIR} = $ENV{STARPU_DIR}")
+        
+        set(TBFMM_STARPU_VERSION "1.4" CACHE STRING "Set to starpu version to look at the inalude dir and set the lib name"  )
+        message(STATUS "TBFMM_STARPU_VERSION = ${TBFMM_STARPU_VERSION}")
+		
+	    INCLUDE_DIRECTORIES($ENV{STARPU_DIR}/include/starpu/${TBFMM_STARPU_VERSION}/)
+	    link_directories("$ENV{STARPU_DIR}/lib/")
+	    list(APPEND TBFMM_LIBRARIES starpu-${TBFMM_STARPU_VERSION})
+
+	    list(APPEND TBF_USE_LIST STARPU)
+    endif()
+else()
+    message(STATUS "STARPU Cannot be found, set env variable STARPU_DIR")
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE STARPU)
+
+#################################################
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp/CMakeLists.txt")
     if(NOT ${TBFMM_ENABLE_INASTEMP})
         message(STATUS "INASTEMP Disabled")   

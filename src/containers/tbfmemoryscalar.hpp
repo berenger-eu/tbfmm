@@ -40,12 +40,18 @@ public:
     class Viewer{
         DataType* ptrToData;
     public:
-        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+        explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
 
-        __device__ __host__ DataType& getItem(){
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+        DataType& getItem(){
             return *ptrToData;
         }
     };
@@ -53,12 +59,17 @@ public:
     class ViewerConst{
         const DataType* ptrToData;
     public:
-        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+            explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
-
-        __device__ __host__ const DataType& getItem() const{
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+        const DataType& getItem() const{
             return *ptrToData;
         }
     };

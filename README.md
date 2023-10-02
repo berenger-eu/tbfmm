@@ -30,8 +30,9 @@ TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM 
 - Clang/LLVM (8 and 10) https://llvm.org/
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
-SPECX needs GNU g++ version 8 or above.
+SPECX needs C++ compiler (for example GNU g++ version 8 or above).
 Intel compiler (icpc) can be used to compile the code, however, its OpenMP library is currently not compatible with TBFMM (tested on version `19.0.4.243`).
+StarPU needs a C compiler
 
 ## Dependency list
 
@@ -40,6 +41,7 @@ All the dependencies are optional:
 - Inastemp (for P2P vectorization)
 - Specx (for parallelization)
 - FFTW (for the uniform kernel)
+- StarPU (for task-based parallelization, similar to Specx)
 
 ## How to compile
 
@@ -79,6 +81,12 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 # If a package has been found but should be disabled, this can be done
 # with -DTBFMM_ENABLE_[PACKAGE]=OFF, where PACKAGE can be:
 # SPECX, INASTEMP, FFTW, OPENMP
+
+# To use StarPU, one has to set the env variable STARPU_DIR that contains the install dir of StarPU
+# It is also advised to disable Specx, to compile faster
+# The cmake variable TBFMM_STARPU_VERSION can be used to set starpu version (1.4 by default)
+export STARPU_DIR=/my_computer/StarPU/install/
+cmake -DTBFMM_ENABLE_SPECX=OFF
 
 # Update an existing configuration by calling again cmake -D[an option]=[a value] ..
 # or using ccmake ..
@@ -542,13 +550,15 @@ There are several different kernels:
 
 In addition, an extra algorithm can be used to apply periodicity above the level 1 (to simulate a repetition of the simulation box).
 
-Here is an example of asking TBFMM to provide the best algorithm class (sequential < OpenMP < SPECX)
+Here is an example of asking TBFMM to provide the best algorithm class (sequential < OpenMP < SPECX < StarPU)
 
 ```cpp
 // Let TBFMM select the right algorithm class (for kernel = KernelClass)
 using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 // Could be specific (but needs to be sure the algorithm is supported)
-#ifdef TBF_USE_SPECX
+#ifdef TBF_USE_STARPU
+    using AlgorithmClass = TbfSmStarpuAlgorithm<RealType, KernelClass>;
+#if defined(TBF_USE_SPECX)
     using AlgorithmClass = TbfSmSpecxAlgorithm<RealType, KernelClass>;
 #elif defined(TBF_USE_OPENMP)
     using AlgorithmClass = TbfOpenmpAlgorithm<RealType, KernelClass>;

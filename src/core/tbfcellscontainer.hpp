@@ -141,12 +141,20 @@ public:
         return objectData.getPtr();
     }
 
+    auto getDataSize() const {
+        return objectData.getAllocatedMemorySizeInByte();
+    }
+
     unsigned char* getMultipolePtr(){
         return objectMultipole.getPtr();
     }
 
     const unsigned char* getMultipolePtr() const {
         return objectMultipole.getPtr();
+    }
+
+    auto getMultipoleSize() const {
+        return objectMultipole.getAllocatedMemorySizeInByte();
     }
 
     unsigned char* getLocalPtr(){
@@ -157,6 +165,9 @@ public:
         return objectLocal.getPtr();
     }
 
+    auto getLocalSize() const {
+        return objectLocal.getAllocatedMemorySizeInByte();
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 

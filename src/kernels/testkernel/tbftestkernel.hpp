@@ -97,6 +97,7 @@ public:
         }
     }
 
+    #ifdef __NVCC__
     static constexpr bool CudaP2P = true;
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
@@ -136,6 +137,7 @@ public:
             inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
         }
     }
+    #endif
 };
 
 #endif

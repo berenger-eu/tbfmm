@@ -16,10 +16,15 @@
 #include "algorithms/openmp/tbfopenmpalgorithm.hpp"
 #include "algorithms/openmp/tbfopenmpalgorithmtsm.hpp"
 #endif
+#ifdef TBF_USE_STARPU
+#include "algorithms/smstarpu/tbfsmstarpualgorithm.hpp"
+#endif
 
 struct TbfAlgorithmSelecter{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
-#ifdef TBF_USE_SPECX
+#ifdef TBF_USE_STARPU
+    using type = TbfSmStarpuAlgorithm<RealType, KernelClass, SpaceIndexType>;
+#elif defined(TBF_USE_SPECX)
 #ifndef TBF_USE_CUDA
     using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else

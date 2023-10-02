@@ -149,7 +149,10 @@ public:
         constructAllItems();
     }
 
-    __device__ __host__ bool isEmpty() const {
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+    bool isEmpty() const {
         return !nbItemsInBlocks;
     }
 
@@ -184,7 +187,10 @@ public:
     }
 
     template <long int IdxBlock>
-    __device__ __host__ auto getViewerForBlock(){
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+        auto getViewerForBlock(){
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -220,7 +226,10 @@ public:
     }
 
     template <long int IdxBlock>
-    __device__ __host__ auto getViewerForBlockConst() const {
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+        auto getViewerForBlockConst() const {
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -231,6 +240,13 @@ public:
         else{
             return typename BlockType::ViewerConst(nullptr, 0);
         }
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    auto getAllocatedMemorySizeInByte() const{
+        return allocatedMemorySizeInByte;
     }
 };
 

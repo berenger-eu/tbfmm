@@ -151,7 +151,10 @@ public:
         return objectData.template getViewerForBlockConst<0>().getItem().nbParticles;
     }
 
-    __device__ __host__ long int getNbLeaves() const{
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    long int getNbLeaves() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
     }
 
@@ -165,27 +168,42 @@ public:
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).boxCoord;
     }
 
-    __device__ __host__ const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf);
     }
 
-    __device__ __host__ long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).nbParticles;
     }
 
-    __device__ __host__ const long int* getParticleIndexes(const long int inIdxLeaf) const {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+const long int* getParticleIndexes(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlockConst<2>().getItem(leafHeader.offSet);
     }
 
-    __device__ __host__ long int* getParticleIndexes(const long int inIdxLeaf) {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    long int* getParticleIndexes(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlock<2>().getItem(leafHeader.offSet);
     }
 
-    __device__ __host__ std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<const DataType*, NbDataValuesPerParticle> particleDataPtr;
@@ -195,7 +213,10 @@ public:
         return particleDataPtr;
     }
 
-    __device__ __host__ std::array<DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    std::array<DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<DataType*, NbDataValuesPerParticle> particleDataPtr;
@@ -205,7 +226,10 @@ public:
         return particleDataPtr;
     }
 
-    __device__ __host__ const std::array<const RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) const {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    const std::array<const RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<const RhsType*, NbRhsValuesPerParticle> particleRhsPtr;
@@ -222,7 +246,10 @@ public:
         return particleRhsPtr;
     }
 
-    __device__ __host__ std::array<RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    std::array<RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         std::array<RhsType*, NbRhsValuesPerParticle> particleRhsPtr;
@@ -278,12 +305,20 @@ public:
         return objectData.getPtr();
     }
 
+    auto getDataSize() const {
+        return objectData.getAllocatedMemorySizeInByte();
+    }
+
     unsigned char* getRhsPtr(){
         return objectRhs.getPtr();
     }
 
     const unsigned char* getRhsPtr() const {
         return objectRhs.getPtr();
+    }
+
+    auto getRhsSize() const {
+        return objectRhs.getAllocatedMemorySizeInByte();
     }
 
     ///////////////////////////////////////////////////////////////////////////
