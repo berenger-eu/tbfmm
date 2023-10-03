@@ -14,6 +14,7 @@
 
 #include <starpu.h>
 
+#include "tbfsmstarpuutils.hpp"
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
 class TbfSmStarpuAlgorithm {
@@ -26,90 +27,8 @@ public:
 protected:
     using ThisClass = TbfSmStarpuAlgorithm<RealType_T, KernelClass_T, SpaceIndexType_T>;
 
-    using CellHandleContainer = std::vector<std::vector<std::array<starpu_data_handle_t, 3>>>;
-    using ParticleHandleContainer = std::vector<std::array<starpu_data_handle_t,2>>;
-
-    void CleanCellHandles(CellHandleContainer& inCellHandles) const{
-        for(auto& handlePerLevel : inCellHandles){
-            for(auto& handleGroup : handlePerLevel){
-                for(auto& handle : handleGroup){
-                    starpu_data_unregister(handle);
-                }
-            }
-        }
-    }
-
-    template <class TreeClass>
-    auto GetCellHandles(TreeClass& inTree) const{
-        CellHandleContainer allCellHandles(configuration.getTreeHeight());
-
-        for(long int idxLevel = 0 ; idxLevel < configuration.getTreeHeight() ; ++idxLevel){
-            auto& cellGroups = inTree.getCellGroupsAtLevel(idxLevel);
-
-            auto currentCellGroup = cellGroups.begin();
-            const auto endCellGroup = cellGroups.end();
-
-            while(currentCellGroup != endCellGroup){
-                starpu_data_handle_t handleData;
-                starpu_variable_data_register(&handleData, STARPU_MAIN_RAM,
-                                            uintptr_t(currentCellGroup->getDataPtr()),
-                                            uint32_t(currentCellGroup->getDataSize()));
-
-                starpu_data_handle_t handleMultipole;
-                starpu_variable_data_register(&handleMultipole, STARPU_MAIN_RAM,
-                                            uintptr_t(currentCellGroup->getMultipolePtr()),
-                                            uint32_t(currentCellGroup->getMultipoleSize()));
-
-                starpu_data_handle_t handleLocal;
-                starpu_variable_data_register(&handleLocal, STARPU_MAIN_RAM,
-                                            uintptr_t(currentCellGroup->getLocalPtr()),
-                                            uint32_t(currentCellGroup->getLocalSize()));
-
-                std::array<starpu_data_handle_t, 3> cellHandles{handleData, handleMultipole, handleLocal};
-                allCellHandles[idxLevel].push_back(cellHandles);
-
-                ++currentCellGroup;
-            }
-        }
-        return allCellHandles;
-    }
-
-
-    void CleanParticleHandles(ParticleHandleContainer& inParticleHandles) const{
-        for(auto& handleGroup : inParticleHandles){
-            for(auto& handle : handleGroup){
-                starpu_data_unregister(handle);
-            }
-        }
-    }
-
-    template <class TreeClass>
-    auto GetParticleHandles(TreeClass& inTree) const{
-        ParticleHandleContainer allParticlesHandles;
-
-        auto& particleGroups = inTree.getParticleGroups();
-
-        auto currentParticleGroup = particleGroups.begin();
-        const auto endParticleGroup = particleGroups.end();
-
-        while(currentParticleGroup != endParticleGroup){
-            starpu_data_handle_t handleData;
-            starpu_variable_data_register(&handleData, STARPU_MAIN_RAM,
-                                        uintptr_t(currentParticleGroup->getDataPtr()),
-                                        uint32_t(currentParticleGroup->getDataSize()));
-
-            starpu_data_handle_t handleRhs;
-            starpu_variable_data_register(&handleRhs, STARPU_MAIN_RAM,
-                                        uintptr_t(currentParticleGroup->getRhsPtr()),
-                                        uint32_t(currentParticleGroup->getRhsSize()));
-
-            std::array<starpu_data_handle_t,2> particlesHandles{handleData, handleRhs};
-            allParticlesHandles.push_back(particlesHandles);
-
-            ++currentParticleGroup;
-        }
-        return allParticlesHandles;
-    }
+    using CellHandleContainer = typename TbfStarPUHandleBuilder::CellHandleContainer;
+    using ParticleHandleContainer = typename TbfStarPUHandleBuilder::ParticleHandleContainer;
 
     using VecOfIndexes = std::vector<TbfXtoXInteraction<typename SpaceIndexType::IndexType>>;
     std::list<VecOfIndexes> vecIndexBuffer;
@@ -123,8 +42,8 @@ protected:
     starpu_codelet m2l_cl_between_groups;
     starpu_codelet m2l_cl_inside;
 
-    starpu_codelet p2p_cl_in;
-    starpu_codelet p2p_cl_inout;
+    starpu_codelet p2p_cl_oneleaf;
+    starpu_codelet p2p_cl_twoleaves;
 
     template<class CellContainerClass, class ParticleContainerClass>
     static void P2MCallback(void *buffers[], void *cl_arg){
@@ -150,7 +69,7 @@ protected:
     }
 
     template<class ParticleContainerClass>
-    static void P2PInOutCallback(void *buffers[], void *cl_arg){
+    static void P2PBetweenLeavesCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         VecOfIndexes* indexesForGroup_first;
         starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
@@ -176,7 +95,7 @@ protected:
     }
 
     template<class ParticleContainerClass>
-    static void P2PCallback(void *buffers[], void *cl_arg){
+    static void P2POneLeafCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         VecOfIndexes* indexesForGroup_first;
         starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
@@ -356,23 +275,23 @@ protected:
         l2p_cl.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
         l2p_cl.name = "l2p_cl";
 
-        memset(&p2p_cl_in, 0, sizeof(p2p_cl_in));
-        p2p_cl_in.cpu_funcs[0] = &P2PCallback<ParticleContainerClass>;
-        p2p_cl_in.where |= STARPU_CPU;
-        p2p_cl_in.nbuffers = 2;
-        p2p_cl_in.modes[0] = STARPU_R;
-        p2p_cl_in.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
-        p2p_cl_in.name = "p2p_cl_in";
+        memset(&p2p_cl_oneleaf, 0, sizeof(p2p_cl_oneleaf));
+        p2p_cl_oneleaf.cpu_funcs[0] = &P2POneLeafCallback<ParticleContainerClass>;
+        p2p_cl_oneleaf.where |= STARPU_CPU;
+        p2p_cl_oneleaf.nbuffers = 2;
+        p2p_cl_oneleaf.modes[0] = STARPU_R;
+        p2p_cl_oneleaf.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_oneleaf.name = "p2p_cl_oneleaf";
 
-        memset(&p2p_cl_inout, 0, sizeof(p2p_cl_inout));
-        p2p_cl_inout.cpu_funcs[0] = &P2PInOutCallback<ParticleContainerClass>;
-        p2p_cl_inout.where |= STARPU_CPU;
-        p2p_cl_inout.nbuffers = 4;
-        p2p_cl_inout.modes[0] = STARPU_R;
-        p2p_cl_inout.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
-        p2p_cl_inout.modes[2] = STARPU_R;
-        p2p_cl_inout.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
-        p2p_cl_inout.name = "p2p_cl_inout";
+        memset(&p2p_cl_twoleaves, 0, sizeof(p2p_cl_twoleaves));
+        p2p_cl_twoleaves.cpu_funcs[0] = &P2PBetweenLeavesCallback<ParticleContainerClass>;
+        p2p_cl_twoleaves.where |= STARPU_CPU;
+        p2p_cl_twoleaves.nbuffers = 4;
+        p2p_cl_twoleaves.modes[0] = STARPU_R;
+        p2p_cl_twoleaves.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_twoleaves.modes[2] = STARPU_R;
+        p2p_cl_twoleaves.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_twoleaves.name = "p2p_cl_twoleaves";
 
         memset(&m2l_cl_between_groups, 0, sizeof(m2l_cl_between_groups));
         m2l_cl_between_groups.cpu_funcs[0] = M2LCallback<CellContainerClass>;
@@ -649,7 +568,7 @@ protected:
                 auto* thisptr = this;
                 vecIndexBuffer.push_back(indexes.toStdVector());
                 VecOfIndexes* vecIndexesPtr = &vecIndexBuffer.back();
-                starpu_insert_task(&p2p_cl_inout,
+                starpu_insert_task(&p2p_cl_twoleaves,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
                                    STARPU_VALUE, &vecIndexesPtr, sizeof(void*),
                                    STARPU_PRIORITY, priorities.getP2PPriority(),
@@ -664,7 +583,7 @@ protected:
             auto* thisptr = this;
             vecIndexBuffer.push_back(std::move(indexesForGroup.first));
             VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
-            starpu_insert_task(&p2p_cl_in,
+            starpu_insert_task(&p2p_cl_oneleaf,
                                STARPU_VALUE, &thisptr, sizeof(void*),
                                STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
                                STARPU_PRIORITY, priorities.getP2PPriority(),
@@ -719,8 +638,8 @@ public:
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
-        CellHandleContainer allCellHandles = GetCellHandles(inTree);
-        ParticleHandleContainer allParticlesHandles = GetParticleHandles(inTree);
+        auto allCellHandles = TbfStarPUHandleBuilder::GetCellHandles(inTree, configuration);
+        auto allParticlesHandles = TbfStarPUHandleBuilder::GetParticleHandles(inTree);
 
         using CellContainerClass = typename TreeClass::CellGroupClass;
         using ParticleContainerClass = typename TreeClass::LeafGroupClass;
@@ -754,8 +673,8 @@ public:
 
         starpu_pause();
         vecIndexBuffer.clear();
-        CleanCellHandles(allCellHandles);
-        CleanParticleHandles(allParticlesHandles);
+        TbfStarPUHandleBuilder::CleanCellHandles(allCellHandles);
+        TbfStarPUHandleBuilder::CleanParticleHandles(allParticlesHandles);
     }
 
     template <class FuncType>
