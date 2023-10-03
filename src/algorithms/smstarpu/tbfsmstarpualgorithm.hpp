@@ -138,8 +138,6 @@ protected:
 
     template <class TreeClass>
     void P2M(TreeClass& inTree, CellHandleContainer& cellHandles, ParticleHandleContainer& particleHandles){
-        using CellContainerClass = typename TreeClass::CellGroupClass;
-        using ParticleContainerClass = typename TreeClass::LeafGroupClass;
         if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
@@ -176,7 +174,6 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree, CellHandleContainer& cellHandles){
-        using CellContainerClass = typename TreeClass::CellGroupClass;
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -223,7 +220,6 @@ protected:
 
     template <class TreeClass>
     void M2L(TreeClass& inTree, CellHandleContainer& cellHandles){
-        using CellContainerClass = typename TreeClass::CellGroupClass;
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -275,7 +271,6 @@ protected:
 
     template <class TreeClass>
     void L2L(TreeClass& inTree, CellHandleContainer& cellHandles){
-        using CellContainerClass = typename TreeClass::CellGroupClass;
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -322,8 +317,6 @@ protected:
 
     template <class TreeClass>
     void L2P(TreeClass& inTree, CellHandleContainer& cellHandles, ParticleHandleContainer& particleHandles){
-        using CellContainerClass = typename TreeClass::CellGroupClass;
-        using ParticleContainerClass = typename TreeClass::LeafGroupClass;
         if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
@@ -363,7 +356,6 @@ protected:
 
     template <class TreeClass>
     void P2P(TreeClass& inTree, ParticleHandleContainer& particleHandles){
-        using ParticleContainerClass = typename TreeClass::LeafGroupClass;
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroups = inTree.getParticleGroups();

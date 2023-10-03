@@ -18,6 +18,7 @@
 #endif
 #ifdef TBF_USE_STARPU
 #include "algorithms/smstarpu/tbfsmstarpualgorithm.hpp"
+#include "algorithms/smstarpu/tbfsmstarpualgorithmtsm.hpp"
 #endif
 
 struct TbfAlgorithmSelecter{
@@ -39,7 +40,9 @@ struct TbfAlgorithmSelecter{
 
 struct TbfAlgorithmSelecterTsm{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
-#ifdef TBF_USE_SPECX
+#ifdef TBF_USE_STARPU
+    using type = TbfSmStarpuAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
+#elif defined(TBF_USE_SPECX)
     using type = TbfSmSpecxAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;

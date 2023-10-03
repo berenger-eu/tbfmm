@@ -231,18 +231,18 @@ public:
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
 
-        unsigned char* tgtData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[2]);
-        size_t tgtDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
+        unsigned char* tgtData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[1]);
+        size_t tgtDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[1]);
 
-        unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[3]);
-        size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
+        unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[2]);
+        size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
 
         const ParticleContainerClassSource groupSrc(srcData, srcDataSize,
                                         nullptr, 0);
         ParticleContainerClassTarget groupTarget(tgtData, tgtDataSize,
                                            tgtRhs, tgtRhsSize);
 
-        thisptr->kernelWrapper.P2PBetweenGroups(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        thisptr->kernelWrapper.P2PBetweenGroupsTsm(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
     }
 };
 
