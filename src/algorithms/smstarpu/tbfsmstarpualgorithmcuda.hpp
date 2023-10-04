@@ -63,7 +63,7 @@ protected:
             p2m_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2MCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
             p2m_cl.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuP2M | KernelCapabilities::CudaP2M, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuP2M || KernelCapabilities::CudaP2M, "At least one should be enabled.");
         p2m_cl.nbuffers = 3;
         p2m_cl.modes[0] = STARPU_R;
         p2m_cl.modes[1] = STARPU_R;
@@ -79,7 +79,7 @@ protected:
             m2m_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::M2MCallback<ThisClass, CellContainerClass>;
             m2m_cl.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuM2M | KernelCapabilities::CudaM2M, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuM2M || KernelCapabilities::CudaM2M, "At least one should be enabled.");
         m2m_cl.nbuffers = 4;
         m2m_cl.modes[0] = STARPU_R;
         m2m_cl.modes[1] = STARPU_R;
@@ -96,7 +96,7 @@ protected:
             l2l_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::L2LCallback<ThisClass, CellContainerClass>;
             l2l_cl.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuL2L | KernelCapabilities::CudaL2L, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuL2L || KernelCapabilities::CudaL2L, "At least one should be enabled.");
         l2l_cl.nbuffers = 4;
         l2l_cl.modes[0] = STARPU_R;
         l2l_cl.modes[1] = STARPU_R;
@@ -113,7 +113,7 @@ protected:
             l2p_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::L2PCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
             l2p_cl.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuL2P | KernelCapabilities::CudaL2P, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuL2P || KernelCapabilities::CudaL2P, "At least one should be enabled.");
         l2p_cl.nbuffers = 4;
         l2p_cl.modes[0] = STARPU_R;
         l2p_cl.modes[1] = STARPU_R;
@@ -130,7 +130,7 @@ protected:
             p2p_cl_oneleaf.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
             p2p_cl_oneleaf.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuP2P | KernelCapabilities::CudaP2P, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuP2P || KernelCapabilities::CudaP2P, "At least one should be enabled.");
         p2p_cl_oneleaf.nbuffers = 2;
         p2p_cl_oneleaf.modes[0] = STARPU_R;
         p2p_cl_oneleaf.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
@@ -145,7 +145,7 @@ protected:
             p2p_cl_twoleaves.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2PBetweenLeavesCallback<ThisClass, ParticleContainerClass>;
             p2p_cl_twoleaves.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuP2P | KernelCapabilities::CudaP2P, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuP2P || KernelCapabilities::CudaP2P, "At least one should be enabled.");
         p2p_cl_twoleaves.nbuffers = 4;
         p2p_cl_twoleaves.modes[0] = STARPU_R;
         p2p_cl_twoleaves.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
@@ -162,7 +162,7 @@ protected:
             m2l_cl_between_groups.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::M2LCallback<ThisClass, CellContainerClass>;
             m2l_cl_between_groups.where |= STARPU_CUDA;
         }
-        static_assert(KernelCapabilities::CpuM2L | KernelCapabilities::CudaM2L, "At least one should be enabled.");
+        static_assert(KernelCapabilities::CpuM2L || KernelCapabilities::CudaM2L, "At least one should be enabled.");
         m2l_cl_between_groups.nbuffers = 4;
         m2l_cl_between_groups.modes[0] = STARPU_R;
         m2l_cl_between_groups.modes[1] = STARPU_R;
@@ -515,7 +515,8 @@ public:
 
         starpu_resume();
 
-        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER));
+        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
+                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
             P2M(inTree, allCellHandles, allParticlesHandles);
@@ -558,6 +559,9 @@ public:
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
         inStream << inAlgo.spaceSystem << "\n";
+        inStream << " - Total workers: " << starpu_worker_get_count() << "\n";
+        inStream << "  - CPU " << starpu_cpu_worker_get_count() << "\n";
+        inStream << "  - CUDA " << starpu_cuda_worker_get_count() << "\n";
         return inStream;
     }
 

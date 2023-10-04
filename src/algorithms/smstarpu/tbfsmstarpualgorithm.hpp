@@ -496,6 +496,8 @@ public:
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
         inStream << inAlgo.spaceSystem << "\n";
+        inStream << " - Total workers: " << starpu_worker_get_count() << "\n";
+        inStream << "  - CPU " << starpu_cpu_worker_get_count() << "\n";
         return inStream;
     }
 
