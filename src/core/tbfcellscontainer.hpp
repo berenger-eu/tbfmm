@@ -47,12 +47,25 @@ private:
     LocalMemoryBlockType objectLocal;
 
 public:
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     explicit TbfCellsContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
                                unsigned char* inObjectMultipolePtr, const size_t inObjectMultipoleSize,
                                unsigned char* inObjectLocalPtr, const size_t inObjectLocalSize)
         : objectData(inObjectDataPtr, inObjectDataSize),
           objectMultipole(inObjectMultipolePtr, inObjectMultipoleSize),
           objectLocal(inObjectLocalPtr, inObjectLocalSize){
+
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+        explicit TbfCellsContainer(const std::array<std::pair<unsigned char*, size_t>, 3>& inPtrsSizes)
+        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second),
+        objectMultipole(inPtrsSizes[1].first, inPtrsSizes[1].second),
+        objectLocal(inPtrsSizes[2].first, inPtrsSizes[2].second){
 
     }
 

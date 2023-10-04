@@ -54,10 +54,22 @@ private:
     RhsMemoryBlockType objectRhs;
 
 public:
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     explicit TbfParticlesContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
                                unsigned char* inObjectRhsPtr, const size_t inObjectRhsSize)
         : objectData(inObjectDataPtr, inObjectDataSize),
         objectRhs(inObjectRhsPtr, inObjectRhsSize){
+
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    explicit TbfParticlesContainer(const std::array<std::pair<unsigned char*,size_t>,2>& inPtrsSizes)
+        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second),
+        objectRhs(inPtrsSizes[1].first, inPtrsSizes[1].second){
 
     }
 
