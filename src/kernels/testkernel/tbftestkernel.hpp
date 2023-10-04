@@ -98,6 +98,7 @@ public:
     }
 
     #ifdef __NVCC__
+    static constexpr bool CpuP2P = true;
     static constexpr bool CudaP2P = true;
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
