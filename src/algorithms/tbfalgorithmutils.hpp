@@ -6,6 +6,7 @@
 #include "containers/tbfvectorview.hpp"
 
 #include <cassert>
+#include <type_traits>
 
 namespace TbfAlgorithmUtils{
 
@@ -197,6 +198,67 @@ public:
     int getL2PPriority() const{
         return prioL2P;
     }
+};
+///////////////////////////////////////////////////////////////////////////////
+
+
+template <const bool>
+class BoolSelecter;
+
+template <>
+class BoolSelecter<true> : public std::true_type {};
+
+template <>
+class BoolSelecter<false> : public std::false_type {};
+
+// See http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf.
+template <typename...>
+using void_t = void;
+
+#define CUDA_OP_DETECT(OP_NAME)\
+template <typename, template <typename> class, typename = void_t<>>\
+    struct detect_##OP_NAME : std::false_type {};\
+        \
+    template <typename T, template <typename> class Op>\
+    struct detect_##OP_NAME<T, Op, void_t<Op<T>>> : BoolSelecter<T::OP_NAME> {};\
+        \
+    template <typename T>\
+    using OP_NAME##_test = decltype(T::OP_NAME);\
+        \
+    template <typename T>\
+    using class_has_##OP_NAME = detect_##OP_NAME<T, OP_NAME##_test>;
+
+template <class KernelClass>
+class KernelHardwareSupport{
+    CUDA_OP_DETECT(CudaP2P)
+    CUDA_OP_DETECT(CudaP2M)
+    CUDA_OP_DETECT(CudaM2M)
+    CUDA_OP_DETECT(CudaM2L)
+    CUDA_OP_DETECT(CudaL2L)
+    CUDA_OP_DETECT(CudaL2P)
+
+    CUDA_OP_DETECT(CpuP2P)
+    CUDA_OP_DETECT(CpuP2M)
+    CUDA_OP_DETECT(CpuM2M)
+    CUDA_OP_DETECT(CpuM2L)
+    CUDA_OP_DETECT(CpuL2L)
+    CUDA_OP_DETECT(CpuL2P)
+
+public:
+    // Check if cuda is enabled
+    constexpr static bool CudaP2P = class_has_CudaP2P<KernelClass>::value;
+    constexpr static bool CudaP2M = class_has_CudaP2M<KernelClass>::value;
+    constexpr static bool CudaM2M = class_has_CudaM2M<KernelClass>::value;
+    constexpr static bool CudaM2L = class_has_CudaM2L<KernelClass>::value;
+    constexpr static bool CudaL2L = class_has_CudaL2L<KernelClass>::value;
+    constexpr static bool CudaL2P = class_has_CudaL2P<KernelClass>::value;
+
+    constexpr static bool CpuP2P = (!CudaP2P || class_has_CpuP2P<KernelClass>::value);
+    constexpr static bool CpuP2M = (!CudaP2M || class_has_CpuP2M<KernelClass>::value);
+    constexpr static bool CpuM2M = (!CudaM2M || class_has_CpuM2M<KernelClass>::value);
+    constexpr static bool CpuM2L = (!CudaM2L || class_has_CpuM2L<KernelClass>::value);
+    constexpr static bool CpuL2L = (!CudaL2L || class_has_CpuL2L<KernelClass>::value);
+    constexpr static bool CpuL2P = (!CudaL2P || class_has_CpuL2P<KernelClass>::value);
 };
 
 }

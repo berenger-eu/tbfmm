@@ -273,7 +273,9 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
         //        for(long int idxLeaf = 0 ; idxLeaf < header.nbLeaves ; ++idxLeaf){
         //            const auto& leafHeader = leavesViewer.getItem(idxLeaf);

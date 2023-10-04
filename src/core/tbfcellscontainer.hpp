@@ -180,6 +180,9 @@ public:
 
     ///////////////////////////////////////////////////////////////////////////
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
         //        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
         //            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);

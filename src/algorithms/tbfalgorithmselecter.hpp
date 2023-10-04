@@ -19,12 +19,19 @@
 #ifdef TBF_USE_STARPU
 #include "algorithms/smstarpu/tbfsmstarpualgorithm.hpp"
 #include "algorithms/smstarpu/tbfsmstarpualgorithmtsm.hpp"
+#ifdef TBF_USE_CUDA
+#include "algorithms/smstarpu/tbfsmstarpualgorithmcuda.hpp"
+#endif
 #endif
 
 struct TbfAlgorithmSelecter{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_STARPU
+#ifndef TBF_USE_CUDA
     using type = TbfSmStarpuAlgorithm<RealType, KernelClass, SpaceIndexType>;
+#else
+    using type = TbfSmStarpuAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
+#endif
 #elif defined(TBF_USE_SPECX)
 #ifndef TBF_USE_CUDA
     using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;

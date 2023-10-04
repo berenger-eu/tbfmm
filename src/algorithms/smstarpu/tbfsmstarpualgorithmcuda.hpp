@@ -7,30 +7,19 @@
 #include "../sequential/tbfgroupkernelinterfacecuda.hpp"
 #include "spacial/tbfspacialconfiguration.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
-
-#include <Legacy/SpRuntime.hpp>
+#include "tbfsmstarpucallbacks.hpp"
+#include "tbfsmstarpucallbackscuda.hpp"
 
 #include <cassert>
 #include <iterator>
+#include <list>
 
 #include <starpu.h>
 
-#ifndef SCALFMM_USE_CUDA
-#error CUDA MUST BE ENABLED
-#endif
-
-template <const bool>
-class BoolSelecter;
-
-template <>
-class BoolSelecter<true> : public std::true_type {};
-
-template <>
-class BoolSelecter<false> : public std::false_type {};
-
+#include "tbfsmstarpuutils.hpp"
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfSmSpecxAlgorithmCuda {
+class TbfSmStarpuAlgorithmCuda {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -38,6 +27,166 @@ public:
     using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
 
 protected:
+    using ThisClass = TbfSmStarpuAlgorithmCuda<RealType_T, KernelClass_T, SpaceIndexType_T>;
+
+    using CellHandleContainer = typename TbfStarPUHandleBuilder::CellHandleContainer;
+    using ParticleHandleContainer = typename TbfStarPUHandleBuilder::ParticleHandleContainer;
+
+    using VecOfIndexes = std::vector<TbfXtoXInteraction<typename SpaceIndexType::IndexType>>;
+    std::list<VecOfIndexes> vecIndexBuffer;
+
+    starpu_codelet p2m_cl;
+    starpu_codelet m2m_cl;
+    starpu_codelet l2l_cl;
+    starpu_codelet l2l_cl_nocommute;
+    starpu_codelet l2p_cl;
+
+    starpu_codelet m2l_cl_between_groups;
+    starpu_codelet m2l_cl_inside;
+
+    starpu_codelet p2p_cl_oneleaf;
+    starpu_codelet p2p_cl_twoleaves;
+
+    friend TbfSmStarpuCallbacks;
+    friend TbfSmStarpuCallbacksCuda;
+
+    using KernelCapabilities = TbfAlgorithmUtils::KernelHardwareSupport<KernelClass>;
+
+    template<class CellContainerClass, class ParticleContainerClass>
+    void initCodelet(){
+        memset(&p2m_cl, 0, sizeof(p2m_cl));
+        if constexpr(KernelCapabilities::CpuP2M){
+            p2m_cl.cpu_funcs[0] = &TbfSmStarpuCallbacks::P2MCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
+            p2m_cl.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaP2M){
+            p2m_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2MCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
+            p2m_cl.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuP2M | KernelCapabilities::CudaP2M, "At least one should be enabled.");
+        p2m_cl.nbuffers = 3;
+        p2m_cl.modes[0] = STARPU_R;
+        p2m_cl.modes[1] = STARPU_R;
+        p2m_cl.modes[2] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2m_cl.name = "p2m_cl";
+
+        memset(&m2m_cl, 0, sizeof(m2m_cl));
+        if constexpr(KernelCapabilities::CpuM2M){
+            m2m_cl.cpu_funcs[0] = &TbfSmStarpuCallbacks::M2MCallback<ThisClass, CellContainerClass>;
+            m2m_cl.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaM2M){
+            m2m_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::M2MCallback<ThisClass, CellContainerClass>;
+            m2m_cl.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuM2M | KernelCapabilities::CudaM2M, "At least one should be enabled.");
+        m2m_cl.nbuffers = 4;
+        m2m_cl.modes[0] = STARPU_R;
+        m2m_cl.modes[1] = STARPU_R;
+        m2m_cl.modes[2] = STARPU_R;
+        m2m_cl.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        m2m_cl.name = "m2m_cl";
+
+        memset(&l2l_cl, 0, sizeof(l2l_cl));
+        if constexpr(KernelCapabilities::CpuL2L){
+            l2l_cl.cpu_funcs[0] = &TbfSmStarpuCallbacks::L2LCallback<ThisClass, CellContainerClass>;
+            l2l_cl.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaL2L){
+            l2l_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::L2LCallback<ThisClass, CellContainerClass>;
+            l2l_cl.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuL2L | KernelCapabilities::CudaL2L, "At least one should be enabled.");
+        l2l_cl.nbuffers = 4;
+        l2l_cl.modes[0] = STARPU_R;
+        l2l_cl.modes[1] = STARPU_R;
+        l2l_cl.modes[2] = STARPU_R;
+        l2l_cl.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        l2l_cl.name = "l2l_cl";
+
+        memset(&l2p_cl, 0, sizeof(l2p_cl));
+        if constexpr(KernelCapabilities::CpuL2P){
+            l2p_cl.cpu_funcs[0] = &TbfSmStarpuCallbacks::L2PCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
+            l2p_cl.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaL2P){
+            l2p_cl.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::L2PCallback<ThisClass, CellContainerClass, ParticleContainerClass>;
+            l2p_cl.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuL2P | KernelCapabilities::CudaL2P, "At least one should be enabled.");
+        l2p_cl.nbuffers = 4;
+        l2p_cl.modes[0] = STARPU_R;
+        l2p_cl.modes[1] = STARPU_R;
+        l2p_cl.modes[2] = STARPU_R;
+        l2p_cl.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        l2p_cl.name = "l2p_cl";
+
+        memset(&p2p_cl_oneleaf, 0, sizeof(p2p_cl_oneleaf));
+        if constexpr(KernelCapabilities::CpuP2P){
+            p2p_cl_oneleaf.cpu_funcs[0] = &TbfSmStarpuCallbacks::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
+            p2p_cl_oneleaf.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaP2P){
+            p2p_cl_oneleaf.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
+            p2p_cl_oneleaf.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuP2P | KernelCapabilities::CudaP2P, "At least one should be enabled.");
+        p2p_cl_oneleaf.nbuffers = 2;
+        p2p_cl_oneleaf.modes[0] = STARPU_R;
+        p2p_cl_oneleaf.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_oneleaf.name = "p2p_cl_oneleaf";
+
+        memset(&p2p_cl_twoleaves, 0, sizeof(p2p_cl_twoleaves));
+        if constexpr(KernelCapabilities::CpuP2P){
+            p2p_cl_twoleaves.cpu_funcs[0] = &TbfSmStarpuCallbacks::P2PBetweenLeavesCallback<ThisClass, ParticleContainerClass>;
+            p2p_cl_twoleaves.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaP2P){
+            p2p_cl_twoleaves.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2PBetweenLeavesCallback<ThisClass, ParticleContainerClass>;
+            p2p_cl_twoleaves.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuP2P | KernelCapabilities::CudaP2P, "At least one should be enabled.");
+        p2p_cl_twoleaves.nbuffers = 4;
+        p2p_cl_twoleaves.modes[0] = STARPU_R;
+        p2p_cl_twoleaves.modes[1] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_twoleaves.modes[2] = STARPU_R;
+        p2p_cl_twoleaves.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        p2p_cl_twoleaves.name = "p2p_cl_twoleaves";
+
+        memset(&m2l_cl_between_groups, 0, sizeof(m2l_cl_between_groups));
+        if constexpr(KernelCapabilities::CpuM2L){
+            m2l_cl_between_groups.cpu_funcs[0] = &TbfSmStarpuCallbacks::M2LCallback<ThisClass, CellContainerClass>;
+            m2l_cl_between_groups.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaM2L){
+            m2l_cl_between_groups.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::M2LCallback<ThisClass, CellContainerClass>;
+            m2l_cl_between_groups.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuM2L | KernelCapabilities::CudaM2L, "At least one should be enabled.");
+        m2l_cl_between_groups.nbuffers = 4;
+        m2l_cl_between_groups.modes[0] = STARPU_R;
+        m2l_cl_between_groups.modes[1] = STARPU_R;
+        m2l_cl_between_groups.modes[2] = STARPU_R;
+        m2l_cl_between_groups.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        m2l_cl_between_groups.name = "m2l_cl_between_groups";
+
+        memset(&m2l_cl_inside, 0, sizeof(m2l_cl_inside));
+        if constexpr(KernelCapabilities::CpuM2L){
+            m2l_cl_inside.cpu_funcs[0] = &TbfSmStarpuCallbacks::M2LInnerCallback<ThisClass, CellContainerClass>;
+            m2l_cl_inside.where |= STARPU_CPU;
+        }
+        if constexpr(KernelCapabilities::CudaM2L){
+            m2l_cl_inside.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::M2LInnerCallback<ThisClass, CellContainerClass>;
+            m2l_cl_inside.where |= STARPU_CUDA;
+        }
+        static_assert(KernelCapabilities::CpuM2L | KernelCapabilities::CudaM2L, "At least one should be enabled.");
+        m2l_cl_inside.nbuffers = 3;
+        m2l_cl_inside.modes[0] = STARPU_R;
+        m2l_cl_inside.modes[1] = STARPU_R;
+        m2l_cl_inside.modes[2] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
+        m2l_cl_inside.name = "m2l_cl_inside";
+    }
+
     const SpacialConfiguration configuration;
     const SpaceIndexType spaceSystem;
 
@@ -49,58 +198,8 @@ protected:
 
     TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
-    /////////////////////////////////////////////////////////////////
-
-
-    // See http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf.
-    template <typename...>
-    using void_t = void;
-
-    #define CUDA_OP_DETECT(OP_NAME)\
-        template <typename, template <typename> class, typename = void_t<>>\
-            struct detect_##OP_NAME : std::false_type {};\
-        \
-            template <typename T, template <typename> class Op>\
-            struct detect_##OP_NAME<T, Op, void_t<Op<T>>> : BoolSelecter<T::OP_NAME> {};\
-        \
-            template <typename T>\
-            using OP_NAME##_test = decltype(T::OP_NAME);\
-        \
-            template <typename T>\
-            using class_has_##OP_NAME = detect_##OP_NAME<T, OP_NAME##_test>;
-
-    CUDA_OP_DETECT(CudaP2P)
-    CUDA_OP_DETECT(CudaP2M)
-    CUDA_OP_DETECT(CudaM2M)
-    CUDA_OP_DETECT(CudaM2L)
-    CUDA_OP_DETECT(CudaL2L)
-    CUDA_OP_DETECT(CudaL2P)
-
-    CUDA_OP_DETECT(CpuP2P)
-    CUDA_OP_DETECT(CpuP2M)
-    CUDA_OP_DETECT(CpuM2M)
-    CUDA_OP_DETECT(CpuM2L)
-    CUDA_OP_DETECT(CpuL2L)
-    CUDA_OP_DETECT(CpuL2P)
-
-    constexpr static bool CudaP2P = class_has_CudaP2P<KernelClass>::value;
-    constexpr static bool CudaP2M = class_has_CudaP2M<KernelClass>::value;
-    constexpr static bool CudaM2M = class_has_CudaM2M<KernelClass>::value;
-    constexpr static bool CudaM2L = class_has_CudaM2L<KernelClass>::value;
-    constexpr static bool CudaL2L = class_has_CudaL2L<KernelClass>::value;
-    constexpr static bool CudaL2P = class_has_CudaL2P<KernelClass>::value;
-
-    constexpr static bool CpuP2P = class_has_CpuP2P<KernelClass>::value;
-    constexpr static bool CpuP2M = class_has_CpuP2M<KernelClass>::value;
-    constexpr static bool CpuM2M = class_has_CpuM2M<KernelClass>::value;
-    constexpr static bool CpuM2L = class_has_CpuM2L<KernelClass>::value;
-    constexpr static bool CpuL2L = class_has_CpuL2L<KernelClass>::value;
-    constexpr static bool CpuL2P = class_has_CpuL2P<KernelClass>::value;
-
-    /////////////////////////////////////////////////////////////////
-
     template <class TreeClass>
-    void P2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2M(TreeClass& inTree, CellHandleContainer& cellHandles, ParticleHandleContainer& particleHandles){
         if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
@@ -112,45 +211,31 @@ protected:
 
             const auto endLeafGroup = leafGroups.end();
             const auto endParticleGroup = particleGroups.cend();
+            int idxGroup = 0;
 
             while(currentLeafGroup != endLeafGroup && currentParticleGroup != endParticleGroup){
                 assert((*currentParticleGroup).getStartingSpacialIndex() == (*currentLeafGroup).getStartingSpacialIndex()
                        && (*currentParticleGroup).getEndingSpacialIndex() == (*currentLeafGroup).getEndingSpacialIndex()
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
-                auto& leafGroupObj = *currentLeafGroup;
-                const auto& particleGroupObj = *currentParticleGroup;
-                if constexpr(CudaP2M && CpuP2M){
-                    runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
-                                 [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
-                                     kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
-                                 },
-                        SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
-                        }));
-                }
-                else if constexpr(CpuP2M){
-                    runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
-                                 [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
-                        kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
-                    });
-                }
-                else if constexpr(CudaP2M){
-                    runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
-                                 SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                        kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
-                    }));
-                }
-                else{
-                    assert(0);
-                }
+                auto* thisptr = this;
+                starpu_insert_task(&p2m_cl,
+                                   STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_PRIORITY, priorities.getP2MPriority(),
+                                   STARPU_R, particleHandles[idxGroup][0],
+                                   STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][0],
+                                   starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), cellHandles[configuration.getTreeHeight()-1][idxGroup][1],
+                                   STARPU_NAME, "P2M",
+                                   0);
+
                 ++currentParticleGroup;
                 ++currentLeafGroup;
+                ++idxGroup;
             }
         }
     }
 
     template <class TreeClass>
-    void M2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2M(TreeClass& inTree, CellHandleContainer& cellHandles){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -161,53 +246,42 @@ protected:
             const auto endUpperGroup = upperCellGroup.end();
             const auto endLowerGroup = lowerCellGroup.cend();
 
+            int idxUpperGroup = 0;
+            int idxLowerGroup = 0;
+
             while(currentUpperGroup != endUpperGroup && currentLowerGroup != endLowerGroup){
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
-
-                auto& upperGroup = *currentUpperGroup;
-                const auto& lowerGroup = *currentLowerGroup;
-
-                if constexpr(CudaM2M && CpuM2M){
-                    runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
-                                       [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
-                        kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
-                    },
-                        SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
-                        }));
-                }
-                else if constexpr(CpuM2M){
-                    runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
-                                 [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
-                                     kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
-                                 });
-                }
-                else if constexpr(CudaM2M){
-                    runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
-                                 SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
-                                 }));
-                }
-                else{
-                    assert(0);
-                }
+                auto* thisptr = this;
+                starpu_insert_task(&m2m_cl,
+                                   STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_VALUE, &idxLevel, sizeof(long int),
+                                   STARPU_PRIORITY, priorities.getM2MPriority(idxLevel),
+                                   STARPU_R, cellHandles[idxLevel+1][idxLowerGroup][0],
+                                   STARPU_R, cellHandles[idxLevel+1][idxLowerGroup][1],
+                                   STARPU_R, cellHandles[idxLevel][idxUpperGroup][0],
+                                   starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), cellHandles[idxLevel][idxUpperGroup][1],
+                                   STARPU_NAME, "M2M",
+                                   0);
 
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
+                    ++idxLowerGroup;
                     if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
                         ++currentUpperGroup;
+                        ++idxUpperGroup;
                     }
                 }
                 else{
                     ++currentUpperGroup;
+                    ++idxUpperGroup;
                 }
             }
         }
     }
 
     template <class TreeClass>
-    void M2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2L(TreeClass& inTree, CellHandleContainer& cellHandles){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -215,74 +289,50 @@ protected:
 
             auto currentCellGroup = cellGroups.begin();
             const auto endCellGroup = cellGroups.end();
+            int idxGroup = 0;
 
             while(currentCellGroup != endCellGroup){
                 auto indexesForGroup = spacialSystem.getInteractionListForBlock(*currentCellGroup, idxLevel);
-                TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), cellGroups, std::distance(cellGroups.begin(),currentCellGroup),
-                                               [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
-                    assert(&groupTarget == &*currentCellGroup);
+                TbfAlgorithmUtils::TbfMapIndexesAndBlocksIndexes(std::move(indexesForGroup.second), cellGroups, std::distance(cellGroups.begin(),currentCellGroup),
+                                                                 [&](auto& groupTargetIdx, const auto& groupSrcIdx, const auto& indexes){
+                                                                     auto* thisptr = this;
+                                                                     vecIndexBuffer.push_back(indexes.toStdVector());
+                                                                     VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+                                                                     starpu_insert_task(&m2l_cl_between_groups,
+                                                                                        STARPU_VALUE, &thisptr, sizeof(void*),
+                                                                                        STARPU_VALUE, &idxLevel, sizeof(int),
+                                                                                        STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                                                                                        STARPU_PRIORITY, priorities.getM2LPriority(idxLevel),
+                                                                                        STARPU_R, cellHandles[idxLevel][groupSrcIdx][0],
+                                                                                        STARPU_R, cellHandles[idxLevel][groupSrcIdx][1],
+                                                                                        STARPU_R, cellHandles[idxLevel][groupTargetIdx][0],
+                                                                                        starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), cellHandles[idxLevel][groupTargetIdx][2],
+                                                                                        STARPU_NAME, "M2L",
+                                                                                        0);
+                                                                 });
 
-                    if constexpr(CudaM2L && CpuM2L){
-                        runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
-                                           [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
-                            kernelWrapper.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                        },
-                            SpCuda([this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                kernelWrapperCuda.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                            }));
-                    }
-                    else if constexpr(CpuM2L){
-                        runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
-                                     [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
-                             kernelWrapper.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                         });
-                    }
-                    else  if constexpr(CudaM2L){
-                        runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
-                                     SpCuda([this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                         kernelWrapperCuda.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                                     }));
-                    }
-                    else{
-                        assert(0);
-                    }
-                });
-
-                auto& currentGroup = *currentCellGroup;
-
-                if constexpr(CudaM2L && CpuM2L){
-                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
-                                       [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
-                        kernelWrapper.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-                    },
-                        SpCuda([this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-                        }));
-                }
-                else if constexpr(CpuM2L){
-                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
-                                 [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
-                                     kernelWrapper.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-                                 });
-                }
-                else if constexpr(CudaM2L){
-                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
-                                 SpCuda([this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-                                 }));
-                }
-                else{
-                    assert(0);
-                }
-
+                auto* thisptr = this;
+                vecIndexBuffer.push_back(std::move(indexesForGroup.first));
+                VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+                starpu_insert_task(&m2l_cl_inside,
+                                   STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_VALUE, &idxLevel, sizeof(int),
+                                   STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                                   STARPU_PRIORITY, priorities.getM2LPriority(idxLevel),
+                                   STARPU_R, cellHandles[idxLevel][idxGroup][0],
+                                   STARPU_R, cellHandles[idxLevel][idxGroup][1],
+                                   starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), cellHandles[idxLevel][idxGroup][2],
+                                   STARPU_NAME, "M2L-IN",
+                                   0);
 
                 ++currentCellGroup;
+                ++idxGroup;
             }
         }
     }
 
     template <class TreeClass>
-    void L2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2L(TreeClass& inTree, CellHandleContainer& cellHandles){
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -293,53 +343,42 @@ protected:
             const auto endUpperGroup = upperCellGroup.cend();
             const auto endLowerGroup = lowerCellGroup.end();
 
+            int idxUpperGroup = 0;
+            int idxLowerGroup = 0;
+
             while(currentUpperGroup != endUpperGroup && currentLowerGroup != endLowerGroup){
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
-
-                const auto& upperGroup = *currentUpperGroup;
-                auto& lowerGroup = *currentLowerGroup;
-
-                if constexpr(CudaL2L && CpuL2L){
-                    runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
-                                       [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
-                        kernelWrapper.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
-                    },
-                        SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
-                        }));
-                }
-                else if constexpr(CpuL2L){
-                    runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
-                                 [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
-                                     kernelWrapper.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
-                                 });
-                }
-                else if constexpr(CudaL2L){
-                    runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
-                                 SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
-                                 }));
-                }
-                else{
-                    assert(0);
-                }
+                auto* thisptr = this;
+                starpu_insert_task(&l2l_cl,
+                                   STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_VALUE, &idxLevel, sizeof(long int),
+                                   STARPU_PRIORITY, priorities.getL2LPriority(idxLevel),
+                                   STARPU_R, cellHandles[idxLevel][idxUpperGroup][0],
+                                   STARPU_R, cellHandles[idxLevel][idxUpperGroup][2],
+                                   STARPU_R, cellHandles[idxLevel+1][idxLowerGroup][0],
+                                   starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), cellHandles[idxLevel+1][idxLowerGroup][2],
+                                   STARPU_NAME, "L2L",
+                                   0);
 
                 if(spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()){
                     ++currentLowerGroup;
+                    ++idxLowerGroup;
                     if(currentLowerGroup != endLowerGroup && currentUpperGroup->getEndingSpacialIndex() < spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex())){
                         ++currentUpperGroup;
+                        ++idxUpperGroup;
                     }
                 }
                 else{
                     ++currentUpperGroup;
+                    ++idxUpperGroup;
                 }
             }
         }
     }
 
     template <class TreeClass>
-    void L2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2P(TreeClass& inTree, CellHandleContainer& cellHandles, ParticleHandleContainer& particleHandles){
         if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
@@ -352,50 +391,33 @@ protected:
             const auto endLeafGroup = leafGroups.cend();
             const auto endParticleGroup = particleGroups.end();
 
+            int idxGroup = 0;
+
             while(currentLeafGroup != endLeafGroup && currentParticleGroup != endParticleGroup){
                 assert((*currentParticleGroup).getStartingSpacialIndex() == (*currentLeafGroup).getStartingSpacialIndex()
                        && (*currentParticleGroup).getEndingSpacialIndex() == (*currentLeafGroup).getEndingSpacialIndex()
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
 
-                const auto& leafGroupObj = *currentLeafGroup;
-                auto& particleGroupObj = *currentParticleGroup;
-
-                if constexpr(CudaL2P && CpuL2P){
-                    runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
-                                 SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
-                                       [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
-                        kernelWrapper.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
-                    },
-                        SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
-                        }));
-                }
-                else if constexpr(CpuL2P){
-                    runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
-                                 SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
-                                 [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
-                                     kernelWrapper.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
-                                 });
-                }
-                else if constexpr(CudaL2P){
-                    runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
-                                 SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
-                                 SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
-                                 }));
-                }
-                else{
-                    assert(0);
-                }
+                auto* thisptr = this;
+                starpu_insert_task(&l2p_cl,
+                                   STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_PRIORITY, priorities.getL2PPriority(),
+                                   STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][0],
+                                   STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][2],
+                                   STARPU_R, particleHandles[idxGroup][0],
+                                   starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[idxGroup][1],
+                                   STARPU_NAME, "L2P",
+                                   0);
 
                 ++currentParticleGroup;
                 ++currentLeafGroup;
+                ++idxGroup;
             }
         }
     }
 
     template <class TreeClass>
-    void P2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2P(TreeClass& inTree, ParticleHandleContainer& particleHandles){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroups = inTree.getParticleGroups();
@@ -403,79 +425,42 @@ protected:
         auto currentParticleGroup = particleGroups.begin();
         const auto endParticleGroup = particleGroups.end();
 
+        int idxGroup = 0;
+
         while(currentParticleGroup != endParticleGroup){
 
             auto indexesForGroup = spacialSystem.getNeighborListForBlock(*currentParticleGroup, configuration.getTreeHeight()-1, true);
-            TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
-                                           [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
-                assert(&groupTarget == &*currentParticleGroup);
+            TbfAlgorithmUtils::TbfMapIndexesAndBlocksIndexes(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
+                                                             [&](auto& groupTargetIdx, auto& groupSrcIdx, const auto& indexes){
+                                                                 auto* thisptr = this;
+                                                                 vecIndexBuffer.push_back(indexes.toStdVector());
+                                                                 VecOfIndexes* vecIndexesPtr = &vecIndexBuffer.back();
+                                                                 starpu_insert_task(&p2p_cl_twoleaves,
+                                                                                    STARPU_VALUE, &thisptr, sizeof(void*),
+                                                                                    STARPU_VALUE, &vecIndexesPtr, sizeof(void*),
+                                                                                    STARPU_PRIORITY, priorities.getP2PPriority(),
+                                                                                    STARPU_R, particleHandles[groupSrcIdx][0],
+                                                                                    starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[groupSrcIdx][1],
+                                                                                    STARPU_R, particleHandles[groupTargetIdx][0],
+                                                                                    starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[groupTargetIdx][1],
+                                                                                    STARPU_NAME, "P2P-INOUT",
+                                                                                    0);
+                                                             });
 
-                if constexpr(CudaP2P && CpuP2P){
-                    runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
-                                 SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
-                                       [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&, const unsigned char&, unsigned char&){
-                        kernelWrapper.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                    },
-                        SpCuda([this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                        }));
-                }
-                else if constexpr(CpuP2P){
-                    runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
-                                 SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
-                                 [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&, const unsigned char&, unsigned char&){
-                                     kernelWrapper.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                                 });
-                }
-                else if constexpr(CudaP2P){
-                    runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
-                                 SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
-                                 SpCuda([this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
-                                 }));
-                }
-                else{
-                    assert(0);
-                }
-
-            });
-
-            auto& currentGroup = *currentParticleGroup;
-
-            if constexpr(CudaP2P && CpuP2P){
-                runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
-                                   [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
-                    kernelWrapper.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-
-                    kernelWrapper.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
-                },
-                    SpCuda([this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                        kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-
-                        kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
-                    }));
-            }
-            else if constexpr(CpuP2P){
-                runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
-                             [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
-                                 kernelWrapper.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-
-                                 kernelWrapper.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
-                             });
-            }
-            else if constexpr(CudaP2P){
-                runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
-                             SpCuda([this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                 kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
-
-                                 kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
-                             }));
-            }
-            else{
-                assert(0);
-            }
+            auto* thisptr = this;
+            vecIndexBuffer.push_back(std::move(indexesForGroup.first));
+            VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+            starpu_insert_task(&p2p_cl_oneleaf,
+                               STARPU_VALUE, &thisptr, sizeof(void*),
+                               STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                               STARPU_PRIORITY, priorities.getP2PPriority(),
+                               STARPU_R, particleHandles[idxGroup][0],
+                               starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[idxGroup][1],
+                               STARPU_NAME, "P2P",
+                               0);
 
             ++currentParticleGroup;
+            ++idxGroup;
         }
     }
 
@@ -486,51 +471,77 @@ protected:
     }
 
 public:
-    explicit TbfSmSpecxAlgorithmCuda(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    explicit TbfSmStarpuAlgorithmCuda(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
-          kernelWrapper(configuration), kernelWrapperCuda(configuration),
-          priorities(configuration.getTreeHeight()){
+        kernelWrapper(configuration), kernelWrapperCuda(configuration),
+        priorities(configuration.getTreeHeight()){
         kernels.emplace_back(configuration);
+
+        [[maybe_unused]] const int ret = starpu_init(NULL);
+        assert(ret == 0);
+        starpu_pause();
     }
 
     template <class SourceKernelClass,
-              typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
-                                                 && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
-    TbfSmSpecxAlgorithmCuda(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
+             typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
+                                                    && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
+    TbfSmStarpuAlgorithmCuda(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
-          kernelWrapper(configuration), kernelWrapperCuda(configuration),
-          priorities(configuration.getTreeHeight()){
+        kernelWrapper(configuration), kernelWrapperCuda(configuration),
+        priorities(configuration.getTreeHeight()){
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
+
+        [[maybe_unused]] const int ret = starpu_init(NULL);
+        assert(ret == 0);
+        starpu_pause();
+    }
+
+    ~TbfSmStarpuAlgorithmCuda(){
+        starpu_resume();
+        starpu_shutdown();
     }
 
     template <class TreeClass>
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
-        SpRuntime runtime;
+        auto allCellHandles = TbfStarPUHandleBuilder::GetCellHandles(inTree, configuration);
+        auto allParticlesHandles = TbfStarPUHandleBuilder::GetParticleHandles(inTree);
 
-        increaseNumberOfKernels(runtime.getNbThreads());
+        using CellContainerClass = typename TreeClass::CellGroupClass;
+        using ParticleContainerClass = typename TreeClass::LeafGroupClass;
+
+        initCodelet<CellContainerClass, ParticleContainerClass>();
+
+        starpu_resume();
+
+        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER));
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
-            P2M(runtime, inTree);
+            P2M(inTree, allCellHandles, allParticlesHandles);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){
-            M2M(runtime, inTree);
+            M2M(inTree, allCellHandles);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2L){
-            M2L(runtime, inTree);
+            M2L(inTree, allCellHandles);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
-            L2L(runtime, inTree);
+            L2L(inTree, allCellHandles);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
-            P2P(runtime, inTree);
+            P2P(inTree, allParticlesHandles);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
-            L2P(runtime, inTree);
+            L2P(inTree, allCellHandles, allParticlesHandles);
         }
 
-        runtime.waitAllTasks();
+        starpu_task_wait_for_all();
+
+        starpu_pause();
+        vecIndexBuffer.clear();
+        TbfStarPUHandleBuilder::CleanCellHandles(allCellHandles);
+        TbfStarPUHandleBuilder::CleanParticleHandles(allParticlesHandles);
     }
 
     template <class FuncType>
@@ -541,8 +552,8 @@ public:
     }
 
     template <class StreamClass>
-    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpecxAlgorithmCuda& inAlgo) {
-        inStream << "TbfSmSpecxAlgorithmCuda @ " << &inAlgo << "\n";
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmStarpuAlgorithmCuda& inAlgo) {
+        inStream << "TbfSmStarpuAlgorithmCuda @ " << &inAlgo << "\n";
         inStream << " - Configuration: " << "\n";
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
@@ -551,11 +562,11 @@ public:
     }
 
     static int GetNbThreads(){
-        return SpUtils::DefaultNumThreads();
+        return starpu_worker_get_count_by_type(STARPU_CPU_WORKER);
     }
 
     static const char* GetName(){
-        return "TbfSmSpecxAlgorithmCuda";
+        return "TbfSmStarpuAlgorithmCuda";
     }
 };
 

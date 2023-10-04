@@ -114,7 +114,10 @@ if(DEFINED ENV{STARPU_DIR})
     message(STATUS "STARPU Found")
     if(NOT ${TBFMM_ENABLE_STARPU})
         message(STATUS "STARPU Disabled (but env variable found)")   
-    else()	    		
+    else()	    
+    	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
+    	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
+    			
         message(STATUS "ENV{STARPU_DIR} = $ENV{STARPU_DIR}")
         
         set(TBFMM_STARPU_VERSION "1.4" CACHE STRING "Set to starpu version to look at the inalude dir and set the lib name"  )
@@ -125,6 +128,18 @@ if(DEFINED ENV{STARPU_DIR})
 	    list(APPEND TBFMM_LIBRARIES starpu-${TBFMM_STARPU_VERSION})
 
 	    list(APPEND TBF_USE_LIST STARPU)
+	    if(TBFMM_USE_CUDA)
+	        enable_language(CUDA)
+	        set(CUDA_SEPARABLE_COMPILATION ON)
+		            
+            if(NOT CMAKE_CUDA_ARCHITECTURES)
+              set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
+                  "Set CUDA target architecture" FORCE)
+            endif()
+	        list(APPEND TBF_USE_LIST CUDA)	   
+	        
+	        add_definitions("--expt-relaxed-constexpr") 
+	    endif()
     endif()
 else()
     message(STATUS "STARPU Cannot be found, set env variable STARPU_DIR")
