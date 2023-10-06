@@ -314,35 +314,35 @@ __global__ void P2PBetweenGroups_core(KernelClass inKernel,
                                       const long int* intervalSizes,
                                       const std::pair<long int,long int>* inBlockIdxs,
                                       const long int inNbBlocks) {
-//    ParticleGroupClass inParticleGroup(ptrsAndSizeParticles);
-//    ParticleGroupClass inOtherParticleGroup(ptrsAndSizeOthers);
+    ParticleGroupClass inParticleGroup(ptrsAndSizeParticles);
+    ParticleGroupClass inOtherParticleGroup(ptrsAndSizeOthers);
 
-//    for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
-//        for(long int idxInteractions = intervalSizes[idxBlock] ; idxInteractions < intervalSizes[idxBlock+1] ; ++idxInteractions){
-//            const auto interaction = inIndexes[inBlockIdxs[idxInteractions].first];
+    for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
+        for(long int idxInteractions = intervalSizes[idxBlock] ; idxInteractions < intervalSizes[idxBlock+1] ; ++idxInteractions){
+            const auto interaction = inIndexes[inBlockIdxs[idxInteractions].first];
 
-//            auto foundSrc = inBlockIdxs[idxInteractions].second;
-//            assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
-//                   && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
+            auto foundSrc = inBlockIdxs[idxInteractions].second;
+            assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
+                   && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
-//            assert(inOtherParticleGroup.getLeafSymbData(foundSrc).spaceIndex == interaction.indexSrc);
-//            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
+            assert(inOtherParticleGroup.getLeafSymbData(foundSrc).spaceIndex == interaction.indexSrc);
+            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
 
-//            const auto& srcData = TbfUtils::make_const(inOtherParticleGroup).getParticleData(foundSrc);
-//            auto&& srcRhs = inOtherParticleGroup.getParticleRhs(foundSrc);
-//            auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
-//            const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
+            const auto& srcData = TbfUtils::make_const(inOtherParticleGroup).getParticleData(foundSrc);
+            auto&& srcRhs = inOtherParticleGroup.getParticleRhs(foundSrc);
+            auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
+            const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
 
-//            inKernel.P2PCuda(inOtherParticleGroup.getLeafSymbData(foundSrc),
-//                         inOtherParticleGroup.getParticleIndexes(foundSrc),
-//                         srcData, srcRhs,
-//                         inOtherParticleGroup.getNbParticlesInLeaf(foundSrc),
-//                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
-//                         inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-//                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
-//                         interaction.arrayIndexSrc);
-//        }
-//    }
+            inKernel.P2PCuda(inOtherParticleGroup.getLeafSymbData(foundSrc),
+                         inOtherParticleGroup.getParticleIndexes(foundSrc),
+                         srcData, srcRhs,
+                         inOtherParticleGroup.getNbParticlesInLeaf(foundSrc),
+                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
+                         inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
+                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
+                         interaction.arrayIndexSrc);
+        }
+    }
 }
 
 

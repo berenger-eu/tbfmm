@@ -9,7 +9,12 @@ public:
     template<class ThisClass, class CellContainerClass, class ParticleContainerClass>
     static void P2MCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
-        starpu_codelet_unpack_args(cl_arg, &thisptr);
+        unsigned char* groupCellsData;
+        size_t groupCellsDataSize;
+        unsigned char* groupParticlesData;
+        size_t groupParticlesDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &groupCellsData, &groupCellsDataSize, &groupParticlesData, &groupParticlesDataSize);
+
 
         unsigned char* particleData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t particleDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -91,7 +96,12 @@ public:
     static void M2MCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         long int idxLevel;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel);
+        unsigned char* groupCellsLowerData;
+        size_t groupCellsLowerDataSize;
+        unsigned char* groupCellsUpperData;
+        size_t groupCellsUpperDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &groupCellsLowerData, &groupCellsLowerDataSize,
+                                   &groupCellsUpperData, &groupCellsUpperDataSize);
 
         unsigned char* lowerData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t lowerDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -118,7 +128,12 @@ public:
         ThisClass* thisptr;
         int idxLevel;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first);
+        unsigned char* groupCellsSrcData;
+        size_t groupCellsSrcDataSize;
+        unsigned char* groupCellsTgtData;
+        size_t groupCellsTgtDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first,
+                                   &groupCellsSrcData, &groupCellsSrcDataSize, &groupCellsTgtData, &groupCellsTgtDataSize);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -144,7 +159,9 @@ public:
         ThisClass* thisptr;
         int idxLevel;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first);
+        unsigned char* groupCellsData;
+        size_t groupCellsDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first, &groupCellsData, &groupCellsDataSize);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -165,7 +182,12 @@ public:
     static void L2LCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         long int idxLevel;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel);
+        unsigned char* groupCellsLowerData;
+        size_t groupCellsLowerDataSize;
+        unsigned char* groupCellsUpperData;
+        size_t groupCellsUpperDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &groupCellsUpperData, &groupCellsUpperDataSize,
+                                   &groupCellsLowerData, &groupCellsLowerDataSize);
 
         unsigned char* upperData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t upperDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -188,7 +210,11 @@ public:
     template<class ThisClass, class CellContainerClass, class ParticleContainerClass>
     static void L2PCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
-        starpu_codelet_unpack_args(cl_arg, &thisptr);
+        unsigned char* groupCellsData;
+        size_t groupCellsDataSize;
+        unsigned char* groupParticlesData;
+        size_t groupParticlesDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr,  &groupCellsData, &groupCellsDataSize, &groupParticlesData, &groupParticlesDataSize);
 
         unsigned char* leafData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t leafDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -214,7 +240,12 @@ public:
         ThisClass* thisptr;
         int idxLevel;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first);
+        unsigned char* groupCellsSrcData;
+        size_t groupCellsSrcDataSize;
+        unsigned char* groupCellsTgtData;
+        size_t groupCellsTgtDataSize;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &idxLevel, &indexesForGroup_first,
+                                   &groupCellsSrcData, &groupCellsSrcDataSize, &groupCellsTgtData, &groupCellsTgtDataSize);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
