@@ -234,6 +234,15 @@ message(STATUS "Available compilation keys are: ${TBF_USE_LIST}")
 
 #################################################
 
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPERCASE)
+
+if(TBFMM_USE_CUDA AND (CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "RELWITHDEBINFO"))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -G -g")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G -g")
+    message(STATUS "CMAKE_CUDA_FLAGS = ${CMAKE_CUDA_FLAGS}")
+endif()
+
+
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 file(GLOB_RECURSE cpp_for_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
