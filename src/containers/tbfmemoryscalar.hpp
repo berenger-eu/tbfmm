@@ -17,6 +17,9 @@ public:
     constexpr static long int BlockMemoryAlignementBytes = MemoryAlignementBytes;
 
     template <class FuncType>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static void ApplyToAllElements(DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         assert(inNbItems == 1);
         (void)inNbItems;
@@ -24,12 +27,17 @@ public:
     }
 
     template <class FuncType>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static void ApplyToAllElementsConst(const DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         assert(inNbItems == 1);
         (void)inNbItems;
         inFunc(*inPtrToData);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         assert(inNbItems == 1);
         (void)inNbItems;

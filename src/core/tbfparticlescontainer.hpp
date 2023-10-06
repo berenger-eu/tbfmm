@@ -58,18 +58,20 @@ public:
     __device__ __host__
 #endif
     explicit TbfParticlesContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
-                               unsigned char* inObjectRhsPtr, const size_t inObjectRhsSize)
-        : objectData(inObjectDataPtr, inObjectDataSize),
-        objectRhs(inObjectRhsPtr, inObjectRhsSize){
+                               unsigned char* inObjectRhsPtr, const size_t inObjectRhsSize,
+                                   const bool inInitFromMemory = true)
+        : objectData(inObjectDataPtr, inObjectDataSize, inInitFromMemory),
+        objectRhs(inObjectRhsPtr, inObjectRhsSize, inInitFromMemory){
 
     }
 
 #ifdef __NVCC__
     __device__ __host__
 #endif
-    explicit TbfParticlesContainer(const std::array<std::pair<unsigned char*,size_t>,2>& inPtrsSizes)
-        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second),
-        objectRhs(inPtrsSizes[1].first, inPtrsSizes[1].second){
+    explicit TbfParticlesContainer(const std::array<std::pair<unsigned char*,size_t>,2>& inPtrsSizes,
+                                       const bool inInitFromMemory = true)
+        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second, inInitFromMemory),
+        objectRhs(inPtrsSizes[1].first, inPtrsSizes[1].second, inInitFromMemory){
 
     }
 
@@ -157,14 +159,23 @@ public:
         (*this) = TbfParticlesContainer(groups.front(), inParticlePositions, inSpaceSystem);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getStartingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().startingSpaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getEndingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().endingSpaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int getNbParticles() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbParticles;
     }
@@ -173,15 +184,29 @@ public:
     __device__ __host__
 #endif
     long int getNbLeaves() const{
+//        if(print){
+//            auto* ptr = &objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
+//            printf("========== cuda @%p (diff ptr %lu)\n",
+//                   ptr,
+//                   ((size_t)ptr)-((size_t)objectData.getPtr()));
+//            printf("%d\n", *ptr);
+//            return 0;
+//        }
         return objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getLeafSpacialIndex(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).spaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const std::array<long int, Dim>& getLeafBoxCoord(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).boxCoord;
     }
@@ -316,6 +341,25 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    void initMemoryBlockHeader(){
+        objectData.initHeader();
+        objectRhs.initHeader();
+    }
+
+    auto getDataPtrsAndSizes(){
+        return std::array<std::pair<unsigned char*,size_t>,2>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectRhs.getPtr(), objectRhs.getAllocatedMemorySizeInByte()}};
+
+    }
+
+    auto getDataPtrsAndSizes() const{
+        return std::array<std::pair<const unsigned char*,size_t>,2>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectRhs.getPtr(), objectRhs.getAllocatedMemorySizeInByte()}};
+
+    }
 
     unsigned char* getDataPtr(){
         return objectData.getPtr();

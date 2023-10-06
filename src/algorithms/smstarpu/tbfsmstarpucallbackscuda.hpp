@@ -22,18 +22,24 @@ public:
 
         CellContainerClass leafGroupObj(leafData, leafDataSize,
                                         leafMultipole, leafMultipoleSize,
-                                        nullptr, 0);
+                                        nullptr, 0, false);
         const ParticleContainerClass particleGroupObj(particleData, particleDataSize,
-                                                      nullptr, 0);
+                                                      nullptr, 0, false);
 
-        thisptr->kernelWrapperCuda.P2M(thisptr->kernels[starpu_worker_get_id()], particleGroupObj, leafGroupObj);
+        thisptr->kernelWrapperCuda.P2M(starpu_cuda_get_local_stream(),
+                                       thisptr->kernels[starpu_worker_get_id()], particleGroupObj, leafGroupObj);
     }
 
     template<class ThisClass, class ParticleContainerClass>
     static void P2PBetweenLeavesCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* srcDataCpu;
+        size_t srcDataSizeCpu;
+        unsigned char* tgtDataCpu;
+        size_t tgtDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first,
+                                   &srcDataCpu, &srcDataSizeCpu, &tgtDataCpu, &tgtDataSizeCpu);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -47,19 +53,29 @@ public:
         unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[3]);
         size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
-        ParticleContainerClass groupSrc(srcData, srcDataSize,
-                                        srcRhs, srcRhsSize);
-        ParticleContainerClass groupTarget(tgtData, tgtDataSize,
-                                           tgtRhs, tgtRhsSize);
+        ParticleContainerClass groupSrcCpu(srcDataCpu, srcDataSizeCpu,
+                                        nullptr, 0, true);
+        ParticleContainerClass groupTargetCpu(tgtDataCpu, tgtDataSizeCpu,
+                                           nullptr, 0, true);
 
-        thisptr->kernelWrapperCuda.P2PBetweenGroups(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        ParticleContainerClass groupSrc(srcData, srcDataSize,
+                                        srcRhs, srcRhsSize, false);
+        ParticleContainerClass groupTarget(tgtData, tgtDataSize,
+                                           tgtRhs, tgtRhsSize, false);
+
+        thisptr->kernelWrapperCuda.P2PBetweenGroups(starpu_cuda_get_local_stream(),
+                                                    thisptr->kernels[starpu_worker_get_id()],
+                                                    groupSrcCpu, groupTargetCpu,
+                                                    groupTarget, groupSrc, *indexesForGroup_first);
     }
 
     template<class ThisClass, class ParticleContainerClass>
     static void P2POneLeafCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* particleDataCpu;
+        size_t particleDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first, &particleDataCpu, &particleDataSizeCpu);
 
         unsigned char* particleData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t particleDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -67,11 +83,16 @@ public:
         unsigned char* particleRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[1]);
         size_t particleRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[1]);
 
-        ParticleContainerClass currentGroup(particleData, particleDataSize,
-                                            particleRhs, particleRhsSize);
+        ParticleContainerClass currentGroupCpu(particleDataCpu, particleDataSizeCpu,
+                                            nullptr, 0, true);
 
-        thisptr->kernelWrapperCuda.P2PInGroup(thisptr->kernels[starpu_worker_get_id()], currentGroup, *indexesForGroup_first);
-        thisptr->kernelWrapperCuda.P2PInner(thisptr->kernels[starpu_worker_get_id()], currentGroup);
+        ParticleContainerClass currentGroup(particleData, particleDataSize,
+                                            particleRhs, particleRhsSize, false);
+
+        thisptr->kernelWrapperCuda.P2PInGroup(starpu_cuda_get_local_stream(),
+                                              thisptr->kernels[starpu_worker_get_id()], currentGroupCpu, currentGroup, *indexesForGroup_first);
+        thisptr->kernelWrapperCuda.P2PInner(starpu_cuda_get_local_stream(),
+                                            thisptr->kernels[starpu_worker_get_id()], currentGroupCpu, currentGroup);
     }
 
     template<class ThisClass, class CellContainerClass>
@@ -93,11 +114,12 @@ public:
         size_t upperMultipoleSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
         const CellContainerClass lowerGroupObj(lowerData, lowerDataSize, lowerMultipole, lowerMultipoleSize,
-                                               nullptr, 0);
+                                               nullptr, 0, false);
         CellContainerClass upperGroupObj(upperData, upperDataSize, upperMultipole, upperMultipoleSize,
-                                         nullptr, 0);
+                                         nullptr, 0, false);
 
-        thisptr->kernelWrapperCuda.M2M(idxLevel, thisptr->kernels[starpu_worker_get_id()], lowerGroupObj, upperGroupObj);
+        thisptr->kernelWrapperCuda.M2M(starpu_cuda_get_local_stream(),
+                                       idxLevel, thisptr->kernels[starpu_worker_get_id()], lowerGroupObj, upperGroupObj);
     }
 
     template<class ThisClass, class CellContainerClass>
@@ -120,10 +142,11 @@ public:
         size_t tgtLocalSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
         const CellContainerClass groupSrc(srcData, srcDataSize, srcMultipole, srcMultipoleSize,
-                                          nullptr, 0);
-        CellContainerClass groupTarget(tgtData, tgtDataSize, nullptr, 0, tgtLocal, tgtLocalSize);
+                                          nullptr, 0, false);
+        CellContainerClass groupTarget(tgtData, tgtDataSize, nullptr, 0, tgtLocal, tgtLocalSize, false);
 
-        thisptr->kernelWrapperCuda.M2LBetweenGroups(idxLevel, thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        thisptr->kernelWrapperCuda.M2LBetweenGroups(starpu_cuda_get_local_stream(),
+                                                    idxLevel, thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
     }
 
     template<class ThisClass, class CellContainerClass>
@@ -143,9 +166,10 @@ public:
         size_t srcLocalSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
 
         CellContainerClass currentGroup(srcData, srcDataSize, srcMultipole, srcMultipoleSize,
-                                        srcLocal, srcLocalSize);
+                                        srcLocal, srcLocalSize, false);
 
-        thisptr->kernelWrapperCuda.M2LInGroup(idxLevel, thisptr->kernels[starpu_worker_get_id()], currentGroup, *indexesForGroup_first);
+        thisptr->kernelWrapperCuda.M2LInGroup(starpu_cuda_get_local_stream(),
+                                              idxLevel, thisptr->kernels[starpu_worker_get_id()], currentGroup, *indexesForGroup_first);
     }
 
     template<class ThisClass, class CellContainerClass>
@@ -166,10 +190,11 @@ public:
         unsigned char* lowerLocal = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[3]);
         size_t lowerLocalSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
-        const CellContainerClass upperGroupObj(upperData, upperDataSize, nullptr, 0, upperLocal, upperLocalSize);
-        CellContainerClass lowerGroupObj(lowerData, lowerDataSize, nullptr, 0, lowerLocal, lowerLocalSize);
+        const CellContainerClass upperGroupObj(upperData, upperDataSize, nullptr, 0, upperLocal, upperLocalSize, false);
+        CellContainerClass lowerGroupObj(lowerData, lowerDataSize, nullptr, 0, lowerLocal, lowerLocalSize, false);
 
-        thisptr->kernelWrapperCuda.L2L(idxLevel, thisptr->kernels[starpu_worker_get_id()], upperGroupObj, lowerGroupObj);
+        thisptr->kernelWrapperCuda.L2L(starpu_cuda_get_local_stream(),
+                                       idxLevel, thisptr->kernels[starpu_worker_get_id()], upperGroupObj, lowerGroupObj);
     }
 
     template<class ThisClass, class CellContainerClass, class ParticleContainerClass>
@@ -189,10 +214,11 @@ public:
         unsigned char* particleRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[3]);
         size_t particleRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
-        const CellContainerClass leafGroupObj(leafData, leafDataSize, nullptr, 0, leafLocal, leafLocalSize);
-        ParticleContainerClass particleGroupObj(particleData, particleDataSize, particleRhs, particleRhsSize);
+        const CellContainerClass leafGroupObj(leafData, leafDataSize, nullptr, 0, leafLocal, leafLocalSize, false);
+        ParticleContainerClass particleGroupObj(particleData, particleDataSize, particleRhs, particleRhsSize, false);
 
-        thisptr->kernelWrapperCuda.L2P(thisptr->kernels[starpu_worker_get_id()], leafGroupObj, particleGroupObj);
+        thisptr->kernelWrapperCuda.L2P(starpu_cuda_get_local_stream(),
+                                       thisptr->kernels[starpu_worker_get_id()], leafGroupObj, particleGroupObj);
     }
 
 
@@ -216,17 +242,23 @@ public:
         size_t tgtLocalSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
 
         const CellContainerClassSource groupSrc(srcData, srcDataSize, srcMultipole, srcMultipoleSize,
-                                                nullptr, 0);
-        CellContainerClassTarget groupTarget(tgtData, tgtDataSize, nullptr, 0, tgtLocal, tgtLocalSize);
+                                                nullptr, 0, false);
+        CellContainerClassTarget groupTarget(tgtData, tgtDataSize, nullptr, 0, tgtLocal, tgtLocalSize, false);
 
-        thisptr->kernelWrapperCuda.M2LBetweenGroups(idxLevel, thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        thisptr->kernelWrapperCuda.M2LBetweenGroups(starpu_cuda_get_local_stream(),
+                                                    idxLevel, thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
     }
 
     template<class ThisClass, class ParticleContainerClassSource, class ParticleContainerClassTarget>
     static void P2PTsmBetweenLeavesCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* srcDataCpu;
+        size_t srcDataSizeCpu;
+        unsigned char* tgtDataCpu;
+        size_t tgtDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first,
+                                   &srcDataCpu, &srcDataSizeCpu, &tgtDataCpu, &tgtDataSizeCpu);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
@@ -237,12 +269,20 @@ public:
         unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[2]);
         size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
 
-        const ParticleContainerClassSource groupSrc(srcData, srcDataSize,
-                                                    nullptr, 0);
-        ParticleContainerClassTarget groupTarget(tgtData, tgtDataSize,
-                                                 tgtRhs, tgtRhsSize);
+        ParticleContainerClassSource groupSrcCpu(srcDataCpu, srcDataSizeCpu,
+                                           nullptr, 0, true);
+        ParticleContainerClassTarget groupTargetCpu(tgtDataCpu, tgtDataSizeCpu,
+                                              nullptr, 0, true);
 
-        thisptr->kernelWrapperCuda.P2PBetweenGroupsTsm(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        const ParticleContainerClassSource groupSrc(srcData, srcDataSize,
+                                                    nullptr, 0, false);
+        ParticleContainerClassTarget groupTarget(tgtData, tgtDataSize,
+                                                 tgtRhs, tgtRhsSize, false);
+
+        thisptr->kernelWrapperCuda.P2PBetweenGroupsTsm(starpu_cuda_get_local_stream(),
+                                                       thisptr->kernels[starpu_worker_get_id()],
+                                                       groupSrcCpu, groupTargetCpu,
+                                                       groupTarget, groupSrc, *indexesForGroup_first);
     }
 };
 

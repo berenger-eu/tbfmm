@@ -33,16 +33,25 @@ public:
     static void P2PBetweenLeavesCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* srcDataCpu;
+        size_t srcDataSizeCpu;
+        unsigned char* tgtDataCpu;
+        size_t tgtDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first,
+                                   &srcDataCpu, &srcDataSizeCpu, &tgtDataCpu, &tgtDataSizeCpu);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
+        assert(srcDataCpu == srcData);
+        assert(srcDataSize == srcDataSizeCpu);
 
         unsigned char* srcRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[1]);
         size_t srcRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[1]);
 
         unsigned char* tgtData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[2]);
         size_t tgtDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
+        assert(tgtDataCpu == tgtData);
+        assert(tgtDataSizeCpu == tgtDataSize);
 
         unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[3]);
         size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[3]);
@@ -59,10 +68,14 @@ public:
     static void P2POneLeafCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* particleDataCpu;
+        size_t particleDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first, &particleDataCpu, &particleDataSizeCpu);
 
         unsigned char* particleData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t particleDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
+        assert(particleDataCpu == particleData);
+        assert(particleDataSize == particleDataSizeCpu);
 
         unsigned char* particleRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[1]);
         size_t particleRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[1]);
@@ -226,13 +239,22 @@ public:
     static void P2PTsmBetweenLeavesCallback(void *buffers[], void *cl_arg){
         ThisClass* thisptr;
         typename ThisClass::VecOfIndexes* indexesForGroup_first;
-        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first);
+        unsigned char* srcDataCpu;
+        size_t srcDataSizeCpu;
+        unsigned char* tgtDataCpu;
+        size_t tgtDataSizeCpu;
+        starpu_codelet_unpack_args(cl_arg, &thisptr, &indexesForGroup_first,
+                                   &srcDataCpu, &srcDataSizeCpu, &tgtDataCpu, &tgtDataSizeCpu);
 
         unsigned char* srcData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[0]);
         size_t srcDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[0]);
+        assert(srcDataCpu == srcData);
+        assert(srcDataSize == srcDataSizeCpu);
 
         unsigned char* tgtData = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[1]);
         size_t tgtDataSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[1]);
+        assert(tgtDataCpu == tgtData);
+        assert(tgtDataSizeCpu == tgtDataSize);
 
         unsigned char* tgtRhs = (unsigned char*)STARPU_VARIABLE_GET_PTR(buffers[2]);
         size_t tgtRhsSize = STARPU_VARIABLE_GET_ELEMSIZE(buffers[2]);
@@ -242,7 +264,8 @@ public:
         ParticleContainerClassTarget groupTarget(tgtData, tgtDataSize,
                                            tgtRhs, tgtRhsSize);
 
-        thisptr->kernelWrapper.P2PBetweenGroupsTsm(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        thisptr->kernelWrapper.P2PBetweenGroupsTsm(thisptr->kernels[starpu_worker_get_id()],
+                                                   groupTarget, groupSrc, *indexesForGroup_first);
     }
 };
 

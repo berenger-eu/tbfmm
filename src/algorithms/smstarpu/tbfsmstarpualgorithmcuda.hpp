@@ -435,9 +435,17 @@ protected:
                                                                  auto* thisptr = this;
                                                                  vecIndexBuffer.push_back(indexes.toStdVector());
                                                                  VecOfIndexes* vecIndexesPtr = &vecIndexBuffer.back();
+                                                                 unsigned char* srcData = inTree.getParticleGroups()[groupSrcIdx].getDataPtr();
+                                                                 size_t srcDataSize = inTree.getParticleGroups()[groupSrcIdx].getDataSize();
+                                                                 unsigned char* tgtData = inTree.getParticleGroups()[groupTargetIdx].getDataPtr();
+                                                                 size_t tgtDataSize = inTree.getParticleGroups()[groupTargetIdx].getDataSize();
                                                                  starpu_insert_task(&p2p_cl_twoleaves,
                                                                                     STARPU_VALUE, &thisptr, sizeof(void*),
                                                                                     STARPU_VALUE, &vecIndexesPtr, sizeof(void*),
+                                                                                    STARPU_VALUE, &srcData, sizeof(void*),
+                                                                                    STARPU_VALUE, &srcDataSize, sizeof(size_t),
+                                                                                    STARPU_VALUE, &tgtData, sizeof(void*),
+                                                                                    STARPU_VALUE, &tgtDataSize, sizeof(size_t),
                                                                                     STARPU_PRIORITY, priorities.getP2PPriority(),
                                                                                     STARPU_R, particleHandles[groupSrcIdx][0],
                                                                                     starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[groupSrcIdx][1],
@@ -450,9 +458,13 @@ protected:
             auto* thisptr = this;
             vecIndexBuffer.push_back(std::move(indexesForGroup.first));
             VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+            unsigned char* groupData = inTree.getParticleGroups()[idxGroup].getDataPtr();
+            size_t groupDataSize = inTree.getParticleGroups()[idxGroup].getDataSize();
             starpu_insert_task(&p2p_cl_oneleaf,
                                STARPU_VALUE, &thisptr, sizeof(void*),
                                STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                               STARPU_VALUE, &groupData, sizeof(void*),
+                               STARPU_VALUE, &groupDataSize, sizeof(size_t),
                                STARPU_PRIORITY, priorities.getP2PPriority(),
                                STARPU_R, particleHandles[idxGroup][0],
                                starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE), particleHandles[idxGroup][1],
@@ -539,10 +551,10 @@ public:
 
         starpu_task_wait_for_all();
 
-        starpu_pause();
         vecIndexBuffer.clear();
         TbfStarPUHandleBuilder::CleanCellHandles(allCellHandles);
         TbfStarPUHandleBuilder::CleanParticleHandles(allParticlesHandles);
+        starpu_pause();
     }
 
     template <class FuncType>

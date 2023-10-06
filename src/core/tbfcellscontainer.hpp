@@ -52,20 +52,22 @@ public:
 #endif
     explicit TbfCellsContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
                                unsigned char* inObjectMultipolePtr, const size_t inObjectMultipoleSize,
-                               unsigned char* inObjectLocalPtr, const size_t inObjectLocalSize)
-        : objectData(inObjectDataPtr, inObjectDataSize),
-          objectMultipole(inObjectMultipolePtr, inObjectMultipoleSize),
-          objectLocal(inObjectLocalPtr, inObjectLocalSize){
+                               unsigned char* inObjectLocalPtr, const size_t inObjectLocalSize,
+                                   const bool inInitFromMemory = true)
+        : objectData(inObjectDataPtr, inObjectDataSize, inInitFromMemory),
+          objectMultipole(inObjectMultipolePtr, inObjectMultipoleSize, inInitFromMemory),
+          objectLocal(inObjectLocalPtr, inObjectLocalSize, inInitFromMemory){
 
     }
 
 #ifdef __NVCC__
     __device__ __host__
 #endif
-        explicit TbfCellsContainer(const std::array<std::pair<unsigned char*, size_t>, 3>& inPtrsSizes)
-        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second),
-        objectMultipole(inPtrsSizes[1].first, inPtrsSizes[1].second),
-        objectLocal(inPtrsSizes[2].first, inPtrsSizes[2].second){
+        explicit TbfCellsContainer(const std::array<std::pair<unsigned char*, size_t>, 3>& inPtrsSizes,
+                                   const bool inInitFromMemory = true)
+        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second, inInitFromMemory),
+        objectMultipole(inPtrsSizes[1].first, inPtrsSizes[1].second, inInitFromMemory),
+        objectLocal(inPtrsSizes[2].first, inPtrsSizes[2].second, inInitFromMemory){
 
     }
 
@@ -110,50 +112,92 @@ public:
 
     TbfCellsContainer(TbfCellsContainer&&) = default;
     TbfCellsContainer& operator=(TbfCellsContainer&&) = default;
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getStartingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().startingSpaceIndex;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getEndingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().endingSpaceIndex;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int getNbCells() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbCells;
     }
 
     /////////////////////////////////////////////////////////////////////////////////////
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getCellSpacialIndex(const long int inIdxCell) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell).spaceIndex;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const std::array<long int, Dim>& getCellBoxCoord(const long int inIdxCell) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell).boxCoord;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const CellHeader& getCellSymbData(const long int inIdxCell) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxCell);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     MultipoleClass& getCellMultipole(const long int inIdxCell) {
         return objectMultipole.template getViewerForBlock<0>().getItem(inIdxCell);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const MultipoleClass& getCellMultipole(const long int inIdxCell) const {
         return objectMultipole.template getViewerForBlockConst<0>().getItem(inIdxCell);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     LocalClass& getCellLocal(const long int inIdxCell) {
         return objectLocal.template getViewerForBlock<0>().getItem(inIdxCell);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const LocalClass& getCellLocal(const long int inIdxCell) const {
         return objectLocal.template getViewerForBlockConst<0>().getItem(inIdxCell);
     }
 
     ///////////////////////////////////////////////////////////////////////////
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    void initMemoryBlockHeader(){
+        objectData.initHeader();
+        objectMultipole.initHeader();
+        objectLocal.initHeader();
+    }
+
+    auto getDataPtrsAndSizes(){
+        return std::array<std::pair<unsigned char*,size_t>,3>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectMultipole.getPtr(), objectMultipole.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectLocal.getPtr(), objectLocal.getAllocatedMemorySizeInByte()}};
+
+    }
+
+    auto getDataPtrsAndSizes() const{
+        return std::array<std::pair<const unsigned char*,size_t>,3>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectMultipole.getPtr(), objectMultipole.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectLocal.getPtr(), objectLocal.getAllocatedMemorySizeInByte()}};
+
+    }
 
     unsigned char* getDataPtr(){
         return objectData.getPtr();
@@ -222,7 +266,9 @@ public:
         return std::optional<long int>(idxCell);
     }
 
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::optional<long int> getElementFromParentIndex(const SpaceIndexType& spaceSystem, const IndexType inParentIndex) const {        
         //        for (long int idxCell = 0 ; idxCell < header.nbCells ; ++idxCell) {
         //            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);

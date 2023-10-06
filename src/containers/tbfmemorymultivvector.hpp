@@ -18,6 +18,9 @@ public:
     constexpr static long int BlockMemoryAlignementBytes = MemoryAlignementBytes;
 
     template <class FuncType>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static void ApplyToAllElements(DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes);
         for(long int idx = 0 ; idx < inNbItems ; ++idx){
@@ -29,6 +32,9 @@ public:
     }
 
     template <class FuncType>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static void ApplyToAllElementsConst(const DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes);
         for(long int idx = 0 ; idx < inNbItems ; ++idx){
@@ -38,7 +44,9 @@ public:
             }
         }
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes);
         return inNbItems*leadingDim;

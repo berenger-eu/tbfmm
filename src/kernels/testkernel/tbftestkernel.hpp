@@ -11,7 +11,12 @@ public:
     using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
 public:
     explicit TbfTestKernel(const SpacialConfiguration& /*inConfiguration*/){}
-    explicit TbfTestKernel(const TbfTestKernel&){}
+
+    TbfTestKernel(const TbfTestKernel&) = default;
+    TbfTestKernel(TbfTestKernel&&) = default;
+
+    TbfTestKernel& operator=(const TbfTestKernel&) = default;
+    TbfTestKernel& operator=(TbfTestKernel&&) = default;
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& /*inLeafIndex*/,  const long int /*particlesIndexes*/[],
