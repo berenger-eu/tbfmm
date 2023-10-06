@@ -184,14 +184,6 @@ public:
     __device__ __host__
 #endif
     long int getNbLeaves() const{
-//        if(print){
-//            auto* ptr = &objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
-//            printf("========== cuda @%p (diff ptr %lu)\n",
-//                   ptr,
-//                   ((size_t)ptr)-((size_t)objectData.getPtr()));
-//            printf("%d\n", *ptr);
-//            return 0;
-//        }
         return objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
     }
 
