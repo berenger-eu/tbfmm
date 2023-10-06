@@ -221,9 +221,6 @@ public:
     //////////////////////////////////////////////////////////////////////
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     void applyToAllElements(FuncType&& inFunc){
         assert(rawMemoryPtr != nullptr);
         if(nbItemsInBlocks){
@@ -236,9 +233,6 @@ public:
     }
 
     template <long int IdxBlock, class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     auto applyToBlock(FuncType&& inFunc){
         if(nbItemsInBlocks){
             using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -267,9 +261,6 @@ public:
     //////////////////////////////////////////////////////////////////////
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     void applyToAllElementsConst(FuncType&& inFunc) const {
         if(nbItemsInBlocks){
             TbfUtils::for_each<TupleOfBlockDefinitions>([&](auto structWithBlockType, auto idxBlock){
@@ -281,9 +272,6 @@ public:
     }
 
     template <long int IdxBlock, class FuncType>
-#ifdef __NVCC__
-        __device__ __host__
-#endif
     auto applyToBlockConst(FuncType&& inFunc) const {
         if(nbItemsInBlocks){
             using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;

@@ -218,8 +218,16 @@ protected:
                        && (*currentParticleGroup).getEndingSpacialIndex() == (*currentLeafGroup).getEndingSpacialIndex()
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
                 auto* thisptr = this;
+                unsigned char* groupCellsData = inTree.getLeafGroups()[idxGroup].getDataPtr();
+                size_t groupCellsDataSize = inTree.getLeafGroups()[idxGroup].getDataSize();
+                unsigned char* groupParticlesData = inTree.getParticleGroups()[idxGroup].getDataPtr();
+                size_t groupParticlesDataSize = inTree.getParticleGroups()[idxGroup].getDataSize();
                 starpu_insert_task(&p2m_cl,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsData, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsDataSize, sizeof(size_t),
+                                   STARPU_VALUE, &groupParticlesData, sizeof(void*),
+                                   STARPU_VALUE, &groupParticlesDataSize, sizeof(size_t),
                                    STARPU_PRIORITY, priorities.getP2MPriority(),
                                    STARPU_R, particleHandles[idxGroup][0],
                                    STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][0],
@@ -253,9 +261,17 @@ protected:
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
                 auto* thisptr = this;
+                unsigned char* groupCellsLowerData = inTree.getCellGroupsAtLevel(idxLevel+1)[idxLowerGroup].getDataPtr();
+                size_t groupCellsLowerDataSize = inTree.getCellGroupsAtLevel(idxLevel+1)[idxLowerGroup].getDataSize();
+                unsigned char* groupParticlesUpperData = inTree.getCellGroupsAtLevel(idxLevel)[idxUpperGroup].getDataPtr();
+                size_t groupParticlesUpperDataSize = inTree.getCellGroupsAtLevel(idxLevel)[idxUpperGroup].getDataSize();
                 starpu_insert_task(&m2m_cl,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
                                    STARPU_VALUE, &idxLevel, sizeof(long int),
+                                   STARPU_VALUE, &groupCellsLowerData, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsLowerDataSize, sizeof(size_t),
+                                   STARPU_VALUE, &groupParticlesUpperData, sizeof(void*),
+                                   STARPU_VALUE, &groupParticlesUpperDataSize, sizeof(size_t),
                                    STARPU_PRIORITY, priorities.getM2MPriority(idxLevel),
                                    STARPU_R, cellHandles[idxLevel+1][idxLowerGroup][0],
                                    STARPU_R, cellHandles[idxLevel+1][idxLowerGroup][1],
@@ -298,10 +314,18 @@ protected:
                                                                      auto* thisptr = this;
                                                                      vecIndexBuffer.push_back(indexes.toStdVector());
                                                                      VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+                                                                     unsigned char* groupCellsSrcData = inTree.getCellGroupsAtLevel(idxLevel)[groupSrcIdx].getDataPtr();
+                                                                     size_t groupCellsDataSrcSize = inTree.getCellGroupsAtLevel(idxLevel)[groupSrcIdx].getDataSize();
+                                                                     unsigned char* groupCellsTgtData = inTree.getCellGroupsAtLevel(idxLevel)[groupTargetIdx].getDataPtr();
+                                                                     size_t groupCellsDataTgtSize = inTree.getCellGroupsAtLevel(idxLevel)[groupTargetIdx].getDataSize();
                                                                      starpu_insert_task(&m2l_cl_between_groups,
                                                                                         STARPU_VALUE, &thisptr, sizeof(void*),
                                                                                         STARPU_VALUE, &idxLevel, sizeof(int),
                                                                                         STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                                                                                        STARPU_VALUE, &groupCellsSrcData, sizeof(void*),
+                                                                                        STARPU_VALUE, &groupCellsDataSrcSize, sizeof(size_t),
+                                                                                        STARPU_VALUE, &groupCellsTgtData, sizeof(void*),
+                                                                                        STARPU_VALUE, &groupCellsDataTgtSize, sizeof(size_t),
                                                                                         STARPU_PRIORITY, priorities.getM2LPriority(idxLevel),
                                                                                         STARPU_R, cellHandles[idxLevel][groupSrcIdx][0],
                                                                                         STARPU_R, cellHandles[idxLevel][groupSrcIdx][1],
@@ -314,10 +338,14 @@ protected:
                 auto* thisptr = this;
                 vecIndexBuffer.push_back(std::move(indexesForGroup.first));
                 VecOfIndexes* indexesForGroup_firstPtr = &vecIndexBuffer.back();
+                unsigned char* groupCellsData = inTree.getCellGroupsAtLevel(idxLevel)[idxGroup].getDataPtr();
+                size_t groupCellsDataSize = inTree.getCellGroupsAtLevel(idxLevel)[idxGroup].getDataSize();
                 starpu_insert_task(&m2l_cl_inside,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
                                    STARPU_VALUE, &idxLevel, sizeof(int),
                                    STARPU_VALUE, &indexesForGroup_firstPtr, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsData, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsDataSize, sizeof(size_t),
                                    STARPU_PRIORITY, priorities.getM2LPriority(idxLevel),
                                    STARPU_R, cellHandles[idxLevel][idxGroup][0],
                                    STARPU_R, cellHandles[idxLevel][idxGroup][1],
@@ -350,9 +378,17 @@ protected:
                 assert(spaceSystem.getParentIndex(currentLowerGroup->getStartingSpacialIndex()) <= currentUpperGroup->getEndingSpacialIndex()
                        || currentUpperGroup->getStartingSpacialIndex() <= spaceSystem.getParentIndex(currentLowerGroup->getEndingSpacialIndex()));
                 auto* thisptr = this;
+                unsigned char* groupParticlesUpperData = inTree.getCellGroupsAtLevel(idxLevel)[idxUpperGroup].getDataPtr();
+                size_t groupParticlesUpperDataSize = inTree.getCellGroupsAtLevel(idxLevel)[idxUpperGroup].getDataSize();
+                unsigned char* groupCellsLowerData = inTree.getCellGroupsAtLevel(idxLevel+1)[idxLowerGroup].getDataPtr();
+                size_t groupCellsLowerDataSize = inTree.getCellGroupsAtLevel(idxLevel+1)[idxLowerGroup].getDataSize();
                 starpu_insert_task(&l2l_cl,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
                                    STARPU_VALUE, &idxLevel, sizeof(long int),
+                                   STARPU_VALUE, &groupParticlesUpperData, sizeof(void*),
+                                   STARPU_VALUE, &groupParticlesUpperDataSize, sizeof(size_t),
+                                   STARPU_VALUE, &groupCellsLowerData, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsLowerDataSize, sizeof(size_t),
                                    STARPU_PRIORITY, priorities.getL2LPriority(idxLevel),
                                    STARPU_R, cellHandles[idxLevel][idxUpperGroup][0],
                                    STARPU_R, cellHandles[idxLevel][idxUpperGroup][2],
@@ -399,8 +435,16 @@ protected:
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
 
                 auto* thisptr = this;
+                unsigned char* groupCellsData = inTree.getLeafGroups()[idxGroup].getDataPtr();
+                size_t groupCellsDataSize = inTree.getLeafGroups()[idxGroup].getDataSize();
+                unsigned char* groupParticlesData = inTree.getParticleGroups()[idxGroup].getDataPtr();
+                size_t groupParticlesDataSize = inTree.getParticleGroups()[idxGroup].getDataSize();
                 starpu_insert_task(&l2p_cl,
                                    STARPU_VALUE, &thisptr, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsData, sizeof(void*),
+                                   STARPU_VALUE, &groupCellsDataSize, sizeof(size_t),
+                                   STARPU_VALUE, &groupParticlesData, sizeof(void*),
+                                   STARPU_VALUE, &groupParticlesDataSize, sizeof(size_t),
                                    STARPU_PRIORITY, priorities.getL2PPriority(),
                                    STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][0],
                                    STARPU_R, cellHandles[configuration.getTreeHeight()-1][idxGroup][2],

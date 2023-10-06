@@ -15,9 +15,6 @@ public:
     constexpr static long int BlockMemoryAlignementBytes = MemoryAlignementBytes;
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     static void ApplyToAllElements(DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         for(long int idx = 0 ; idx < inNbItems ; ++idx){
             inFunc(inPtrToData[idx]);
@@ -25,9 +22,6 @@ public:
     }
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     static void ApplyToAllElementsConst(const DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         for(long int idx = 0 ; idx < inNbItems ; ++idx){
             inFunc(inPtrToData[idx]);

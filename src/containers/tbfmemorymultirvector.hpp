@@ -19,9 +19,6 @@ public:
     constexpr static long int BlockMemoryAlignementBytes = MemoryAlignementBytes;
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     static void ApplyToAllElements(DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes);
         for(long int idxRow = 0 ; idxRow < NbRows ; ++idxRow){
@@ -33,9 +30,6 @@ public:
     }
 
     template <class FuncType>
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     static void ApplyToAllElementsConst(const DataType* inPtrToData, const long int inNbItems, FuncType&& inFunc){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes);
         for(long int idxRow = 0 ; idxRow < NbRows ; ++idxRow){

@@ -41,16 +41,10 @@ public:
         return vector[offset+inIndex];
     }
 
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     explicit operator std::vector<ElementType_T>() const{
         return toStdVector();
     }
 
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     std::vector<ElementType_T> toStdVector() const{
         return std::vector<ElementType_T>(vector.begin() + offset,
                                    vector.begin() + offset + length);
