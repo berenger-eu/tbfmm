@@ -3,6 +3,8 @@
 
 #include "tbfglobal.hpp"
 
+#include "utils/tbfutils.hpp"
+
 #include <tuple>
 #include <array>
 #include <memory>
@@ -51,10 +53,10 @@ class TbfMemoryBlock{
     }
 
     long int allocatedMemorySizeInByte;
-    std::unique_ptr<unsigned char[]> rawMemoryPtr;
+    unsigned char* rawMemoryPtr;
     long int* nbItemsInBlocks;
     long int* offsetOfBlocksForPtrs;
-    std::array<unsigned char*,NbBlocks> blockRawPtrs;
+    unsigned char* blockRawPtrs[NbBlocks];
     bool objectOwnData;
 
     void constructAllItems(){
@@ -82,8 +84,8 @@ public:
     TbfMemoryBlock()
         : allocatedMemorySizeInByte(0), rawMemoryPtr(nullptr), nbItemsInBlocks(nullptr),
         offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
-        for(auto& blockPtr : blockRawPtrs){
-            blockPtr = nullptr;
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            blockRawPtrs[idxBlock] = nullptr;
         }
     }
 
@@ -91,11 +93,9 @@ public:
     __device__ __host__
 #endif
     ~TbfMemoryBlock(){
-        if(objectOwnData == false){
-            rawMemoryPtr.release();
-        }
-        else{
+        if(objectOwnData == true){
             freeAllItems();
+            delete[] rawMemoryPtr;
         }
     }
 
@@ -112,20 +112,27 @@ public:
     __device__ __host__
 #endif
     TbfMemoryBlock& operator=(TbfMemoryBlock&& other){
+        if(objectOwnData == true){
+            freeAllItems();
+            delete[] rawMemoryPtr;
+        }
+
         allocatedMemorySizeInByte = other.allocatedMemorySizeInByte;
-        rawMemoryPtr = std::move(other.rawMemoryPtr);
+        rawMemoryPtr = other.rawMemoryPtr;
         nbItemsInBlocks = other.nbItemsInBlocks;
         offsetOfBlocksForPtrs = other.offsetOfBlocksForPtrs;
-        blockRawPtrs = other.blockRawPtrs;
         objectOwnData = other.objectOwnData;
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            blockRawPtrs[idxBlock] = other.blockRawPtrs[idxBlock];
+        }
 
         other.allocatedMemorySizeInByte = 0;
         other.nbItemsInBlocks = nullptr;
         other.offsetOfBlocksForPtrs = nullptr;
-        for(auto& blockPtr : other.blockRawPtrs){
-            blockPtr = nullptr;
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            other.blockRawPtrs[idxBlock] = nullptr;
         }
-        assert(other.rawMemoryPtr.get() == nullptr);
+        other.rawMemoryPtr = nullptr;
         other.objectOwnData = false;
 
         return *this;
@@ -148,8 +155,8 @@ public:
 
         if(rawMemoryPtr == nullptr){
             assert(allocatedMemorySizeInByte == 0);
-            for(auto& blockPtr : blockRawPtrs){
-                blockPtr = nullptr;
+            for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+                blockRawPtrs[idxBlock] = nullptr;
             }
         }
         else if(inInitFromMemory){
@@ -176,19 +183,22 @@ public:
             freeAllItems();
         }
 
-        // We allocate, so we will have to deallocate too
-        objectOwnData = true;
-
         const std::array<std::pair<long int, long int>, NbBlocks + 1> sizeAndOffsetOfBlocks = GetSizeAndOffsetOfBlocks(inNbItemsInBlocks);
         const long int totalMemoryToAlloc = (sizeAndOffsetOfBlocks[NbBlocks].second
                                             + sizeof(long int) * NbBlocks
                                             + sizeof(long int) * NbBlocks);
 
-        if(allocatedMemorySizeInByte < totalMemoryToAlloc){
-            rawMemoryPtr.reset(new unsigned char[totalMemoryToAlloc]);
+        if(allocatedMemorySizeInByte < totalMemoryToAlloc || objectOwnData == false){
+            if(objectOwnData == true){
+                freeAllItems();
+                delete[] rawMemoryPtr;
+            }
+            // We allocate, so we will have to deallocate too
+            objectOwnData = true;
+            rawMemoryPtr= new unsigned char[totalMemoryToAlloc];
             allocatedMemorySizeInByte = totalMemoryToAlloc;
         }
-        memset(rawMemoryPtr.get(), 0, totalMemoryToAlloc);
+        memset(rawMemoryPtr, 0, totalMemoryToAlloc);
 
         nbItemsInBlocks = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks));
         offsetOfBlocksForPtrs = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks)
@@ -211,11 +221,11 @@ public:
     }
 
     unsigned char* getPtr(){
-        return rawMemoryPtr.get();
+        return rawMemoryPtr;
     }
 
     const unsigned char* getPtr() const{
-        return rawMemoryPtr.get();
+        return rawMemoryPtr;
     }
 
     //////////////////////////////////////////////////////////////////////
