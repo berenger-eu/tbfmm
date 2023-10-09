@@ -26,16 +26,10 @@ public:
         assert(offset+length <= static_cast<long int>(vector.size()));
     }
 
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     long int size() const{
         return length;
     }
 
-#ifdef __NVCC__
-    __device__ __host__
-#endif
     const ElementType& operator[](const long int inIndex) const{
         assert(inIndex < length);
         return vector[offset+inIndex];

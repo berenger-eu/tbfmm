@@ -199,7 +199,9 @@ public:
 
         return boxPos;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getParentIndex(IndexType inIndex) const{
         return inIndex >> Dim;
     }

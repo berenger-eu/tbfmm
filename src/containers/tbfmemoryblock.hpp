@@ -93,10 +93,12 @@ public:
     __device__ __host__
 #endif
     ~TbfMemoryBlock(){
+#ifndef __CUDA_ARCH__
         if(objectOwnData == true){
             freeAllItems();
             delete[] rawMemoryPtr;
         }
+#endif
     }
 
     TbfMemoryBlock(const TbfMemoryBlock&) = delete;
@@ -112,10 +114,12 @@ public:
     __device__ __host__
 #endif
     TbfMemoryBlock& operator=(TbfMemoryBlock&& other){
+#ifndef __CUDA_ARCH__
         if(objectOwnData == true){
             freeAllItems();
             delete[] rawMemoryPtr;
         }
+#endif
 
         allocatedMemorySizeInByte = other.allocatedMemorySizeInByte;
         rawMemoryPtr = other.rawMemoryPtr;
