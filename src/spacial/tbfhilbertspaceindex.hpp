@@ -775,6 +775,14 @@ public:
         return nbNeighbors - 1;
     }
 
+    static long int constexpr get3PowDim() {
+        long int nbNeighbors = 1;
+        for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
+            nbNeighbors *= 3;
+        }
+        return nbNeighbors;
+    }
+
     static auto getRelativePosFromInteractionIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){

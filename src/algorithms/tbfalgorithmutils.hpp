@@ -228,6 +228,19 @@ template <typename, template <typename> class, typename = void_t<>>\
     template <typename T>\
     using class_has_##OP_NAME = detect_##OP_NAME<T, OP_NAME##_test>;
 
+#define CUDA_METH_DETECT(OP_NAME)\
+template <typename, template <typename> class, typename = void_t<>>\
+    struct detect_##OP_NAME : std::false_type {};\
+        \
+    template <typename T, template <typename> class Op>\
+    struct detect_##OP_NAME<T, Op, void_t<Op<T>>> : std::true_type {};\
+        \
+    template <typename T>\
+    using OP_NAME##_test = decltype(&T::OP_NAME);\
+        \
+    template <typename T>\
+    using class_has_##OP_NAME = detect_##OP_NAME<T, OP_NAME##_test>;
+
 template <class KernelClass>
 class KernelHardwareSupport{
     CUDA_OP_DETECT(CudaP2P)
@@ -244,6 +257,8 @@ class KernelHardwareSupport{
     CUDA_OP_DETECT(CpuL2L)
     CUDA_OP_DETECT(CpuL2P)
 
+    CUDA_METH_DETECT(initCudaKernelData)
+    CUDA_METH_DETECT(releaseCudaKernelData)
 public:
     // Check if cuda is enabled
     constexpr static bool CudaP2P = class_has_CudaP2P<KernelClass>::value;
@@ -259,6 +274,9 @@ public:
     constexpr static bool CpuM2L = (!CudaM2L || class_has_CpuM2L<KernelClass>::value);
     constexpr static bool CpuL2L = (!CudaL2L || class_has_CpuL2L<KernelClass>::value);
     constexpr static bool CpuL2P = (!CudaL2P || class_has_CpuL2P<KernelClass>::value);
+
+    constexpr static bool HasCudaInit = class_has_initCudaKernelData<KernelClass>::value;
+    constexpr static bool HasCudaRelease = class_has_releaseCudaKernelData<KernelClass>::value;
 };
 
 }

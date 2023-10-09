@@ -535,6 +535,16 @@ public:
 
         [[maybe_unused]] const int ret = starpu_init(NULL);
         assert(ret == 0);
+
+        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
+                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
+
+        if constexpr(KernelCapabilities::HasCudaInit){
+            TbStarPUUtils::ExecOnWorkers(STARPU_CUDA, [&](){
+                kernels[starpu_worker_get_id()].initCudaKernelData(starpu_cuda_get_local_stream());
+            });
+        }
+
         starpu_pause();
     }
 
@@ -548,12 +558,27 @@ public:
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
 
         [[maybe_unused]] const int ret = starpu_init(NULL);
-        assert(ret == 0);
+        assert(ret == 0);        
+
+        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
+                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
+
+        if constexpr(KernelCapabilities::HasCudaInit){
+            TbStarPUUtils::ExecOnWorkers(STARPU_CUDA, [&](){
+                kernels[starpu_worker_get_id()].initCudaKernelData(starpu_cuda_get_local_stream());
+            });
+        }
+
         starpu_pause();
     }
 
     ~TbfSmStarpuAlgorithmCuda(){
         starpu_resume();
+        if constexpr(KernelCapabilities::HasCudaRelease){
+            TbStarPUUtils::ExecOnWorkers(STARPU_CUDA, [&](){
+                kernels[starpu_worker_get_id()].releaseCudaKernelData(starpu_cuda_get_local_stream());
+            });
+        }
         starpu_shutdown();
     }
 
@@ -570,9 +595,6 @@ public:
         initCodelet<CellContainerClass, ParticleContainerClass>();
 
         starpu_resume();
-
-        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
-                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
             P2M(inTree, allCellHandles, allParticlesHandles);
