@@ -7,7 +7,7 @@
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-#include "kernels/unifkernel/FP2PR.hpp"
+#include "kernels/P2P/FP2PR.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
 #include "utils/tbfaccuracychecker.hpp"
 

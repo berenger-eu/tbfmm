@@ -8,9 +8,13 @@
 #include "FSpherical.hpp"
 #include "FSmartPointer.hpp"
 #include "FMemUtils.hpp"
-#include "kernels/unifkernel/FP2PR.hpp"
+#include "kernels/P2P/FP2PR.hpp"
 
 #include "utils/tbfperiodicshifter.hpp"
+
+#ifdef __NVCC__
+#include "kernels/P2P/TbfP2PCuda.hpp"
+#endif
 
 /** This is a recursion to get the minimal size of the matrix dlmk
   */
@@ -1394,6 +1398,61 @@ public:
                   ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) const {
         FP2PR::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);
     }
+
+
+#ifdef __NVCC__
+    static constexpr bool CpuP2P = true;
+    static constexpr bool CudaP2P = true;
+
+    struct CudaKernelData{ bool notUsed; };
+
+    void initCudaKernelData(const cudaStream_t& /*inStream*/){
+    }
+
+    auto getCudaKernelData(){
+        return CudaKernelData();
+    }
+
+    void releaseCudaKernelData(const cudaStream_t& /*inStream*/){
+    }
+
+    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
+    __device__ static void P2PCuda(const CudaKernelData& /*cudaKernelData*/,
+                                   const LeafSymbolicData& inNeighborIndex, const long int /*neighborsIndexes*/[],
+                                   const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int inNbParticlesNeighbors,
+                                   const LeafSymbolicData& inTargetIndex,  const long int /*targetIndexes*/[],
+                                   const ParticlesClassValues& inTargets,
+                                   ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles,
+                                   [[maybe_unused]] const long arrayIndexSrc) /*const*/ {
+        static_assert(SpaceIndexType::IsPeriodic == false);
+        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
+                                             (inTargets), (inTargetsRhs), inNbOutParticles);
+        TbfP2PCuda::template GenericFullRemote<RealType>((inTargets), inNbOutParticles,
+                                                (inNeighbors), (inNeighborsRhs), inNbParticlesNeighbors);
+
+    }
+
+    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
+    __device__ static void P2PTsmCuda(const LeafSymbolicDataSource& inNeighborIndex, const long int /*neighborsIndexes*/[],
+                                      const ParticlesClassValuesSource& inNeighbors,
+                                      const long int inNbParticlesNeighbors,
+                                      const LeafSymbolicDataTarget& inTargetIndex, const long int /*targetIndexes*/[],
+                                      const ParticlesClassValuesTarget& inTargets,
+                                      ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles,
+                                      [[maybe_unused]] const long arrayIndexSrc) /*const*/ {
+        static_assert(SpaceIndexType::IsPeriodic == false);
+        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
+                                                (inTargets), (inTargetsRhs), inNbOutParticles);
+    }
+
+    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
+    __device__ static void P2PInnerCuda(const CudaKernelData& /*cudaKernelData*/,
+                                        const LeafSymbolicData& /*inIndex*/, const long int /*indexes*/[],
+                                        const ParticlesClassValues& inTargets,
+                                        ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles) /*const*/ {
+        TbfP2PCuda::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);
+    }
+#endif
 };
 
 
