@@ -233,59 +233,21 @@ __global__ void L2P_core(typename KernelClass::CudaKernelData inKernel,
 }
 
 
-template <class KernelClass, class ParticleGroupClass, class IndexClass>
-__global__ void P2PInGroup_core(typename KernelClass::CudaKernelData inKernel,
-                                std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeParticles,
-                                const IndexClass* inIndexes,
-                                const long int* intervalSizes,
-                                const std::pair<long int,long int>* inBlockIdxs,
-                                const long int inNbBlocks) {
-    ParticleGroupClass inParticleGroup(ptrsAndSizeParticles);
-
-    for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
-        for(long int idxInteractions = intervalSizes[idxBlock] ; idxInteractions < intervalSizes[idxBlock+1] ; ++idxInteractions){
-            const auto interaction = inIndexes[inBlockIdxs[idxInteractions].first];
-
-            auto foundSrc = inBlockIdxs[idxInteractions].second;
-
-            assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                   && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
-
-            assert(inParticleGroup.getLeafSymbData(foundSrc).spaceIndex == interaction.indexSrc);
-            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
-
-            const auto& srcData = TbfUtils::make_const(inParticleGroup).getParticleData(foundSrc);
-            auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
-            auto&& srcRhs = inParticleGroup.getParticleRhs(foundSrc);
-            const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
-
-            KernelClass::P2PCuda(inKernel, inParticleGroup.getLeafSymbData(foundSrc),
-                         inParticleGroup.getParticleIndexes(foundSrc),
-                         srcData, srcRhs,
-                         inParticleGroup.getNbParticlesInLeaf(foundSrc),
-                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
-                         inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
-                         interaction.arrayIndexSrc);
-        }
-    }
-}
-
 template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
 __global__ void P2PBetweenGroupsTsm_core(typename KernelClass::CudaKernelData inKernel,
                                          std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeParticles,
                                          std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeOthers,
                                          const IndexClass* inIndexes,
-                                         const long int* intervalSizes, const std::pair<long int,long int>* inBlockIdxs,
+                                         const long int* intervalSizes,
                                          const long int inNbBlocks) {
     ParticleGroupClassTarget inParticleGroup(ptrsAndSizeParticles);
     ParticleGroupClassSource inOtherParticleGroup(ptrsAndSizeOthers);
 
     for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
         for(long int idxInteractions = intervalSizes[idxBlock] ; idxInteractions < intervalSizes[idxBlock+1] ; ++idxInteractions){
-            const auto interaction = inIndexes[inBlockIdxs[idxInteractions].first];
+            const auto interaction = inIndexes[idxInteractions];
 
-            auto foundSrc = inBlockIdxs[idxInteractions].second;
+            auto foundSrc = interaction.globalSrcPos;
 
             assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                    && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
@@ -297,7 +259,8 @@ __global__ void P2PBetweenGroupsTsm_core(typename KernelClass::CudaKernelData in
             auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
             const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
 
-            KernelClass::P2PTsmCuda(inOtherParticleGroup.getLeafSymbData(foundSrc),
+            KernelClass::P2PTsmCuda(inKernel,
+                                    inOtherParticleGroup.getLeafSymbData(foundSrc),
                             inOtherParticleGroup.getParticleIndexes(foundSrc),
                             srcData,
                             inOtherParticleGroup.getNbParticlesInLeaf(foundSrc),
@@ -305,47 +268,6 @@ __global__ void P2PBetweenGroupsTsm_core(typename KernelClass::CudaKernelData in
                             inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
                             targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
                             interaction.arrayIndexSrc);
-        }
-    }
-}
-
-
-
-template <class KernelClass, class ParticleGroupClass, class IndexClass>
-__global__ void P2PBetweenGroups_core(typename KernelClass::CudaKernelData inKernel,
-                                      std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeParticles,
-                                      std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeOthers,
-                                      const IndexClass* inIndexes,
-                                      const long int* intervalSizes,
-                                      const std::pair<long int,long int>* inBlockIdxs,
-                                      const long int inNbBlocks) {
-    ParticleGroupClass inParticleGroup(ptrsAndSizeParticles);
-    ParticleGroupClass inOtherParticleGroup(ptrsAndSizeOthers);
-
-    for(long int idxBlock = GetBlockId() ; idxBlock < inNbBlocks ; idxBlock += GetNbBlocks()){
-        for(long int idxInteractions = intervalSizes[idxBlock] ; idxInteractions < intervalSizes[idxBlock+1] ; ++idxInteractions){
-            const auto interaction = inIndexes[inBlockIdxs[idxInteractions].first];
-
-            auto foundSrc = inBlockIdxs[idxInteractions].second;
-            assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                   && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
-
-            assert(inOtherParticleGroup.getLeafSymbData(foundSrc).spaceIndex == interaction.indexSrc);
-            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
-
-            const auto& srcData = TbfUtils::make_const(inOtherParticleGroup).getParticleData(foundSrc);
-            auto&& srcRhs = inOtherParticleGroup.getParticleRhs(foundSrc);
-            auto&& targetRhs = inParticleGroup.getParticleRhs(interaction.globalTargetPos);
-            const auto& targetData = TbfUtils::make_const(inParticleGroup).getParticleData(interaction.globalTargetPos);
-
-            KernelClass::P2PCuda(inKernel, inOtherParticleGroup.getLeafSymbData(foundSrc),
-                         inOtherParticleGroup.getParticleIndexes(foundSrc),
-                         srcData, srcRhs,
-                         inOtherParticleGroup.getNbParticlesInLeaf(foundSrc),
-                         inParticleGroup.getLeafSymbData(interaction.globalTargetPos),
-                         inParticleGroup.getParticleIndexes(interaction.globalTargetPos), targetData,
-                         targetRhs, inParticleGroup.getNbParticlesInLeaf(interaction.globalTargetPos),
-                         interaction.arrayIndexSrc);
         }
     }
 }
@@ -386,10 +308,14 @@ public:
         }
     }
 
-    ~DeviceUniquePtr() {
+    void release(){
         if (data) {
             cudaFreeAsync(data, cuStream);
         }
+    }
+
+    ~DeviceUniquePtr() {
+        release();
     }
 
     // Move constructor
@@ -700,61 +626,17 @@ public:
         CUDA_ASSERT(cudaRes);
     }
 
-
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
     void P2PInGroup(cudaStream_t currentStream,
                     KernelClass& inKernel,
                     const ParticleGroupClass& inParticleGroup,
                     ParticleGroupClass& inParticleGroupCuda,
                     const IndexClass& inIndexes) const {
-        std::vector<std::pair<long int,long int>> interactionBlocks[spaceSystem.get3PowDim()];
-        std::vector<long int> interactionBlockIntervals[spaceSystem.get3PowDim()];
-
-        for(long int idxColor = 0 ; idxColor < spaceSystem.get3PowDim() ; ++idxColor){
-            interactionBlockIntervals[idxColor].emplace_back(0);
-        }
-
-        typename SpaceIndexType::IndexType previousTarget = -1;
-
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
-            const auto interaction = inIndexes[idxInteraction];
-
-            auto foundSrc = inParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
-            assert(foundSrc);
-            assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                   && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
-
-            assert(inParticleGroup.getLeafSymbData(*foundSrc).spaceIndex == interaction.indexSrc);
-            assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
-
-            const auto colorTgt = spaceSystem.getColorsIdxAtLeafLevel(interaction.indexTarget);
-            if(previousTarget != interaction.indexTarget){
-                interactionBlockIntervals[colorTgt].emplace_back(interactionBlocks[colorTgt].size());
-                previousTarget = interaction.indexTarget;
-            }
-
-            interactionBlockIntervals[colorTgt].back() += 1;
-            interactionBlocks[colorTgt].emplace_back(std::make_pair(idxInteraction, *foundSrc));
-        }
-
-        {
-            auto inIndexesCuda = MakeDeviceUniquePtr(inIndexes,currentStream);
-            for(long int idxColor = 0 ; idxColor < spaceSystem.get3PowDim() ; ++idxColor){
-                auto interactionBlockIntervalsCuda = MakeDeviceUniquePtr(interactionBlockIntervals[idxColor],currentStream);
-                auto interactionBlocksCuda = MakeDeviceUniquePtr(interactionBlocks[idxColor],currentStream);
-                TbfGroupKernelInterfaceCuda_core::P2PInGroup_core<KernelClass, ParticleGroupClass><<<1,1,0,currentStream>>>(
-                        inKernel.getCudaKernelData(),
-                        inParticleGroupCuda.getDataPtrsAndSizes(),
-                        inIndexesCuda.device_ptr(),
-                        interactionBlockIntervalsCuda.device_ptr(),
-                        interactionBlocksCuda.device_ptr(),
-                        interactionBlockIntervalsCuda.size()-1);
-                [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
-                CUDA_ASSERT(cudaRes);
-            }
-        }
-        [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
-        CUDA_ASSERT(cudaRes);
+        P2PBetweenGroupsGeneric(currentStream,
+                                inKernel, inParticleGroup,
+                                inParticleGroup, inParticleGroupCuda,
+                                inParticleGroupCuda, inIndexes,
+                                true, true);
     }
 
     template <class KernelClass, class ParticleGroupClass>
@@ -773,72 +655,42 @@ public:
                           const ParticleGroupClass& inOtherParticleGroup,
                           ParticleGroupClass& inParticleGroupCuda,
                           ParticleGroupClass& inOtherParticleGroupCuda, const IndexClass& inIndexes) const {
-        std::vector<std::pair<long int,long int>> interactionBlocks[spaceSystem.get3PowDim()];
-        std::vector<long int> interactionBlockIntervals[spaceSystem.get3PowDim()];
-
-        for(long int idxColor = 0 ; idxColor < spaceSystem.get3PowDim() ; ++idxColor){
-            interactionBlockIntervals[idxColor].emplace_back(0);
-        }
-
-        typename SpaceIndexType::IndexType previousTarget = -1;
-
-        for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
-            const auto interaction = inIndexes[idxInteraction];
-
-            auto foundSrc = inOtherParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
-            if(foundSrc){
-                assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
-                       && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
-
-                assert(inOtherParticleGroup.getLeafSymbData(*foundSrc).spaceIndex == interaction.indexSrc);
-                assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
-
-                const auto colorTgt = spaceSystem.getColorsIdxAtLeafLevel(interaction.indexTarget);
-                if(previousTarget != interaction.indexTarget){
-                    interactionBlockIntervals[colorTgt].emplace_back(interactionBlocks[colorTgt].size());
-                    previousTarget = interaction.indexTarget;
-                }
-
-                interactionBlockIntervals[colorTgt].back() += 1;
-                interactionBlocks[colorTgt].emplace_back(std::make_pair(idxInteraction, *foundSrc));
-            }
-        }
-
-        {
-            auto inIndexesCuda = MakeDeviceUniquePtr(inIndexes,currentStream);
-
-            for(long int idxColor = 0 ; idxColor < spaceSystem.get3PowDim() ; ++idxColor){
-                {
-                    auto interactionBlockIntervalsCuda = MakeDeviceUniquePtr(interactionBlockIntervals[idxColor],currentStream);
-                    auto interactionBlocksCuda = MakeDeviceUniquePtr(interactionBlocks[idxColor],currentStream);
-                    TbfGroupKernelInterfaceCuda_core::P2PBetweenGroups_core<KernelClass, ParticleGroupClass><<<1,1,0,currentStream>>>(
-                        inKernel.getCudaKernelData(),
-                                                                                      inParticleGroupCuda.getDataPtrsAndSizes(),
-                                                                                      inOtherParticleGroupCuda.getDataPtrsAndSizes(),
-                                                                                      inIndexesCuda.device_ptr(),
-                                                                                      interactionBlockIntervalsCuda.device_ptr(),
-                                                                                      interactionBlocksCuda.device_ptr(),
-                                                                                      interactionBlockIntervalsCuda.size()-1);
-                }
-                [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
-                 CUDA_ASSERT(cudaRes);
-            }
-        }
-        [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
-        CUDA_ASSERT(cudaRes);
+        P2PBetweenGroupsGeneric(currentStream,
+                                inKernel, inParticleGroup,
+                                inOtherParticleGroup, inParticleGroupCuda,
+                                inOtherParticleGroupCuda, inIndexes,
+                                true, false);
     }
-
-
 
     template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
     void P2PBetweenGroupsTsm(cudaStream_t currentStream,
                              KernelClass& inKernel, const ParticleGroupClassTarget& inParticleGroup,
                              const ParticleGroupClassSource& inOtherParticleGroup, ParticleGroupClassTarget& inParticleGroupCuda,
                              ParticleGroupClassSource& inOtherParticleGroupCuda, const IndexClass& inIndexes) const {
+        P2PBetweenGroupsGeneric(currentStream,
+                                inKernel, inParticleGroup,
+                                inOtherParticleGroup, inParticleGroupCuda,
+                                inOtherParticleGroupCuda, inIndexes,
+                                false, false);
+    }
 
-        std::vector<std::pair<long int,long int>> interactionBlocks;
-        std::vector<long int> interactionBlockIntervals;
-        interactionBlockIntervals.emplace_back(0);
+
+    struct IndexTypeFull{
+        long int globalTargetPos;
+        long int indexTarget;
+        long int indexSrc;
+        long int globalSrcPos;
+        long int arrayIndexSrc;
+    };
+
+    template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
+    void P2PBetweenGroupsGeneric(cudaStream_t currentStream,
+                             KernelClass& inKernel, const ParticleGroupClassTarget& inParticleGroup,
+                             const ParticleGroupClassSource& inOtherParticleGroup, ParticleGroupClassTarget& inParticleGroupCuda,
+                             ParticleGroupClassSource& inOtherParticleGroupCuda, const IndexClass& inIndexes,
+                                 const bool inBothDirection, const bool scrMustBeThere) const {
+        std::vector<IndexTypeFull> indexesFull;
+        std::vector<long int> indexesIntervals;
 
         typename SpaceIndexType::IndexType previousTarget = -1;
 
@@ -846,7 +698,8 @@ public:
             const auto interaction = inIndexes[idxInteraction];
 
             auto foundSrc = inOtherParticleGroup.getElementFromSpacialIndex(interaction.indexSrc);
-            if(foundSrc){
+            if(scrMustBeThere || foundSrc){
+                assert(foundSrc);
                 assert(inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget)
                        && *inParticleGroup.getElementFromSpacialIndex(interaction.indexTarget) == interaction.globalTargetPos);
 
@@ -854,26 +707,70 @@ public:
                 assert(inParticleGroup.getLeafSymbData(interaction.globalTargetPos).spaceIndex == interaction.indexTarget);
 
                 if(previousTarget != interaction.indexTarget){
-                    interactionBlockIntervals.emplace_back(interactionBlocks.size());
+                    indexesIntervals.emplace_back(indexesFull.size());
                     previousTarget = interaction.indexTarget;
                 }
 
-                interactionBlockIntervals.back() += 1;
-                interactionBlocks.emplace_back(std::make_pair(idxInteraction, *foundSrc));
+                indexesIntervals.back() += 1;
+                indexesFull.emplace_back(IndexTypeFull{interaction.globalTargetPos,
+                                                       interaction.indexTarget, interaction.indexSrc, *foundSrc,
+                                                       interaction.arrayIndexSrc});
             }
         }
 
-        {
-            auto inIndexesCuda = MakeDeviceUniquePtr(inIndexes,currentStream);
-            auto interactionBlocksCuda = MakeDeviceUniquePtr(interactionBlocks,currentStream);
-            auto interactionBlockIntervalsCuda = MakeDeviceUniquePtr(interactionBlockIntervals,currentStream);
+        auto indexesFullCuda = MakeDeviceUniquePtr(indexesFull,currentStream);
+        auto indexesIntervalsCuda = MakeDeviceUniquePtr(indexesIntervals,currentStream);
+        TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
+            inKernel.getCudaKernelData(),
+            inParticleGroupCuda.getDataPtrsAndSizes(),
+            inOtherParticleGroupCuda.getDataPtrsAndSizes(),
+            indexesFullCuda.device_ptr(),
+            indexesIntervalsCuda.device_ptr(),
+            indexesIntervalsCuda.size()-1);
 
-            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource, IndexClass><<<1,1,0,currentStream>>>(inKernel.getCudaKernelData(),
-                                                                                                                                                                                inParticleGroupCuda.getDataPtrsAndSizes(),
-                                                                                                   inOtherParticleGroupCuda.getDataPtrsAndSizes(),
-                                                                                 inIndexesCuda.device_ptr(), interactionBlockIntervalsCuda.device_ptr(),
-                                                                                 interactionBlocksCuda.device_ptr(),  interactionBlockIntervalsCuda.size()-1);
+        if(inBothDirection){
+            // Reverse indexes
+            for(auto& index: indexesFull){
+                std::swap(index.globalTargetPos, index.globalSrcPos);
+                std::swap(index.indexTarget, index.indexSrc);
+                // TODO reverse this index.arrayIndexSrc;
+            }
+
+            std::sort(indexesFull.begin(), indexesFull.end(), [](const auto& i1, const auto& i2){
+                return i1.indexTarget < i2.indexTarget;
+            });
+
+            std::vector<long int> indexesIntervalsReverse;
+            previousTarget = -1;
+            for(long int idxInteractionRev = 0 ; idxInteractionRev < static_cast<long int>(indexesFull.size()) ; ++idxInteractionRev){
+                const auto& interaction = indexesFull[idxInteractionRev];
+                if(previousTarget != interaction.indexTarget){
+                    indexesIntervalsReverse.emplace_back(idxInteractionRev);
+                    previousTarget = interaction.indexTarget;
+                }
+                indexesIntervalsReverse.back() += 1;
+            }
+
+            auto indexesFullCudaReverse = MakeDeviceUniquePtr(indexesFull,currentStream);
+            auto indexesIntervalsCudaReverse = MakeDeviceUniquePtr(indexesIntervalsReverse,currentStream);
+            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
+                inKernel.getCudaKernelData(),
+                inOtherParticleGroupCuda.getDataPtrsAndSizes(),
+                inParticleGroupCuda.getDataPtrsAndSizes(),
+                indexesFullCudaReverse.device_ptr(),
+                indexesIntervalsCudaReverse.device_ptr(),
+                indexesIntervalsCudaReverse.size()-1);
+
+            [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
+            CUDA_ASSERT(cudaRes);
         }
+        else{
+            [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
+            CUDA_ASSERT(cudaRes);
+        }
+
+        indexesFullCuda.release();
+        indexesIntervalsCuda.release();
         [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
         CUDA_ASSERT(cudaRes);
     }

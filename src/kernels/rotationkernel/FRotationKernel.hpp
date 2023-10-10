@@ -1416,24 +1416,9 @@ public:
     void releaseCudaKernelData(const cudaStream_t& /*inStream*/){
     }
 
-    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    __device__ static void P2PCuda(const CudaKernelData& /*cudaKernelData*/,
-                                   const LeafSymbolicData& inNeighborIndex, const long int /*neighborsIndexes*/[],
-                                   const ParticlesClassValues& inNeighbors, ParticlesClassRhs& inNeighborsRhs, const long int inNbParticlesNeighbors,
-                                   const LeafSymbolicData& inTargetIndex,  const long int /*targetIndexes*/[],
-                                   const ParticlesClassValues& inTargets,
-                                   ParticlesClassRhs& inTargetsRhs, const long int inNbOutParticles,
-                                   [[maybe_unused]] const long arrayIndexSrc) /*const*/ {
-        static_assert(SpaceIndexType::IsPeriodic == false);
-        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
-                                             (inTargets), (inTargetsRhs), inNbOutParticles);
-        TbfP2PCuda::template GenericFullRemote<RealType>((inTargets), inNbOutParticles,
-                                                (inNeighbors), (inNeighborsRhs), inNbParticlesNeighbors);
-
-    }
-
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    __device__ static void P2PTsmCuda(const LeafSymbolicDataSource& inNeighborIndex, const long int /*neighborsIndexes*/[],
+    __device__ static void P2PTsmCuda(const CudaKernelData& /*cudaKernelData*/,
+                                      const LeafSymbolicDataSource& inNeighborIndex, const long int /*neighborsIndexes*/[],
                                       const ParticlesClassValuesSource& inNeighbors,
                                       const long int inNbParticlesNeighbors,
                                       const LeafSymbolicDataTarget& inTargetIndex, const long int /*targetIndexes*/[],

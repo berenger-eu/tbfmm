@@ -118,23 +118,6 @@ public:
     void releaseCudaKernelData(const cudaStream_t& /*inStream*/){
     }
 
-    template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
-    __device__ static void P2PCuda(const CudaKernelData& /*cudaKernelData*/,
-                                   const LeafSymbolicData& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
-             const ParticlesClassValues& /*inParticlesNeighbors*/, ParticlesClassRhs& inParticlesNeighborsRhs,
-             const long int inNbParticlesNeighbors,
-             const LeafSymbolicData& /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-             const ParticlesClassValues& /*inOutParticles*/,
-             ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
-             const long /*arrayIndexSrc*/) /*const*/ {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
-        }
-        for(int idxPart = 0 ; idxPart < inNbParticlesNeighbors ; ++idxPart){
-            inParticlesNeighborsRhs[0][idxPart] += inNbOutParticles;
-        }
-    }
-
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
     __device__ static void P2PTsmCuda(const CudaKernelData& /*cudaKernelData*/,
                                       const LeafSymbolicDataSource& /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
