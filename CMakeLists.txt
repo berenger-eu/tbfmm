@@ -114,7 +114,7 @@ if(DEFINED ENV{STARPU_DIR} AND NOT DEFINED TBFMM_USE_STARPU)
     set(TBFMM_USE_STARPU $ENV{STARPU_DIR})
 endif()
 
-OPTION(TBFMM_USE_STARPU "The path to StarPU (default is env variable STARPU_DIR)")
+OPTION(TBFMM_USE_STARPU "The path to StarPU (default is env variable STARPU_DIR), empty will disable StarPU")
 
 
 if(TBFMM_USE_STARPU)
@@ -125,13 +125,13 @@ if(TBFMM_USE_STARPU)
     	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
     	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
     			
-        message(STATUS "ENV{STARPU_DIR} = $ENV{STARPU_DIR}")
+        message(STATUS "TBFMM_USE_STARPU = ${TBFMM_USE_STARPU}")
         
         set(TBFMM_STARPU_VERSION "1.4" CACHE STRING "Set to starpu version to look at the inalude dir and set the lib name"  )
         message(STATUS "TBFMM_STARPU_VERSION = ${TBFMM_STARPU_VERSION}")
 		
-	    INCLUDE_DIRECTORIES($ENV{STARPU_DIR}/include/starpu/${TBFMM_STARPU_VERSION}/)
-	    link_directories("$ENV{STARPU_DIR}/lib/")
+	    INCLUDE_DIRECTORIES(${TBFMM_USE_STARPU}/include/starpu/${TBFMM_STARPU_VERSION}/)
+	    link_directories("${TBFMM_USE_STARPU}/lib/")
 	    list(APPEND TBFMM_LIBRARIES starpu-${TBFMM_STARPU_VERSION})
 
 	    list(APPEND TBF_USE_LIST STARPU)

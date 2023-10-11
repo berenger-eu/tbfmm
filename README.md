@@ -87,6 +87,9 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 # The cmake variable TBFMM_STARPU_VERSION can be used to set starpu version (1.4 by default)
 export STARPU_DIR=/my_computer/StarPU/install/
 cmake -DTBFMM_ENABLE_SPECX=OFF
+# Or
+cmake -DTBFMM_USE_STARPU=/my_computer/StarPU/install/  -DTBFMM_ENABLE_SPECX=OFF
+# even if the env variable is set, it is still possible to disable it with -DTBFMM_ENABLE_STARPU=OFF
 
 # Update an existing configuration by calling again cmake -D[an option]=[a value] ..
 # or using ccmake ..
