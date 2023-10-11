@@ -691,6 +691,7 @@ public:
                                  const bool inBothDirection, const bool scrMustBeThere) const {
         std::vector<IndexTypeFull> indexesFull;
         std::vector<long int> indexesIntervals;
+        indexesIntervals.push_back(0);
 
         typename SpaceIndexType::IndexType previousTarget = -1;
 
@@ -717,6 +718,11 @@ public:
                                                        interaction.arrayIndexSrc});
             }
         }
+
+        if(indexesFull.empty()){
+            return;
+        }
+        assert(indexesIntervals.size() >= 2);
 
         auto indexesFullCuda = MakeDeviceUniquePtr(indexesFull,currentStream);
         auto indexesIntervalsCuda = MakeDeviceUniquePtr(indexesIntervals,currentStream);
@@ -748,8 +754,8 @@ public:
                     indexesIntervalsReverse.emplace_back(idxInteractionRev);
                     previousTarget = interaction.indexTarget;
                 }
-                indexesIntervalsReverse.back() += 1;
             }
+            indexesIntervalsReverse.emplace_back(static_cast<long int>(indexesFull.size()));
 
             auto indexesFullCudaReverse = MakeDeviceUniquePtr(indexesFull,currentStream);
             auto indexesIntervalsCudaReverse = MakeDeviceUniquePtr(indexesIntervalsReverse,currentStream);
