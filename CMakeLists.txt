@@ -110,7 +110,14 @@ list(APPEND TBF_USE_LIST_AVAILABLE SPECX)
 
 #################################################
 
-if(DEFINED ENV{STARPU_DIR})
+if(DEFINED ENV{STARPU_DIR} AND NOT DEFINED TBFMM_USE_STARPU)
+    set(TBFMM_USE_STARPU $ENV{STARPU_DIR})
+endif()
+
+OPTION(TBFMM_USE_STARPU "The path to StarPU (default is env variable STARPU_DIR)")
+
+
+if(TBFMM_USE_STARPU)
     message(STATUS "STARPU Found")
     if(NOT ${TBFMM_ENABLE_STARPU})
         message(STATUS "STARPU Disabled (but env variable found)")   
