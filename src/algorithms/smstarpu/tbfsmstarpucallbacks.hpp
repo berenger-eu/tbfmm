@@ -66,7 +66,7 @@ public:
         ParticleContainerClass groupTarget(tgtData, tgtDataSize,
                                            tgtRhs, tgtRhsSize);
 
-        thisptr->kernelWrapper.P2PBetweenGroups(thisptr->kernels[starpu_worker_get_id()], groupTarget, groupSrc, *indexesForGroup_first);
+        thisptr->kernelWrapper.P2PBetweenGroups(thisptr->kernels[starpu_worker_get_id()], groupSrc, groupTarget, *indexesForGroup_first);
     }
 
     template<class ThisClass, class ParticleContainerClass>
@@ -296,7 +296,7 @@ public:
                                            tgtRhs, tgtRhsSize);
 
         thisptr->kernelWrapper.P2PBetweenGroupsTsm(thisptr->kernels[starpu_worker_get_id()],
-                                                   groupTarget, groupSrc, *indexesForGroup_first);
+                                                   groupSrc, groupTarget, *indexesForGroup_first);
     }
 };
 

@@ -235,8 +235,8 @@ __global__ void L2P_core(typename KernelClass::CudaKernelData inKernel,
 
 template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
 __global__ void P2PBetweenGroupsTsm_core(typename KernelClass::CudaKernelData inKernel,
-                                         std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeParticles,
                                          std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeOthers,
+                                         std::array<std::pair<unsigned char*,size_t>,2> ptrsAndSizeParticles,
                                          const IndexClass* inIndexes,
                                          const long int* intervalSizes,
                                          const long int inNbBlocks) {
@@ -651,26 +651,37 @@ public:
 
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
     void P2PBetweenGroups(cudaStream_t currentStream,
-                          KernelClass& inKernel, const ParticleGroupClass& inParticleGroup,
+                          KernelClass& inKernel,
                           const ParticleGroupClass& inOtherParticleGroup,
+                           const ParticleGroupClass& inParticleGroup,
+                          ParticleGroupClass& inOtherParticleGroupCuda,
                           ParticleGroupClass& inParticleGroupCuda,
-                          ParticleGroupClass& inOtherParticleGroupCuda, const IndexClass& inIndexes) const {
+                          const IndexClass& inIndexes) const {
         P2PBetweenGroupsGeneric(currentStream,
-                                inKernel, inParticleGroup,
-                                inOtherParticleGroup, inParticleGroupCuda,
-                                inOtherParticleGroupCuda, inIndexes,
+                                inKernel,
+                                inOtherParticleGroup,
+                                inParticleGroup,
+                                inOtherParticleGroupCuda,
+                                inParticleGroupCuda,
+                                inIndexes,
                                 true, false);
     }
 
     template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
     void P2PBetweenGroupsTsm(cudaStream_t currentStream,
-                             KernelClass& inKernel, const ParticleGroupClassTarget& inParticleGroup,
-                             const ParticleGroupClassSource& inOtherParticleGroup, ParticleGroupClassTarget& inParticleGroupCuda,
-                             ParticleGroupClassSource& inOtherParticleGroupCuda, const IndexClass& inIndexes) const {
+                             KernelClass& inKernel,
+                             const ParticleGroupClassSource& inOtherParticleGroup,
+                             const ParticleGroupClassTarget& inParticleGroup,
+                             ParticleGroupClassSource& inOtherParticleGroupCuda,
+                             ParticleGroupClassTarget& inParticleGroupCuda,
+                             const IndexClass& inIndexes) const {
         P2PBetweenGroupsGeneric(currentStream,
-                                inKernel, inParticleGroup,
-                                inOtherParticleGroup, inParticleGroupCuda,
-                                inOtherParticleGroupCuda, inIndexes,
+                                inKernel,
+                                inOtherParticleGroup,
+                                inParticleGroup,
+                                inOtherParticleGroupCuda,
+                                inParticleGroupCuda,
+                                inIndexes,
                                 false, false);
     }
 
@@ -685,9 +696,12 @@ public:
 
     template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
     void P2PBetweenGroupsGeneric(cudaStream_t currentStream,
-                             KernelClass& inKernel, const ParticleGroupClassTarget& inParticleGroup,
-                             const ParticleGroupClassSource& inOtherParticleGroup, ParticleGroupClassTarget& inParticleGroupCuda,
-                             ParticleGroupClassSource& inOtherParticleGroupCuda, const IndexClass& inIndexes,
+                             KernelClass& inKernel,
+                                 const ParticleGroupClassSource& inOtherParticleGroup,
+                             const ParticleGroupClassTarget& inParticleGroup,
+                                 ParticleGroupClassSource& inOtherParticleGroupCuda,
+                             ParticleGroupClassTarget& inParticleGroupCuda,
+                                 const IndexClass& inIndexes,
                                  const bool inBothDirection, const bool scrMustBeThere) const {
         std::vector<IndexTypeFull> indexesFull;
         std::vector<long int> indexesIntervals;
@@ -728,8 +742,8 @@ public:
         auto indexesIntervalsCuda = MakeDeviceUniquePtr(indexesIntervals,currentStream);
         TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
             inKernel.getCudaKernelData(),
-            inParticleGroupCuda.getDataPtrsAndSizes(),
             inOtherParticleGroupCuda.getDataPtrsAndSizes(),
+            inParticleGroupCuda.getDataPtrsAndSizes(),
             indexesFullCuda.device_ptr(),
             indexesIntervalsCuda.device_ptr(),
             indexesIntervalsCuda.size()-1);
@@ -761,8 +775,8 @@ public:
             auto indexesIntervalsCudaReverse = MakeDeviceUniquePtr(indexesIntervalsReverse,currentStream);
             TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
                 inKernel.getCudaKernelData(),
-                inOtherParticleGroupCuda.getDataPtrsAndSizes(),
                 inParticleGroupCuda.getDataPtrsAndSizes(),
+                inOtherParticleGroupCuda.getDataPtrsAndSizes(),
                 indexesFullCudaReverse.device_ptr(),
                 indexesIntervalsCudaReverse.device_ptr(),
                 indexesIntervalsCudaReverse.size()-1);

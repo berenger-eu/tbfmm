@@ -277,8 +277,10 @@ public:
     }
 
     template <class KernelClass, class ParticleGroupClass, class IndexClass>
-    void P2PBetweenGroups(KernelClass& inKernel, ParticleGroupClass& inParticleGroup,
-                          ParticleGroupClass& inOtherParticleGroup, const IndexClass& inIndexes) const {
+    void P2PBetweenGroups(KernelClass& inKernel,
+                          ParticleGroupClass& inOtherParticleGroup,
+                          ParticleGroupClass& inParticleGroup,
+                          const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
 
@@ -307,9 +309,10 @@ public:
         }
     }
 
-    template <class KernelClass, class ParticleGroupClassTarget, class ParticleGroupClassSource, class IndexClass>
-    void P2PBetweenGroupsTsm(KernelClass& inKernel, ParticleGroupClassTarget& inParticleGroup,
-                          ParticleGroupClassSource& inOtherParticleGroup, const IndexClass& inIndexes) const {
+    template <class KernelClass, class ParticleGroupClassSource, class ParticleGroupClassTarget, class IndexClass>
+    void P2PBetweenGroupsTsm(KernelClass& inKernel, ParticleGroupClassSource& inOtherParticleGroup,
+                             ParticleGroupClassTarget& inParticleGroup,
+                          const IndexClass& inIndexes) const {
         for(long int idxInteraction = 0 ; idxInteraction < static_cast<long int>(inIndexes.size()) ; ++idxInteraction){
             const auto interaction = inIndexes[idxInteraction];
 

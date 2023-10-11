@@ -79,7 +79,7 @@ public:
         thisptr->kernelWrapperCuda.P2PBetweenGroups(starpu_cuda_get_local_stream(),
                                                     thisptr->kernels[starpu_worker_get_id()],
                                                     groupSrcCpu, groupTargetCpu,
-                                                    groupTarget, groupSrc, *indexesForGroup_first);
+                                                    groupSrc, groupTarget, *indexesForGroup_first);
     }
 
     template<class ThisClass, class ParticleContainerClass>
@@ -354,7 +354,7 @@ public:
         thisptr->kernelWrapperCuda.P2PBetweenGroupsTsm(starpu_cuda_get_local_stream(),
                                                        thisptr->kernels[starpu_worker_get_id()],
                                                        groupSrcCpu, groupTargetCpu,
-                                                       groupTarget, groupSrc, *indexesForGroup_first);
+                                                       groupSrc, groupTarget, *indexesForGroup_first);
     }
 };
 

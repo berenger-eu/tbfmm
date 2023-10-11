@@ -122,14 +122,14 @@ protected:
         l2p_cl.name = "l2p_cl";
 
         memset(&p2p_cl_oneleaf, 0, sizeof(p2p_cl_oneleaf));
-//        if constexpr(KernelCapabilities::CpuP2P){
+        if constexpr(KernelCapabilities::CpuP2P){
             p2p_cl_oneleaf.cpu_funcs[0] = &TbfSmStarpuCallbacks::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
             p2p_cl_oneleaf.where |= STARPU_CPU;
-//        }
-//        if constexpr(KernelCapabilities::CudaP2P){
-//            p2p_cl_oneleaf.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
-//            p2p_cl_oneleaf.where |= STARPU_CUDA;
-//        }
+        }
+        if constexpr(KernelCapabilities::CudaP2P){
+            p2p_cl_oneleaf.cuda_funcs[0] = &TbfSmStarpuCallbacksCuda::P2POneLeafCallback<ThisClass, ParticleContainerClass>;
+            p2p_cl_oneleaf.where |= STARPU_CUDA;
+        }
         static_assert(KernelCapabilities::CpuP2P || KernelCapabilities::CudaP2P, "At least one should be enabled.");
         p2p_cl_oneleaf.nbuffers = 2;
         p2p_cl_oneleaf.modes[0] = STARPU_R;
