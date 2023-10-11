@@ -96,6 +96,8 @@ public:
         for(auto& handlePerLevel : inCellHandles){
             for(auto& handleGroup : handlePerLevel){
                 for(auto& handle : handleGroup){
+                    starpu_data_acquire(handle, STARPU_R);
+                    starpu_data_release(handle);
                     starpu_data_unregister(handle);
                 }
             }
@@ -106,6 +108,8 @@ public:
     static void CleanParticleHandles(ParticleHandleContainer& inParticleHandles) {
         for(auto& handleGroup : inParticleHandles){
             for(auto& handle : handleGroup){
+                starpu_data_acquire(handle, STARPU_R);
+                starpu_data_release(handle);
                 starpu_data_unregister(handle);
             }
         }
