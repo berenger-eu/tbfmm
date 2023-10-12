@@ -140,6 +140,7 @@ int main(int argc, char** argv){
     std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
     std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
     std::cout << "Number of threads " << algorithm->GetNbThreads() << std::endl;
+    std::cout << *algorithm << std::endl;
 
     {
         TbfTimer timerExecute;
