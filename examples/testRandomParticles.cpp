@@ -83,6 +83,7 @@ int main(int argc, char** argv){
         using KernelClass = TbfTestKernel<RealType>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
         AlgorithmClass algorithm(configuration);
+        std::cout << "algorithm -- " << algorithm << std::endl;
 
         TbfTimer timerExecute;
 

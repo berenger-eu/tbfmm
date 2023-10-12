@@ -99,7 +99,9 @@ public:
 
         return boxPos;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getParentIndex(IndexType inIndex) const{
         return inIndex >> Dim;
     }
@@ -673,6 +675,14 @@ public:
             nbNeighbors *= 3;
         }
         return nbNeighbors - 1;
+    }
+
+    static long int constexpr get3PowDim() {
+        long int nbNeighbors = 1;
+        for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
+            nbNeighbors *= 3;
+        }
+        return nbNeighbors;
     }
 
     static auto getRelativePosFromInteractionIndex(long int inArrayPos){

@@ -31,11 +31,17 @@ struct for_each_type{
 };
 
 template <std::size_t... Idx>
+#ifdef __NVCC__
+__device__ __host__
+#endif
 inline auto make_index_dispatcher(std::index_sequence<Idx...>) {
     return [] (auto&& f) { (f(std::integral_constant<std::size_t,Idx>{}), ...); };
 }
 
 template <typename Tuple, typename Func>
+#ifdef __NVCC__
+__device__ __host__
+#endif
 inline void for_each(Func&& f) {
     auto dispatcher = make_index_dispatcher(std::make_index_sequence<std::tuple_size<std::decay_t<Tuple>>::value>{});
     dispatcher([&f](auto idx) { f(for_each_type<typename std::tuple_element<idx, Tuple>::type>(), idx); });
@@ -124,7 +130,10 @@ inline constexpr long int lipow(long int val, const long int power){
 }
 
 template <class ObjectType>
-__device__ __host__ static const ObjectType& make_const(ObjectType& obj){
+#ifdef __NVCC__
+__device__ __host__
+#endif
+static const ObjectType& make_const(ObjectType& obj){
     return obj;
 }
 

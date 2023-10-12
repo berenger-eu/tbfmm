@@ -27,7 +27,9 @@ public:
             inFunc(inPtrToData[idx]);
         }
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes);
         return leadingDim;
@@ -37,26 +39,39 @@ public:
         DataType* ptrToData;
         const long int nbItems;
     public:
-        __device__ __host__ explicit Viewer(DataType* inPtrToData, const long int inNbItems)
+        #ifdef __NVCC__
+                    __device__ __host__
+        #endif
+        explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems){}
-
-        __device__ __host__ DataType& getItem(const long int inIdx){
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        DataType& getItem(const long int inIdx){
             return ptrToData[inIdx];
         }
-
-        __device__ __host__ long int getNbItems() const{
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        long int getNbItems() const{
             return nbItems;
         }
-
-        __device__ __host__ long int size() const{
+        #ifdef __NVCC__
+                        __device__ __host__
+        #endif
+        long int size() const{
             return getNbItems();
         }
-
-        __device__ __host__ DataType& front(){
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        DataType& front(){
             return ptrToData[0];
         }
-
-        __device__ __host__ DataType& back(){
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        DataType& back(){
             return ptrToData[getNbItems()-1];
         }
     };
@@ -66,26 +81,42 @@ public:
         const DataType* ptrToData;
         const long int nbItems;
     public:
-        __device__ __host__ explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems){}
 
-        __device__ __host__ const DataType& getItem(const long int inIdx){
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        const DataType& getItem(const long int inIdx){
             return ptrToData[inIdx];
         }
 
-        __device__ __host__ long int getNbItems() const{
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        long int getNbItems() const{
             return nbItems;
         }
 
-        __device__ __host__ long int size() const{
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        long int size() const{
             return getNbItems();
         }
-
-        __device__ __host__ const DataType& front(){
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
+        const DataType& front(){
             return ptrToData[0];
         }
-
-        __device__ __host__ const DataType& back(){
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+        const DataType& back(){
             return ptrToData[getNbItems()-1];
         }
     };

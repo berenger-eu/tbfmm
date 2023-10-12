@@ -3,6 +3,8 @@
 
 #include "tbfglobal.hpp"
 
+#include "utils/tbfutils.hpp"
+
 #include <tuple>
 #include <array>
 #include <memory>
@@ -21,6 +23,9 @@ class TbfMemoryBlock{
     using TupleOfBlockDefinitions = std::tuple<typename std::decay<BlockDefinitions>::type ...>;
 
     template <class SizeContainerClass>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     constexpr static std::array<std::pair<long int, long int>, NbBlocks + 1> GetSizeAndOffsetOfBlocks(const SizeContainerClass& inSizes){
         std::array<long int, NbBlocks> sizeOfBlocks = {};
         std::array<long int, NbBlocks> alignementOfBlocks = {};
@@ -48,10 +53,11 @@ class TbfMemoryBlock{
     }
 
     long int allocatedMemorySizeInByte;
-    std::unique_ptr<unsigned char[]> rawMemoryPtr;
+    unsigned char* rawMemoryPtr;
     long int* nbItemsInBlocks;
     long int* offsetOfBlocksForPtrs;
-    std::array<unsigned char*,NbBlocks> blockRawPtrs;
+    unsigned char* blockRawPtrs[NbBlocks];
+    bool objectOwnData;
 
     void constructAllItems(){
         applyToAllElements([](auto& inItem){
@@ -62,6 +68,8 @@ class TbfMemoryBlock{
     }
 
     void freeAllItems(){
+        assert(objectOwnData);
+
         applyToAllElements([](auto& inItem){
             static_assert (std::is_reference<decltype(inItem)>::value, "Should be a ref here");
             using ItemType = typename std::decay<decltype(inItem)>::type;
@@ -70,51 +78,103 @@ class TbfMemoryBlock{
     }
 
 public:
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     TbfMemoryBlock()
         : allocatedMemorySizeInByte(0), rawMemoryPtr(nullptr), nbItemsInBlocks(nullptr),
-          offsetOfBlocksForPtrs(nullptr){
-        for(auto& blockPtr : blockRawPtrs){
-            blockPtr = nullptr;
+        offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            blockRawPtrs[idxBlock] = nullptr;
         }
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    ~TbfMemoryBlock(){
+#ifndef __CUDA_ARCH__
+        if(objectOwnData == true){
+            freeAllItems();
+            delete[] rawMemoryPtr;
+        }
+#endif
     }
 
     TbfMemoryBlock(const TbfMemoryBlock&) = delete;
     TbfMemoryBlock& operator=(const TbfMemoryBlock&) = delete;
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     TbfMemoryBlock(TbfMemoryBlock&& other) : TbfMemoryBlock(){
         (*this) = std::move(other);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     TbfMemoryBlock& operator=(TbfMemoryBlock&& other){
+#ifndef __CUDA_ARCH__
+        if(objectOwnData == true){
+            freeAllItems();
+            delete[] rawMemoryPtr;
+        }
+#endif
+
         allocatedMemorySizeInByte = other.allocatedMemorySizeInByte;
-        rawMemoryPtr = std::move(other.rawMemoryPtr);
+        rawMemoryPtr = other.rawMemoryPtr;
         nbItemsInBlocks = other.nbItemsInBlocks;
         offsetOfBlocksForPtrs = other.offsetOfBlocksForPtrs;
-        blockRawPtrs = other.blockRawPtrs;
+        objectOwnData = other.objectOwnData;
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            blockRawPtrs[idxBlock] = other.blockRawPtrs[idxBlock];
+        }
 
         other.allocatedMemorySizeInByte = 0;
         other.nbItemsInBlocks = nullptr;
         other.offsetOfBlocksForPtrs = nullptr;
-        for(auto& blockPtr : other.blockRawPtrs){
-            blockPtr = nullptr;
+        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+            other.blockRawPtrs[idxBlock] = nullptr;
         }
-        assert(other.rawMemoryPtr.get() == nullptr);
+        other.rawMemoryPtr = nullptr;
+        other.objectOwnData = false;
 
         return *this;
     }
 
     template <class SizeContainerClass>
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     explicit TbfMemoryBlock(SizeContainerClass&& inNbItemsInBlocks) : TbfMemoryBlock(){
         resetBlocksFromSizes(std::forward<SizeContainerClass>(inNbItemsInBlocks));
     }
 
-    explicit TbfMemoryBlock(unsigned char* inRawMemoryPtr, const long int inBlockSizeInByte)
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    explicit TbfMemoryBlock(unsigned char* inRawMemoryPtr, const long int inBlockSizeInByte, const bool inInitFromMemory = true)
         : allocatedMemorySizeInByte(inBlockSizeInByte), rawMemoryPtr(inRawMemoryPtr), nbItemsInBlocks(nullptr),
-          offsetOfBlocksForPtrs(nullptr){
+        offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
 
+        if(rawMemoryPtr == nullptr){
+            assert(allocatedMemorySizeInByte == 0);
+            for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+                blockRawPtrs[idxBlock] = nullptr;
+            }
+        }
+        else if(inInitFromMemory){
+            initHeader();
+        }
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    void initHeader(){
         nbItemsInBlocks = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks));
         offsetOfBlocksForPtrs = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks)
-                                                        - (sizeof(long int) * NbBlocks));
+                                                             - (sizeof(long int) * NbBlocks));
 
         for(long int idxPtr = 0 ; idxPtr < NbBlocks ; ++idxPtr){
             blockRawPtrs[idxPtr] = &rawMemoryPtr[offsetOfBlocksForPtrs[idxPtr]];
@@ -123,18 +183,26 @@ public:
 
     template <class SizeContainerClass>
     void resetBlocksFromSizes(SizeContainerClass&& inNbItemsInBlocks){
-        freeAllItems();
+        if(objectOwnData){
+            freeAllItems();
+        }
 
         const std::array<std::pair<long int, long int>, NbBlocks + 1> sizeAndOffsetOfBlocks = GetSizeAndOffsetOfBlocks(inNbItemsInBlocks);
         const long int totalMemoryToAlloc = (sizeAndOffsetOfBlocks[NbBlocks].second
                                             + sizeof(long int) * NbBlocks
                                             + sizeof(long int) * NbBlocks);
 
-        if(allocatedMemorySizeInByte < totalMemoryToAlloc){
-            rawMemoryPtr.reset(new unsigned char[totalMemoryToAlloc]);
+        if(allocatedMemorySizeInByte < totalMemoryToAlloc || objectOwnData == false){
+            if(objectOwnData == true){
+                freeAllItems();
+                delete[] rawMemoryPtr;
+            }
+            // We allocate, so we will have to deallocate too
+            objectOwnData = true;
+            rawMemoryPtr= new unsigned char[totalMemoryToAlloc];
             allocatedMemorySizeInByte = totalMemoryToAlloc;
         }
-        memset(rawMemoryPtr.get(), 0, totalMemoryToAlloc);
+        memset(rawMemoryPtr, 0, totalMemoryToAlloc);
 
         nbItemsInBlocks = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks));
         offsetOfBlocksForPtrs = reinterpret_cast<long int*>(&rawMemoryPtr[allocatedMemorySizeInByte] - (sizeof(long int) * NbBlocks)
@@ -149,22 +217,26 @@ public:
         constructAllItems();
     }
 
-    __device__ __host__ bool isEmpty() const {
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+    bool isEmpty() const {
         return !nbItemsInBlocks;
     }
 
     unsigned char* getPtr(){
-        return rawMemoryPtr.get();
+        return rawMemoryPtr;
     }
 
     const unsigned char* getPtr() const{
-        return rawMemoryPtr.get();
+        return rawMemoryPtr;
     }
 
     //////////////////////////////////////////////////////////////////////
 
     template <class FuncType>
     void applyToAllElements(FuncType&& inFunc){
+        assert(rawMemoryPtr != nullptr);
         if(nbItemsInBlocks){
             TbfUtils::for_each<TupleOfBlockDefinitions>([&](auto structWithBlockType, auto idxBlock){
                 using BlockType = typename decltype(structWithBlockType)::BlockTypeT;
@@ -184,7 +256,10 @@ public:
     }
 
     template <long int IdxBlock>
-    __device__ __host__ auto getViewerForBlock(){
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+        auto getViewerForBlock(){
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -220,7 +295,10 @@ public:
     }
 
     template <long int IdxBlock>
-    __device__ __host__ auto getViewerForBlockConst() const {
+    #ifdef __NVCC__
+    __device__ __host__
+    #endif
+        auto getViewerForBlockConst() const {
         static_assert(IdxBlock < NbBlocks, "Index of block out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
@@ -231,6 +309,13 @@ public:
         else{
             return typename BlockType::ViewerConst(nullptr, 0);
         }
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    auto getAllocatedMemorySizeInByte() const{
+        return allocatedMemorySizeInByte;
     }
 };
 

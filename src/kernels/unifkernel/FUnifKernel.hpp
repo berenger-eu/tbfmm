@@ -21,7 +21,7 @@
 
 #include "FUnifM2LHandler.hpp"
 #include "FAbstractUnifKernel.hpp"
-#include "FP2PR.hpp"
+#include "kernels/P2P/FP2PR.hpp"
 
 #include "utils/tbfperiodicshifter.hpp"
 

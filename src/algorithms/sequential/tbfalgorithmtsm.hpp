@@ -189,7 +189,7 @@ protected:
                                                       std::distance(particleGroupsTarget.begin(), currentParticleGroupTarget), particleGroupsTarget,
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroupTarget);
-                kernelWrapper.P2PBetweenGroupsTsm(kernel, groupTarget, groupSrc, indexes);
+                kernelWrapper.P2PBetweenGroupsTsm(kernel, groupSrc, groupTarget, indexes);
             });
 
 

@@ -110,6 +110,52 @@ list(APPEND TBF_USE_LIST_AVAILABLE SPECX)
 
 #################################################
 
+if(DEFINED ENV{STARPU_DIR} AND NOT DEFINED TBFMM_USE_STARPU)
+    set(TBFMM_USE_STARPU $ENV{STARPU_DIR})
+endif()
+
+OPTION(TBFMM_USE_STARPU "The path to StarPU (default is env variable STARPU_DIR), empty will disable StarPU")
+
+
+if(TBFMM_USE_STARPU)
+    message(STATUS "STARPU Found")
+    if(NOT ${TBFMM_ENABLE_STARPU})
+        message(STATUS "STARPU Disabled (but env variable found)")   
+    else()	    
+    	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
+    	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
+    			
+        message(STATUS "TBFMM_USE_STARPU = ${TBFMM_USE_STARPU}")
+        
+        set(TBFMM_STARPU_VERSION "1.4" CACHE STRING "Set to starpu version to look at the inalude dir and set the lib name"  )
+        message(STATUS "TBFMM_STARPU_VERSION = ${TBFMM_STARPU_VERSION}")
+		
+	    INCLUDE_DIRECTORIES(${TBFMM_USE_STARPU}/include/starpu/${TBFMM_STARPU_VERSION}/)
+	    link_directories("${TBFMM_USE_STARPU}/lib/")
+	    list(APPEND TBFMM_LIBRARIES starpu-${TBFMM_STARPU_VERSION})
+
+	    list(APPEND TBF_USE_LIST STARPU)
+	    if(TBFMM_USE_CUDA)
+	        enable_language(CUDA)
+	        set(CUDA_SEPARABLE_COMPILATION ON)
+		            
+            if(NOT CMAKE_CUDA_ARCHITECTURES)
+              set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
+                  "Set CUDA target architecture" FORCE)
+            endif()
+	        list(APPEND TBF_USE_LIST CUDA)	   
+	        
+	        add_definitions("--expt-relaxed-constexpr") 
+	    endif()
+    endif()
+else()
+    message(STATUS "STARPU Cannot be found, set env variable STARPU_DIR")
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE STARPU)
+
+#################################################
+
 if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp/CMakeLists.txt")
     if(NOT ${TBFMM_ENABLE_INASTEMP})
         message(STATUS "INASTEMP Disabled")   
@@ -194,6 +240,17 @@ endforeach()
 message(STATUS "Available compilation keys are: ${TBF_USE_LIST}")
 
 #################################################
+
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPERCASE)
+
+if(TBFMM_USE_CUDA AND (CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "RELWITHDEBINFO"))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -G -g")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G -g")
+    message(STATUS "CMAKE_CUDA_FLAGS = ${CMAKE_CUDA_FLAGS}")
+endif()
+if(TBFMM_USE_CUDA)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${CMAKE_CXX_FLAGS}")
+endif()
 
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 

@@ -13,17 +13,6 @@
 #include <cassert>
 #include <iterator>
 
-
-template <const bool>
-class BoolSelecter;
-
-template <>
-class BoolSelecter<true> : public std::true_type {};
-
-template <>
-class BoolSelecter<false> : public std::false_type {};
-
-
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
 class TbfSmSpecxAlgorithmCuda {
 public:
@@ -46,51 +35,7 @@ protected:
 
     /////////////////////////////////////////////////////////////////
 
-
-    // See http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2015/n4502.pdf.
-    template <typename...>
-    using void_t = void;
-
-    #define CUDA_OP_DETECT(OP_NAME)\
-        template <typename, template <typename> class, typename = void_t<>>\
-            struct detect_##OP_NAME : std::false_type {};\
-        \
-            template <typename T, template <typename> class Op>\
-            struct detect_##OP_NAME<T, Op, void_t<Op<T>>> : BoolSelecter<T::OP_NAME> {};\
-        \
-            template <typename T>\
-            using OP_NAME##_test = decltype(T::OP_NAME);\
-        \
-            template <typename T>\
-            using class_has_##OP_NAME = detect_##OP_NAME<T, OP_NAME##_test>;
-
-    CUDA_OP_DETECT(CudaP2P)
-    CUDA_OP_DETECT(CudaP2M)
-    CUDA_OP_DETECT(CudaM2M)
-    CUDA_OP_DETECT(CudaM2L)
-    CUDA_OP_DETECT(CudaL2L)
-    CUDA_OP_DETECT(CudaL2P)
-
-    CUDA_OP_DETECT(CpuP2P)
-    CUDA_OP_DETECT(CpuP2M)
-    CUDA_OP_DETECT(CpuM2M)
-    CUDA_OP_DETECT(CpuM2L)
-    CUDA_OP_DETECT(CpuL2L)
-    CUDA_OP_DETECT(CpuL2P)
-
-    constexpr static bool CudaP2P = class_has_CudaP2P<KernelClass>::value;
-    constexpr static bool CudaP2M = class_has_CudaP2M<KernelClass>::value;
-    constexpr static bool CudaM2M = class_has_CudaM2M<KernelClass>::value;
-    constexpr static bool CudaM2L = class_has_CudaM2L<KernelClass>::value;
-    constexpr static bool CudaL2L = class_has_CudaL2L<KernelClass>::value;
-    constexpr static bool CudaL2P = class_has_CudaL2P<KernelClass>::value;
-
-    constexpr static bool CpuP2P = class_has_CpuP2P<KernelClass>::value;
-    constexpr static bool CpuP2M = class_has_CpuP2M<KernelClass>::value;
-    constexpr static bool CpuM2M = class_has_CpuM2M<KernelClass>::value;
-    constexpr static bool CpuM2L = class_has_CpuM2L<KernelClass>::value;
-    constexpr static bool CpuL2L = class_has_CpuL2L<KernelClass>::value;
-    constexpr static bool CpuL2P = class_has_CpuL2P<KernelClass>::value;
+    using KernelCapabilities = TbfAlgorithmUtils::KernelHardwareSupport<KernelClass>;
 
     /////////////////////////////////////////////////////////////////
 
@@ -114,7 +59,7 @@ protected:
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
                 auto& leafGroupObj = *currentLeafGroup;
                 const auto& particleGroupObj = *currentParticleGroup;
-                if constexpr(CudaP2M && CpuP2M){
+                if constexpr(KernelCapabilities::CudaP2M && KernelCapabilities::CpuP2M){
                     runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                  [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                                      kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
@@ -123,13 +68,13 @@ protected:
                             kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
                         }));
                 }
-                else if constexpr(CpuP2M){
+                else if constexpr(KernelCapabilities::CpuP2M){
                     runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                  [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                         kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
                     });
                 }
-                else if constexpr(CudaP2M){
+                else if constexpr(KernelCapabilities::CudaP2M){
                     runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                  SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                         kernelWrapperCuda.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
@@ -163,7 +108,7 @@ protected:
                 auto& upperGroup = *currentUpperGroup;
                 const auto& lowerGroup = *currentLowerGroup;
 
-                if constexpr(CudaM2M && CpuM2M){
+                if constexpr(KernelCapabilities::CudaM2M && KernelCapabilities::CpuM2M){
                     runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                        [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                         kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
@@ -172,13 +117,13 @@ protected:
                             kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
                         }));
                 }
-                else if constexpr(CpuM2M){
+                else if constexpr(KernelCapabilities::CpuM2M){
                     runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                  [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                                      kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
                                  });
                 }
-                else if constexpr(CudaM2M){
+                else if constexpr(KernelCapabilities::CudaM2M){
                     runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                  SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                                      kernelWrapperCuda.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
@@ -217,7 +162,7 @@ protected:
                                                [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                     assert(&groupTarget == &*currentCellGroup);
 
-                    if constexpr(CudaM2L && CpuM2L){
+                    if constexpr(KernelCapabilities::CudaM2L && KernelCapabilities::CpuM2L){
                         runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
                                            [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
                             kernelWrapper.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
@@ -226,13 +171,13 @@ protected:
                                 kernelWrapperCuda.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                             }));
                     }
-                    else if constexpr(CpuM2L){
+                    else if constexpr(KernelCapabilities::CpuM2L){
                         runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
                                      [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
                              kernelWrapper.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                          });
                     }
-                    else  if constexpr(CudaM2L){
+                    else  if constexpr(KernelCapabilities::CudaM2L){
                         runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
                                      SpCuda([this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                                          kernelWrapperCuda.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
@@ -245,7 +190,7 @@ protected:
 
                 auto& currentGroup = *currentCellGroup;
 
-                if constexpr(CudaM2L && CpuM2L){
+                if constexpr(KernelCapabilities::CudaM2L && KernelCapabilities::CpuM2L){
                     runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
                                        [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                         kernelWrapper.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
@@ -254,13 +199,13 @@ protected:
                             kernelWrapperCuda.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
                         }));
                 }
-                else if constexpr(CpuM2L){
+                else if constexpr(KernelCapabilities::CpuM2L){
                     runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
                                  [this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                                      kernelWrapper.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
                                  });
                 }
-                else if constexpr(CudaM2L){
+                else if constexpr(KernelCapabilities::CudaM2L){
                     runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*currentGroup.getMultipolePtr()), SpCommutativeWrite(*currentGroup.getLocalPtr()),
                                  SpCuda([this, idxLevel, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                                      kernelWrapperCuda.M2LInGroup(idxLevel, kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
@@ -405,28 +350,28 @@ protected:
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
 
-                if constexpr(CudaP2P && CpuP2P){
+                if constexpr(KernelCapabilities::CudaP2P && KernelCapabilities::CpuP2P){
                     runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
                                  SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
                                        [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&, const unsigned char&, unsigned char&){
                         kernelWrapper.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                     },
                         SpCuda([this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                            kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
+                            //kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                         }));
                 }
-                else if constexpr(CpuP2P){
+                else if constexpr(KernelCapabilities::CpuP2P){
                     runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
                                  SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
                                  [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&, const unsigned char&, unsigned char&){
                                      kernelWrapper.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                                  });
                 }
-                else if constexpr(CudaP2P){
+                else if constexpr(KernelCapabilities::CudaP2P){
                     runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpCommutativeWrite(*groupSrc.getRhsPtr()),
                                  SpRead(*groupTarget.getDataPtr()), SpCommutativeWrite(*groupTarget.getRhsPtr()),
                                  SpCuda([this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                     kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
+                                     //kernelWrapperCuda.P2PBetweenGroups(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                                  }));
                 }
                 else{
@@ -437,7 +382,7 @@ protected:
 
             auto& currentGroup = *currentParticleGroup;
 
-            if constexpr(CudaP2P && CpuP2P){
+            if constexpr(KernelCapabilities::CudaP2P && KernelCapabilities::CpuP2P){
                 runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
                                    [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
@@ -445,12 +390,12 @@ protected:
                     kernelWrapper.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
                 },
                     SpCuda([this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                        kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
+//                        kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
 
-                        kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
+//                        kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
                     }));
             }
-            else if constexpr(CpuP2P){
+            else if constexpr(KernelCapabilities::CpuP2P){
                 runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
                              [this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const unsigned char&, unsigned char&){
                                  kernelWrapper.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
@@ -458,12 +403,12 @@ protected:
                                  kernelWrapper.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
                              });
             }
-            else if constexpr(CudaP2P){
+            else if constexpr(KernelCapabilities::CudaP2P){
                 runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*currentGroup.getDataPtr()),SpCommutativeWrite(*currentGroup.getRhsPtr()),
                              SpCuda([this, indexesForGroup_first = std::move(indexesForGroup.first), &currentGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
-                                 kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
+//                                 kernelWrapperCuda.P2PInGroup(kernels[SpUtils::GetThreadId()-1], currentGroup, indexesForGroup_first);
 
-                                 kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
+//                                 kernelWrapperCuda.P2PInner(kernels[SpUtils::GetThreadId()-1], currentGroup);
                              }));
             }
             else{
