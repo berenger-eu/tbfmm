@@ -42,7 +42,7 @@ __device__ static void GenericFullRemote(const ParticlesClassValues& inNeighbors
             tx = double(targetsX[idxTarget]);
             ty = double(targetsY[idxTarget]);
             tz = double(targetsZ[idxTarget]);
-            tv = double(targetsForcesX[idxTarget]);
+            tv = double(targetsPhysicalValues[idxTarget]);
         }
 
         double  tfx = double(0.);
