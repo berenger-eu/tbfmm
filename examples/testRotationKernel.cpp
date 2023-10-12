@@ -133,6 +133,7 @@ int main(int argc, char** argv){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
     std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
+    std::cout << tree << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
