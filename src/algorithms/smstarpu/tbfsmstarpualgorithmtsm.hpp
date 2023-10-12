@@ -37,14 +37,28 @@ protected:
     std::list<VecOfIndexes> vecIndexBuffer;
 
     starpu_codelet p2m_cl;
+    starpu_perfmodel p2m_cl_model;
+
     starpu_codelet m2m_cl;
+    starpu_perfmodel m2m_cl_model;
+
     starpu_codelet l2l_cl;
+    starpu_perfmodel l2l_cl_model;
+
     starpu_codelet l2l_cl_nocommute;
+    starpu_perfmodel l2l_cl_nocommute_model;
+
     starpu_codelet l2p_cl;
+    starpu_perfmodel l2p_cl_model;
+
 
     starpu_codelet m2l_cl_between_groups;
+    starpu_perfmodel m2l_cl_between_groups_model;
+
 
     starpu_codelet p2p_cl_twoleaves;
+    starpu_perfmodel p2p_cl_twoleaves_model;
+
 
     friend TbfSmStarpuCallbacks;
 
@@ -108,6 +122,28 @@ protected:
         m2l_cl_between_groups.modes[2] = STARPU_R;
         m2l_cl_between_groups.modes[3] = starpu_data_access_mode(STARPU_RW|STARPU_COMMUTE);
         m2l_cl_between_groups.name = "m2l_cl_between_groups";
+
+        p2m_cl_model.type = STARPU_HISTORY_BASED;
+        p2m_cl_model.symbol = "p2m_cl";
+        p2m_cl.model = &p2m_cl_model;
+        m2m_cl_model.type = STARPU_HISTORY_BASED;
+        m2m_cl_model.symbol = "m2m_cl";
+        m2m_cl.model = &m2m_cl_model;
+        l2l_cl_model.type = STARPU_HISTORY_BASED;
+        l2l_cl_model.symbol = "l2l_cl";
+        l2l_cl.model = &l2l_cl_model;
+        l2l_cl_nocommute_model.type = STARPU_HISTORY_BASED;
+        l2l_cl_nocommute_model.symbol = "l2l_cl_nocommute";
+        l2l_cl_nocommute.model = &l2l_cl_nocommute_model;
+        l2p_cl_model.type = STARPU_HISTORY_BASED;
+        l2p_cl_model.symbol = "l2p_cl";
+        l2p_cl.model = &l2p_cl_model;
+        m2l_cl_between_groups_model.type = STARPU_HISTORY_BASED;
+        m2l_cl_between_groups_model.symbol = "m2l_cl_between_groups";
+        m2l_cl_between_groups.model = &m2l_cl_between_groups_model;
+        p2p_cl_twoleaves_model.type = STARPU_HISTORY_BASED;
+        p2p_cl_twoleaves_model.symbol = "p2p_cl_twoleaves";
+        p2p_cl_twoleaves.model = &p2p_cl_twoleaves_model;
     }
 
     const SpacialConfiguration configuration;
