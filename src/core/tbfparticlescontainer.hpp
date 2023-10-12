@@ -54,6 +54,26 @@ private:
     RhsMemoryBlockType objectRhs;
 
 public:
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    explicit TbfParticlesContainer(unsigned char* inObjectDataPtr, const size_t inObjectDataSize,
+                               unsigned char* inObjectRhsPtr, const size_t inObjectRhsSize,
+                                   const bool inInitFromMemory = true)
+        : objectData(inObjectDataPtr, inObjectDataSize, inInitFromMemory),
+        objectRhs(inObjectRhsPtr, inObjectRhsSize, inInitFromMemory){
+
+    }
+
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    explicit TbfParticlesContainer(const std::array<std::pair<unsigned char*,size_t>,2>& inPtrsSizes,
+                                       const bool inInitFromMemory = true)
+        : objectData(inPtrsSizes[0].first, inPtrsSizes[0].second, inInitFromMemory),
+        objectRhs(inPtrsSizes[1].first, inPtrsSizes[1].second, inInitFromMemory){
+
+    }
 
     TbfParticlesContainer(const TbfParticlesContainer&) = delete;
     TbfParticlesContainer& operator=(const TbfParticlesContainer&) = delete;
@@ -139,52 +159,85 @@ public:
         (*this) = TbfParticlesContainer(groups.front(), inParticlePositions, inSpaceSystem);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getStartingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().startingSpaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getEndingSpacialIndex() const{
         return objectData.template getViewerForBlockConst<0>().getItem().endingSpaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int getNbParticles() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbParticles;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int getNbLeaves() const{
         return objectData.template getViewerForBlockConst<0>().getItem().nbLeaves;
     }
 
     ///////////////////////////////////////////////////////////////////////////
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getLeafSpacialIndex(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).spaceIndex;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const std::array<long int, Dim>& getLeafBoxCoord(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).boxCoord;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const LeafHeader& getLeafSymbData(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int getNbParticlesInLeaf(const long int inIdxLeaf) const{
         return objectData.template getViewerForBlockConst<1>().getItem(inIdxLeaf).nbParticles;
     }
 
-    const long int* getParticleIndexes(const long int inIdxLeaf) const {
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+const long int* getParticleIndexes(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlockConst<2>().getItem(leafHeader.offSet);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     long int* getParticleIndexes(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
         return &objectData.template getViewerForBlock<2>().getItem(leafHeader.offSet);
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::array<const DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
@@ -195,6 +248,9 @@ public:
         return particleDataPtr;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::array<DataType*, NbDataValuesPerParticle> getParticleData(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
@@ -205,6 +261,9 @@ public:
         return particleDataPtr;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     const std::array<const RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) const {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
@@ -222,6 +281,9 @@ public:
         return particleRhsPtr;
     }
 
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::array<RhsType*, NbRhsValuesPerParticle> getParticleRhs(const long int inIdxLeaf) {
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
         const auto& leafHeader = leavesViewer.getItem(inIdxLeaf);
@@ -240,7 +302,9 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     std::optional<long int> getElementFromSpacialIndex(const IndexType inIndex) const {
         //        for(long int idxLeaf = 0 ; idxLeaf < header.nbLeaves ; ++idxLeaf){
         //            const auto& leafHeader = leavesViewer.getItem(idxLeaf);
@@ -269,6 +333,25 @@ public:
     }
 
     ///////////////////////////////////////////////////////////////////////////
+#ifdef __NVCC__
+    __device__ __host__
+#endif
+    void initMemoryBlockHeader(){
+        objectData.initHeader();
+        objectRhs.initHeader();
+    }
+
+    auto getDataPtrsAndSizes(){
+        return std::array<std::pair<unsigned char*,size_t>,2>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectRhs.getPtr(), objectRhs.getAllocatedMemorySizeInByte()}};
+
+    }
+
+    auto getDataPtrsAndSizes() const{
+        return std::array<std::pair<const unsigned char*,size_t>,2>{std::pair<unsigned char*,size_t>{objectData.getPtr(), objectData.getAllocatedMemorySizeInByte()},
+                                                                 std::pair<unsigned char*,size_t>{objectRhs.getPtr(), objectRhs.getAllocatedMemorySizeInByte()}};
+
+    }
 
     unsigned char* getDataPtr(){
         return objectData.getPtr();
@@ -278,12 +361,20 @@ public:
         return objectData.getPtr();
     }
 
+    auto getDataSize() const {
+        return objectData.getAllocatedMemorySizeInByte();
+    }
+
     unsigned char* getRhsPtr(){
         return objectRhs.getPtr();
     }
 
     const unsigned char* getRhsPtr() const {
         return objectRhs.getPtr();
+    }
+
+    auto getRhsSize() const {
+        return objectRhs.getAllocatedMemorySizeInByte();
     }
 
     ///////////////////////////////////////////////////////////////////////////

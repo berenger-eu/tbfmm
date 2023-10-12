@@ -39,7 +39,9 @@ public:
             }
         }
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes);
         return NbRows*leadingDim;
@@ -50,15 +52,22 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes)){}
-
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         DataType& getItem(const long int inIdx, const long int inIdxRow){
             DataType* ptrToDataRow = reinterpret_cast<DataType*>(reinterpret_cast<unsigned char*>(ptrToData)+ inIdxRow*leadingDim);
             return ptrToDataRow[inIdx];
         }
-
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         long int getNbItems() const{
             return nbItems;
         }
@@ -70,15 +79,24 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(inNbItems, MemoryAlignementBytes)){}
 
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         const DataType& getItem(const long int inIdx, const long int inIdxRow){
             const DataType* ptrToDataRow = reinterpret_cast<const DataType*>(reinterpret_cast<const unsigned char*>(ptrToData)+ inIdxRow*leadingDim);
             return ptrToDataRow[inIdx];
         }
 
+        #ifdef __NVCC__
+                __device__ __host__
+        #endif
         long int getNbItems() const{
             return nbItems;
         }

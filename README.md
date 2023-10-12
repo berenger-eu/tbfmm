@@ -30,22 +30,24 @@ TBFMM is based on standard C++17, hence it needs a "modern" C++ compiler. TBFMM 
 - Clang/LLVM (8 and 10) https://llvm.org/
 
 TBFMM should work on Linux and Mac OS, but has not been tested on Windows.
-SPETABARU needs GNU g++ version 8 or above.
+SPECX needs C++ compiler (for example GNU g++ version 8 or above).
 Intel compiler (icpc) can be used to compile the code, however, its OpenMP library is currently not compatible with TBFMM (tested on version `19.0.4.243`).
+StarPU needs a C compiler
 
 ## Dependency list
 
 All the dependencies are optional:
 - OpenMP (for parallelization)
 - Inastemp (for P2P vectorization)
-- Spetabaru (for parallelization)
+- Specx (for parallelization)
 - FFTW (for the uniform kernel)
+- StarPU (for task-based parallelization, similar to Specx)
 
 ## How to compile
 
 TBFMM uses CMake as build system https://cmake.org/
 
-The build process consists in the following steps: cloning the repository and moving to the corresponding folder, adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPETABARU (a task-based runtime system). Both are optional, and to activate them, it is needed to clone their repository before running cmake.
+The build process consists in the following steps: cloning the repository and moving to the corresponding folder, adding git submodules (optional), creating a build directory, running cmake, configuring cmake, running make and that's all. The submodules are Inastemp (for vectorization) and SPECX (a task-based runtime system). Both are optional, and to activate them, it is needed to clone their repository before running cmake.
 
 ```bash
 # Cloning the repository
@@ -53,10 +55,10 @@ git clone https://gitlab.inria.fr/bramas/tbfmm.git
 # Moving to the newly created "tbfmm" directory
 cd tbfmm
 
-# To enable SPETABARU and Inastemp
+# To enable SPECX and Inastemp
 git submodule init && git submodule update
-# To enable only SPETABARU (run from the main directory)
-git submodule init deps/spetabaru && git submodule update
+# To enable only SPECX (run from the main directory)
+git submodule init deps/specx && git submodule update
 # To enable only Inastemp (run from the main directory)
 git submodule init deps/inastemp && git submodule update
 
@@ -78,7 +80,16 @@ cmake -DCMAKE_BUILD_TYPE=RELEASE ..
 
 # If a package has been found but should be disabled, this can be done
 # with -DTBFMM_ENABLE_[PACKAGE]=OFF, where PACKAGE can be:
-# SPETABARU, INASTEMP, FFTW, OPENMP
+# SPECX, INASTEMP, FFTW, OPENMP
+
+# To use StarPU, one has to set the env variable STARPU_DIR that contains the install dir of StarPU
+# It is also advised to disable Specx, to compile faster
+# The cmake variable TBFMM_STARPU_VERSION can be used to set starpu version (1.4 by default)
+export STARPU_DIR=/my_computer/StarPU/install/
+cmake -DTBFMM_ENABLE_SPECX=OFF
+# Or
+cmake -DTBFMM_USE_STARPU=/my_computer/StarPU/install/  -DTBFMM_ENABLE_SPECX=OFF
+# even if the env variable is set, it is still possible to disable it with -DTBFMM_ENABLE_STARPU=OFF
 
 # Update an existing configuration by calling again cmake -D[an option]=[a value] ..
 # or using ccmake ..
@@ -153,7 +164,7 @@ Can be found here: https://bramas.gitlabpages.inria.fr/tbfmm/
 
 ## OpenMP
 
-CMake will try to check if OpenMP is supported by the system. If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPETABARU).
+CMake will try to check if OpenMP is supported by the system. If it is the case, all the OpenMP-based code will be enabled, otherwise it will be removed from the compilation process ensuring that the library can compile (but will run in sequential or with SPECX).
 
 ## Inastemp
 
@@ -167,24 +178,24 @@ To avoid having to manage external dependencies, Inastemp is shipped as a git su
 git submodule init deps/inastemp && git submodule update
 ```
 
-## SPETABARU
+## SPECX
 
-SPETABARU is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, one can have a look at https://gitlab.inria.fr/bramas/spetabaru
+SPECX is a C++ task-based runtime system that has speculative execution capability. Currently, speculation is not used in TBFMM because it requires tasks with a specific data access pattern. To know more, one can have a look at https://gitlab.inria.fr/bramas/specx
 
-SPETABARU is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler). It could be a nice alternative to OpenMP when this appears complicated to have an OpenMP lib (as it is sometime the case one some Mac).
+SPECX is pure standard C++, and so it does not need any dependencies (apart from the C++ libs/compiler). It could be a nice alternative to OpenMP when this appears complicated to have an OpenMP lib (as it is sometime the case one some Mac).
 
-To avoid having to manage external dependencies, SPETABARU is shipped as a git submodule, and thus it will be managed by our cmake files. But, the users must explicitly pull the submobule to enable it.
+To avoid having to manage external dependencies, SPECX is shipped as a git submodule, and thus it will be managed by our cmake files. But, the users must explicitly pull the submobule to enable it.
 ```bash
-# To enable only SPETABARU (runned from the main directory)
-git submodule init deps/spetabaru && git submodule update
+# To enable only SPECX (runned from the main directory)
+git submodule init deps/specx && git submodule update
 ```
 
 ## Code organization
 
 - CMakeLists.txt: the build configuration
-- deps: the dependencies (inastemp/spetabaru)
+- deps: the dependencies (inastemp/specx)
 - src: the library
-  - algorithms: the algorithms (sequential/openmp/spetabaru)
+  - algorithms: the algorithms (sequential/openmp/specx)
   - containers: the low-level containers for pure POD approach
   - core: the trees, cells, particles related classes
   - load: basic loader to get particles from FMA files
@@ -542,14 +553,16 @@ There are several different kernels:
 
 In addition, an extra algorithm can be used to apply periodicity above the level 1 (to simulate a repetition of the simulation box).
 
-Here is an example of asking TBFMM to provide the best algorithm class (sequential < OpenMP < SPETABARU)
+Here is an example of asking TBFMM to provide the best algorithm class (sequential < OpenMP < SPECX < StarPU)
 
 ```cpp
 // Let TBFMM select the right algorithm class (for kernel = KernelClass)
 using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 // Could be specific (but needs to be sure the algorithm is supported)
-#ifdef TBF_USE_SPETABARU
-    using AlgorithmClass = TbfSmSpetabaruAlgorithm<RealType, KernelClass>;
+#ifdef TBF_USE_STARPU
+    using AlgorithmClass = TbfSmStarpuAlgorithm<RealType, KernelClass>;
+#if defined(TBF_USE_SPECX)
+    using AlgorithmClass = TbfSmSpecxAlgorithm<RealType, KernelClass>;
 #elif defined(TBF_USE_OPENMP)
     using AlgorithmClass = TbfOpenmpAlgorithm<RealType, KernelClass>;
 #else
@@ -580,7 +593,7 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 // TbfTransferStages
 ```
 
-Both SPETABARU and OpenMP based algorithm can have the number of threads to use given by the environment variable `OMP_NUM_THREADS` and the binding with `OMP_PROC_BIND`.
+Both SPECX and OpenMP based algorithm can have the number of threads to use given by the environment variable `OMP_NUM_THREADS` and the binding with `OMP_PROC_BIND`.
 
 # How-to and examples
 
@@ -1224,7 +1237,7 @@ algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
 The cmake system will define several macro for the potential dependencies:
 
 ```cpp
-TBF_USE_SPETABARU
+TBF_USE_SPECX
 TBF_USE_OPENMP
 TBF_USE_INASTEMP
 TBF_USE_FFTW

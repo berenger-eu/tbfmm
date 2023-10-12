@@ -286,7 +286,7 @@ protected:
 
 #pragma omp task depend(in:ptr_groupSrcGetDataPtr[0],ptr_groupTargetGetDataPtr[0]) depend(commute:ptr_groupTargetGetRhsPtr[0]) default(shared) firstprivate(indexesVec, groupSrcPtr, groupTargetPtr) priority(priorities.getP2PPriority())
                 {
-                    kernelWrapper.P2PBetweenGroupsTsm(kernels[omp_get_thread_num()], *groupTargetPtr, *groupSrcPtr, std::move(*indexesVec));
+                    kernelWrapper.P2PBetweenGroupsTsm(kernels[omp_get_thread_num()], *groupSrcPtr, *groupTargetPtr, std::move(*indexesVec));
                     delete indexesVec;
                 }
             });
