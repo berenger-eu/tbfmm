@@ -394,7 +394,7 @@ public:
              KernelClass& inKernel, const ParticleGroupClass& inParticleGroup,
              const LeafGroupClass& inLeafGroup, const ParticleGroupClass& inParticleGroupCuda,
                                     LeafGroupClass& inLeafGroupCuda) {
-        TbfGroupKernelInterfaceCuda_core::P2M_core<KernelClass, ParticleGroupClass, LeafGroupClass><<<1,1,0,currentStream>>>(inKernel.getCudaKernelData(),
+        TbfGroupKernelInterfaceCuda_core::P2M_core<KernelClass, ParticleGroupClass, LeafGroupClass><<<64,256,0,currentStream>>>(inKernel.getCudaKernelData(),
                                                                             inParticleGroupCuda.getDataPtrsAndSizes(),
                                                                             inLeafGroupCuda.getDataPtrsAndSizes());
         [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
@@ -450,7 +450,7 @@ public:
             assert(interactionOffset[idxParent-idxFirstParent+1] == idxChild);
         }
 
-        TbfGroupKernelInterfaceCuda_core::M2M_core<SpaceIndexType, KernelClass, CellGroupClass><<<1,1,0,currentStream>>>(spaceSystem, inLevel, inKernel.getCudaKernelData(),
+        TbfGroupKernelInterfaceCuda_core::M2M_core<SpaceIndexType, KernelClass, CellGroupClass><<<64,256,0,currentStream>>>(spaceSystem, inLevel, inKernel.getCudaKernelData(),
                                                                                inLowerGroupCuda.getDataPtrsAndSizes(),
                                                                                inUpperGroupCuda.getDataPtrsAndSizes(),
                            idxFirstParent, idxParent, interactionOffset.data());
@@ -493,7 +493,7 @@ public:
             interactionBlocks.emplace_back(idxInteraction);
         }
 
-        TbfGroupKernelInterfaceCuda_core::M2LInGroup_core<SpaceIndexType, KernelClass, CellGroupClass, IndexClass><<<1,1,0,currentStream>>>(spaceSystem, inLevel,
+        TbfGroupKernelInterfaceCuda_core::M2LInGroup_core<SpaceIndexType, KernelClass, CellGroupClass, IndexClass><<<64,256,0,currentStream>>>(spaceSystem, inLevel,
                                                                                       inKernel.getCudaKernelData(),
                                                                                       inCellGroupCuda.getDataPtrsAndSizes(), inIndexes.data(),
                                   static_cast<long int>(interactionBlocks.size()), interactionBlocks.data());
@@ -544,7 +544,7 @@ public:
             }
         }
 
-        TbfGroupKernelInterfaceCuda_core::M2LBetweenGroups_core<SpaceIndexType, KernelClass, CellGroupClassTarget, CellGroupClassSource, IndexClass><<<1,1,0,currentStream>>>(spaceSystem, inLevel,
+        TbfGroupKernelInterfaceCuda_core::M2LBetweenGroups_core<SpaceIndexType, KernelClass, CellGroupClassTarget, CellGroupClassSource, IndexClass><<<64,256,0,currentStream>>>(spaceSystem, inLevel,
                                                                                          inKernel.getCudaKernelData(),
                                                                                          inCellGroupCuda.getDataPtrsAndSizes(),
                                                                                          inOtherCellGroup.getDataPtrsAndSizes(),
@@ -605,7 +605,7 @@ public:
             assert(interactionOffset[idxParent-idxFirstParent+1] == idxChild);
         }
 
-        TbfGroupKernelInterfaceCuda_core::L2L_core<SpaceIndexType, KernelClass, CellGroupClass><<<1,1,0,currentStream>>>(spaceSystem, inLevel,
+        TbfGroupKernelInterfaceCuda_core::L2L_core<SpaceIndexType, KernelClass, CellGroupClass><<<64,256,0,currentStream>>>(spaceSystem, inLevel,
                                                                                inKernel.getCudaKernelData(),
                                                                                inLowerGroupCuda.getDataPtrsAndSizes(),
                                                                                inUpperGroupCuda.getDataPtrsAndSizes(),
@@ -619,7 +619,7 @@ public:
              KernelClass& inKernel, const LeafGroupClass& /*inLeafGroup*/,
              const ParticleGroupClass& /*inParticleGroup*/, const LeafGroupClass& inLeafGroupCuda,
              ParticleGroupClass& inParticleGroupCuda) const {
-        TbfGroupKernelInterfaceCuda_core::L2P_core<KernelClass,LeafGroupClass,ParticleGroupClass><<<1,1,0,currentStream>>>(inKernel.getCudaKernelData(),
+        TbfGroupKernelInterfaceCuda_core::L2P_core<KernelClass,LeafGroupClass,ParticleGroupClass><<<64,256,0,currentStream>>>(inKernel.getCudaKernelData(),
                                                                             inLeafGroupCuda.getDataPtrsAndSizes(),
                                                                             inParticleGroupCuda.getDataPtrsAndSizes());
         [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
@@ -643,7 +643,7 @@ public:
     void P2PInner(cudaStream_t currentStream,
                   KernelClass& inKernel, const ParticleGroupClass& /*inParticleGroup*/,
                   ParticleGroupClass& inParticleGroupCuda) const {
-        TbfGroupKernelInterfaceCuda_core::P2PInner_core<KernelClass,ParticleGroupClass><<<1,1,0,currentStream>>>(inKernel.getCudaKernelData(),
+        TbfGroupKernelInterfaceCuda_core::P2PInner_core<KernelClass,ParticleGroupClass><<<64,256,0,currentStream>>>(inKernel.getCudaKernelData(),
                                                                                                                      inParticleGroupCuda.getDataPtrsAndSizes());
         [[maybe_unused]] auto cudaRes = cudaStreamSynchronize(currentStream);
         CUDA_ASSERT(cudaRes);
@@ -740,7 +740,7 @@ public:
 
         auto indexesFullCuda = MakeDeviceUniquePtr(indexesFull,currentStream);
         auto indexesIntervalsCuda = MakeDeviceUniquePtr(indexesIntervals,currentStream);
-        TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
+        TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<64,256,0,currentStream>>>(
             inKernel.getCudaKernelData(),
             inOtherParticleGroupCuda.getDataPtrsAndSizes(),
             inParticleGroupCuda.getDataPtrsAndSizes(),
@@ -773,7 +773,7 @@ public:
 
             auto indexesFullCudaReverse = MakeDeviceUniquePtr(indexesFull,currentStream);
             auto indexesIntervalsCudaReverse = MakeDeviceUniquePtr(indexesIntervalsReverse,currentStream);
-            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<1,1,0,currentStream>>>(
+            TbfGroupKernelInterfaceCuda_core::P2PBetweenGroupsTsm_core<KernelClass, ParticleGroupClassTarget, ParticleGroupClassSource><<<64,256,0,currentStream>>>(
                 inKernel.getCudaKernelData(),
                 inParticleGroupCuda.getDataPtrsAndSizes(),
                 inOtherParticleGroupCuda.getDataPtrsAndSizes(),
