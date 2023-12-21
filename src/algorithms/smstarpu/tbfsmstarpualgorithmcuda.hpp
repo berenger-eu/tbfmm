@@ -582,8 +582,13 @@ public:
         [[maybe_unused]] const int ret = starpu_init(NULL);
         assert(ret == 0);
 
-        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
-                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
+        pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+        TbStarPUUtils::ExecOnWorkers(STARPU_CUDA|STARPU_CPU, [&](){
+            pthread_mutex_lock(&lock);
+            increaseNumberOfKernels(starpu_worker_get_id()+1);
+            pthread_mutex_unlock(&lock);
+        });
+        pthread_mutex_destroy(&lock);
 
         if constexpr(KernelCapabilities::HasCudaInit){
             TbStarPUUtils::ExecOnWorkers(STARPU_CUDA, [&](){
@@ -604,10 +609,15 @@ public:
         kernels.emplace_back(std::forward<SourceKernelClass>(inKernel));
 
         [[maybe_unused]] const int ret = starpu_init(NULL);
-        assert(ret == 0);        
+        assert(ret == 0);
 
-        increaseNumberOfKernels(starpu_worker_get_count_by_type(STARPU_CPU_WORKER)
-                                + starpu_worker_get_count_by_type(STARPU_CUDA_WORKER));
+        pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+        TbStarPUUtils::ExecOnWorkers(STARPU_CUDA|STARPU_CPU, [&](){
+            pthread_mutex_lock(&lock);
+            increaseNumberOfKernels(starpu_worker_get_id()+1);
+            pthread_mutex_unlock(&lock);
+        });
+        pthread_mutex_destroy(&lock);
 
         if constexpr(KernelCapabilities::HasCudaInit){
             TbStarPUUtils::ExecOnWorkers(STARPU_CUDA, [&](){
