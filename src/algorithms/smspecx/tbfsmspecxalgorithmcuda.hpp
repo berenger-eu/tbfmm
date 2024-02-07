@@ -240,7 +240,7 @@ protected:
                 const auto& upperGroup = *currentUpperGroup;
                 auto& lowerGroup = *currentLowerGroup;
 
-                if constexpr(CudaL2L && CpuL2L){
+                if constexpr(KernelCapabilities::CudaL2L && KernelCapabilities::CpuL2L){
                     runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
                                        [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                         kernelWrapper.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
@@ -249,13 +249,13 @@ protected:
                             kernelWrapperCuda.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
                         }));
                 }
-                else if constexpr(CpuL2L){
+                else if constexpr(KernelCapabilities::CpuL2L){
                     runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
                                  [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                                      kernelWrapper.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
                                  });
                 }
-                else if constexpr(CudaL2L){
+                else if constexpr(KernelCapabilities::CudaL2L){
                     runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
                                  SpCuda([this, idxLevel, &upperGroup, &lowerGroup](const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){
                                      kernelWrapperCuda.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
@@ -300,7 +300,7 @@ protected:
                 const auto& leafGroupObj = *currentLeafGroup;
                 auto& particleGroupObj = *currentParticleGroup;
 
-                if constexpr(CudaL2P && CpuL2P){
+                if constexpr(KernelCapabilities::CudaL2P && KernelCapabilities::CpuL2P){
                     runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
                                  SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
                                        [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
@@ -310,14 +310,14 @@ protected:
                             kernelWrapperCuda.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
                         }));
                 }
-                else if constexpr(CpuL2P){
+                else if constexpr(KernelCapabilities::CpuL2P){
                     runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
                                  SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
                                  [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
                                      kernelWrapper.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
                                  });
                 }
-                else if constexpr(CudaL2P){
+                else if constexpr(KernelCapabilities::CudaL2P){
                     runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()),
                                  SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
                                  SpCuda([this, &leafGroupObj, &particleGroupObj](const SpDeviceDataView<const unsigned char>, const SpDeviceDataView<const unsigned char>, SpDeviceDataView<unsigned char>){

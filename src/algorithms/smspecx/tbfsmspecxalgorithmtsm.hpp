@@ -227,7 +227,7 @@ protected:
                 runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpRead(*groupTarget.getDataPtr()),
                              SpCommutativeWrite(*groupTarget.getRhsPtr()),
                                    [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, const unsigned char&, unsigned char&){
-                    kernelWrapper.P2PBetweenGroupsTsm(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
+                    kernelWrapper.P2PBetweenGroupsTsm(kernels[SpUtils::GetThreadId()-1], groupSrc, groupTarget, std::move(indexesVec));
                 });
 
             });
