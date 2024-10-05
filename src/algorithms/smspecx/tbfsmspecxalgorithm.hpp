@@ -33,7 +33,7 @@ protected:
     TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
     template <class TreeClass>
-    void P2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2M(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > stopUpperLevel){
             auto& leafGroups = inTree.getLeafGroups();
             const auto& particleGroups = inTree.getParticleGroups();
@@ -63,7 +63,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2M(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -99,7 +99,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2L(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -132,7 +132,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2L(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -168,7 +168,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2P(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > stopUpperLevel){
             const auto& leafGroups = inTree.getLeafGroups();
             auto& particleGroups = inTree.getParticleGroups();
@@ -201,7 +201,7 @@ protected:
     }
 
     template <class TreeClass>
-    void P2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2P(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroups = inTree.getParticleGroups();
@@ -264,30 +264,33 @@ public:
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
-        SpRuntime runtime;
+        SpComputeEngine ce(SpWorkerTeamBuilder::TeamOfCpuWorkers());
+        SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC> tg;
+        tg.computeOn(ce);
 
-        increaseNumberOfKernels(runtime.getNbThreads());
+        increaseNumberOfKernels(ce.getNbCpuWorkers());
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
-            P2M(runtime, inTree);
+            P2M(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){
-            M2M(runtime, inTree);
+            M2M(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2L){
-            M2L(runtime, inTree);
+            M2L(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
-            L2L(runtime, inTree);
+            L2L(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
-            P2P(runtime, inTree);
+            P2P(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
-            L2P(runtime, inTree);
+            L2P(tg, inTree);
         }
 
-        runtime.waitAllTasks();
+        tg.waitAllTasks();
+        ce.stopIfNotAlreadyStopped();
     }
 
     template <class FuncType>
