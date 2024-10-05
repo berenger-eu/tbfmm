@@ -32,12 +32,12 @@ struct TbfAlgorithmSelecter{
 #else
     using type = TbfSmStarpuAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
 #endif
-#elif defined(TBF_USE_SPECX)
-#ifndef TBF_USE_CUDA
-    using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
-#else
-    using type = TbfSmSpecxAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
-#endif
+//#elif defined(TBF_USE_SPECX)
+//#ifndef TBF_USE_CUDA
+//    using type = TbfSmSpecxAlgorithm<RealType, KernelClass, SpaceIndexType>;
+//#else
+//    using type = TbfSmSpecxAlgorithmCuda<RealType, KernelClass, SpaceIndexType>;
+//#endif
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithm<RealType, KernelClass, SpaceIndexType>;
 #else
@@ -49,8 +49,8 @@ struct TbfAlgorithmSelecterTsm{
     template<typename RealType, class KernelClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
 #ifdef TBF_USE_STARPU
     using type = TbfSmStarpuAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
-#elif defined(TBF_USE_SPECX)
-    using type = TbfSmSpecxAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
+//#elif defined(TBF_USE_SPECX)
+//    using type = TbfSmSpecxAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #elif defined(TBF_USE_OPENMP)
     using type = TbfOpenmpAlgorithmTsm<RealType, KernelClass, SpaceIndexType>;
 #else
