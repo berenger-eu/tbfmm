@@ -18,8 +18,8 @@ private:
     const long int offset;
     const long int length;
 public:
-    TbfVectorView(const std::vector<ElementType_T>& inVector, const long int inOffset, const long int inLength)
-        : vector(inVector), offset(inOffset), length(inLength){
+    TbfVectorView(const std::vector<ElementType_T>& inVector, const std::ptrdiff_t inOffset, const std::ptrdiff_t inLength)
+        : vector(inVector), offset(static_cast<long int>(inOffset)), length(static_cast<long int>(inLength)){
         assert(offset+length <= static_cast<long int>(vector.size()));
     }
 
@@ -43,7 +43,7 @@ public:
 };
 
 template <class ElementType_T>
-auto TbfMakeVectorView(const std::vector<ElementType_T>& inVector, const long int inOffset, const long int inLength){
+auto TbfMakeVectorView(const std::vector<ElementType_T>& inVector, const std::ptrdiff_t inOffset, const std::ptrdiff_t inLength){
     return TbfVectorView<ElementType_T>(inVector, inOffset, inLength);
 }
 

@@ -1,5 +1,5 @@
-project(TBFMM CXX)
 cmake_minimum_required(VERSION 3.15)
+project(TBFMM CXX)
 
 cmake_policy(SET CMP0074 NEW)
 cmake_policy(SET CMP0057 NEW)
@@ -34,7 +34,8 @@ include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual  -Wall -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wno-error" CACHE STRING "Additional flags"  )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-# so far, do nothing for MSVC compiler
+# suppress warnings from getenv
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else()
     set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual -Wconversion  -Wall -Wno-sign-conversion -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wconversion -Wno-error" CACHE STRING "Additional flags"  )
 endif()
