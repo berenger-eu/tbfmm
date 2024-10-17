@@ -21,8 +21,8 @@ public:
 #ifdef __NVCC__
     __device__ __host__
 #endif
-    TbfVectorView(const std::vector<ElementType_T>& inVector, const long int inOffset, const long int inLength)
-        : vector(inVector), offset(inOffset), length(inLength){
+    TbfVectorView(const std::vector<ElementType_T>& inVector, const std::ptrdiff_t inOffset, const std::ptrdiff_t inLength)
+        : vector(inVector), offset(static_cast<long int>(inOffset)), length(static_cast<long int>(inLength)){
         assert(offset+length <= static_cast<long int>(vector.size()));
     }
 
@@ -49,7 +49,7 @@ template <class ElementType_T>
 #ifdef __NVCC__
 __device__ __host__
 #endif
-auto TbfMakeVectorView(const std::vector<ElementType_T>& inVector, const long int inOffset, const long int inLength){
+auto TbfMakeVectorView(const std::vector<ElementType_T>& inVector, const std::ptrdiff_t inOffset, const std::ptrdiff_t inLength){
     return TbfVectorView<ElementType_T>(inVector, inOffset, inLength);
 }
 

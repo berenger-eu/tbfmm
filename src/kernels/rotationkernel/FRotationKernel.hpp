@@ -35,6 +35,11 @@ template<> struct NumberOfValuesInDlmk<0>{
 *
 * Here is the optimizated kernel, please refer to FRotationOriginalKernel
 * to see the non optimized easy to understand kernel.
+* @details 
+* The expansion implemented by this kernel is given by
+* Derivation and efficient implementation of the fast multipole method
+* http://dx.doi.org/10.1063/1.468354
+* P. 6594, Eq. 1
 */
 template<class RealType_T, int P, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
 class FRotationKernel {
@@ -47,8 +52,8 @@ public:
 
 private:
     const RealType PI = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L);
-    const RealType PIDiv2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L/2);
-    const RealType PI2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L*2);
+    const RealType PIDiv2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L/2.0);
+    const RealType PI2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L*2.0);
 
     //< Size of the data array computed using a suite relation
     static const int SizeArray = ((P+2)*(P+1))/2;
@@ -930,8 +935,20 @@ public:
       * Parallelization of the fast multipole method
       * Formula number 10, page 3
       * \f[
-      * \omega (q,a) = q \frac{a^{l}}{(l+|m|)!} P_{lm}(cos( \alpha ) )e^{-im \beta}
+      * \omega (q,a) = q \frac{a^{l}}{(l+|m|)!} P_{lm}(cos( \alpha ) )e^{-im \beta},
       * \f]
+      * which is a complex value.
+      * Alternatively, see paper
+      * Derivation and efficient implementation of the fast multipole method
+      * http://dx.doi.org/10.1063/1.468354
+      * P. 6594, Eq. 3a with Eq. 2a plugged-in
+      * 
+      * The O{l,m}(a) are chargeless versions of the multipole momemnts.
+      * The product q * O{l,m} is the \omega{l,m}(q,a), calculated by this method.
+      * 
+      * Finally, the |r-a|^{-1} expansion is a contraction of O{l,m}(a) with M{l,m}{r},
+      * where M{l,m}(r) are chargeless Taylor counterparts of the O{l,m}(a).
+      * Assumption: |a| < |r|.
       */
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& LeafIndex,  const long int /*particlesIndexes*/[],
@@ -942,21 +959,21 @@ public:
         std::complex<RealType>* const w = &LeafCell[0];
 
         // Copying the position is faster than using cell position
-        const std::array<RealType,3> cellPosition = getLeafCenter(LeafIndex.boxCoord);
+        const std::array<RealType,SpaceIndexType_T::Dim> cellPosition = getLeafCenter(LeafIndex.boxCoord);
 
         // We need a legendre array
         RealType legendre[SizeArray];
         RealType angles[P+1][2];
 
         // For all particles in the leaf box
-        const RealType*const physicalValues = SourceParticles[3];
-        const RealType*const positionsX = SourceParticles[0];
-        const RealType*const positionsY = SourceParticles[1];
-        const RealType*const positionsZ = SourceParticles[2];
+        const RealType*const physicalValues = SourceParticles[3]; // pointer to contiguously allocated physical parameters (other than coordinates) 
+        const RealType*const positionsX = SourceParticles[0]; // x-coordinate
+        const RealType*const positionsY = SourceParticles[1]; // y-coordinate
+        const RealType*const positionsZ = SourceParticles[2]; // z-coordinate
 
-        for(long int idxPart = 0 ; idxPart < inNbParticles ; ++ idxPart){
-            // P2M
-            const std::array<RealType,3> relativePosition{{positionsX[idxPart] - cellPosition[0],
+        for(unsigned long long idxPart = 0 ; idxPart < inNbParticles ; ++ idxPart){
+            // P2M is given with respect to the cell center
+            const std::array<RealType,SpaceIndexType_T::Dim> relativePosition{{positionsX[idxPart] - cellPosition[0],
                                                    positionsY[idxPart] - cellPosition[1],
                                                    positionsZ[idxPart] - cellPosition[2]}};
             const FSpherical<RealType> sph(relativePosition);
@@ -1164,7 +1181,7 @@ public:
       * We have two different computations, one for the potential (end of function)
       * the other for the forces.
       *
-      * The potential use the fallowing formula, page 36, formula 2.14 + 1:
+      * The potential use the following formula, page 36, formula 2.14 + 1:
       * \f[
       *  \Phi = \sum_{j=0}^P{\left( u_{j,0} I_{j,0}(r, \theta, \phi) + \sum_{k=1}^j{2 Re(u_{j,k} I_{j,k}(r, \theta, \phi))} \right)},
       *  \textrm{since } u_{l,-m} = (-1)^m \overline{ u_{l,m} }

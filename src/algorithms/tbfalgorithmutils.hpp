@@ -12,7 +12,7 @@ namespace TbfAlgorithmUtils{
 
 
 template <class IndexContainerClass, class GroupContainerClassSource, class GroupContainerClassTarget, class FuncType>
-inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainerClassSource& inGroups, const long int idxWorkingGroup,
+inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainerClassSource& inGroups, const std::ptrdiff_t idxWorkingGroup,
                                     GroupContainerClassTarget& inGroupsTarget, FuncType&& inFunc){
     if(std::size(inIndexes) == 0 || std::size(inGroups) == 0){
         return;
@@ -20,8 +20,8 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainer
 
     std::sort(std::begin(inIndexes), std::end(inIndexes), TbfXtoXInteraction<decltype (inIndexes[0].indexSrc)>::SrcFirst);
 
-    long int idxCurrentIndex = 0;
-    long int idxCurrentGroup = 0;// TODO (idxWorkingGroup == 0 ? 1 : 0);
+    std::ptrdiff_t idxCurrentIndex = 0;
+    std::ptrdiff_t idxCurrentGroup = 0;// TODO (idxWorkingGroup == 0 ? 1 : 0);
 
     while(idxCurrentIndex != static_cast<long int>(std::size(inIndexes))
           && idxCurrentGroup != static_cast<long int>(std::size(inGroups))){
@@ -66,7 +66,7 @@ inline void TbfMapIndexesAndBlocks(IndexContainerClass inIndexes, GroupContainer
 }
 
 template <class IndexContainerClass, class GroupContainerClass, class FuncType>
-inline void TbfMapIndexesAndBlocks(IndexContainerClass&& inIndexes, GroupContainerClass& inGroups, const long int idxWorkingGroup,
+inline void TbfMapIndexesAndBlocks(IndexContainerClass&& inIndexes, GroupContainerClass& inGroups, const std::ptrdiff_t idxWorkingGroup,
                                   FuncType&& inFunc){
     TbfMapIndexesAndBlocks(std::forward<IndexContainerClass>(inIndexes), inGroups, idxWorkingGroup, inGroups,
                            std::forward<FuncType>(inFunc));
