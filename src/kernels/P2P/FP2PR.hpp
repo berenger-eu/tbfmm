@@ -16,7 +16,7 @@
 #ifndef FP2PR_HPP
 #define FP2PR_HPP
 
-#include "FMath.hpp"
+#include "kernels/unifkernel/FMath.hpp"
 
 #ifdef TBF_USE_INASTEMP
 #include "InastempGlobal.h"
@@ -27,18 +27,9 @@
  */
 namespace FP2PR{
 
-/// Convert ptr to ptr
-template <class FReal,
-          typename = typename std::enable_if<std::is_floating_point<typename std::remove_const<typename std::remove_reference<FReal>::type>::type>::value, void>::type>
-FReal* GetPtr(FReal* ptr){
-    return ptr;
-}
-
-/// Convert smart ptr to ptr
-template <class FRealContainer,
-          typename = typename std::enable_if<!std::is_floating_point<typename std::remove_const<typename std::remove_reference<FRealContainer>::type>::type>::value, void>::type>
-auto GetPtr(FRealContainer&& ptr){
-    return ptr.get();
+template <class FRealContainer>
+auto GetPtr(FRealContainer& ptr){
+    return &ptr[0];
 }
 
 template <class FReal>

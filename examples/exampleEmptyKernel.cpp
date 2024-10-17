@@ -13,8 +13,8 @@
 
 // The following headers have to be used only if
 // you want to manage the algorithm type explicitely
-#ifdef TBF_USE_SPETABARU
-#include "algorithms/smspetabaru/tbfsmspetabarualgorithm.hpp"
+#ifdef TBF_USE_SPECX
+#include "algorithms/smspecx/tbfsmspecxalgorithm.hpp"
 #endif
 #ifdef TBF_USE_OPENMP
 #include "algorithms/openmp/tbfopenmpalgorithm.hpp"
@@ -261,8 +261,8 @@ int main(int argc, char** argv){
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass>;
-#ifdef TBF_USE_SPETABARU
-    using AlgorithmClass = TbfSmSpetabaruAlgorithm<RealType, KernelClass>;
+#ifdef TBF_USE_SPECX
+    using AlgorithmClass = TbfSmSpecxAlgorithm<RealType, KernelClass>;
 #elif defined(TBF_USE_OPENMP)
     using AlgorithmClass = TbfOpenmpAlgorithm<RealType, KernelClass>;
 #else

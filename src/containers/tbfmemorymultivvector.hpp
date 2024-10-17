@@ -38,7 +38,9 @@ public:
             }
         }
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         const long int leadingDim = TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes);
         return inNbItems*leadingDim;
@@ -50,16 +52,23 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
-        explicit Viewer(DataType* inPtrToData, const long int inNbItems)
+#ifdef __NVCC__
+            __device__ __host__
+#endif
+explicit Viewer(DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
-
-        DataType& getItem(const long int inIdx, const long int inIdxRow){
+#ifdef __NVCC__
+        __device__ __host__
+#endif
+DataType& getItem(const long int inIdx, const long int inIdxRow){
             DataType* ptrToDataCol = reinterpret_cast<DataType*>(reinterpret_cast<unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
-
-        long int getNbItems() const{
+#ifdef __NVCC__
+        __device__ __host__
+#endif
+long int getNbItems() const{
             return nbItems;
         }
     };
@@ -69,15 +78,22 @@ public:
         const long int nbItems;
         const long int leadingDim;
     public:
+        #ifdef __NVCC__
+                    __device__ __host__
+        #endif
         explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems)
             : ptrToData(inPtrToData), nbItems(inNbItems),
               leadingDim(TbfUtils::GetLeadingDim<DataType>(NbRows, MemoryAlignementBytes)){}
-
+        #ifdef __NVCC__
+                            __device__ __host__
+        #endif
         const DataType& getItem(const long int inIdx, const long int inIdxRow){
             const DataType* ptrToDataCol = reinterpret_cast<const DataType*>(reinterpret_cast<const unsigned char*>(ptrToData)+ inIdx*leadingDim);
             return ptrToDataCol[inIdxRow];
         }
-
+        #ifdef __NVCC__
+                                    __device__ __host__
+        #endif
         long int getNbItems() const{
             return nbItems;
         }

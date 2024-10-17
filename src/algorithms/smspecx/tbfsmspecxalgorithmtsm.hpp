@@ -1,5 +1,5 @@
-#ifndef TBFSMSPETABARUALGORITHMTSM_HPP
-#define TBFSMSPETABARUALGORITHMTSM_HPP
+#ifndef TBFSMSPECXALGORITHMTSM_HPP
+#define TBFSMSPECXALGORITHMTSM_HPP
 
 #include "tbfglobal.hpp"
 
@@ -7,14 +7,14 @@
 #include "spacial/tbfspacialconfiguration.hpp"
 #include "algorithms/tbfalgorithmutils.hpp"
 
-#include <Runtimes/SpRuntime.hpp>
+#include <Legacy/SpRuntime.hpp>
 
 
 #include <cassert>
 #include <iterator>
 
 template <class RealType_T, class KernelClass_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType<RealType_T>>
-class TbfSmSpetabaruAlgorithmTsm {
+class TbfSmSpecxAlgorithmTsm {
 public:
     using RealType = RealType_T;
     using KernelClass = KernelClass_T;
@@ -33,7 +33,7 @@ protected:
     TbfAlgorithmUtils::TbfOperationsPriorities priorities;
 
     template <class TreeClass>
-    void P2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2M(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
             auto& leafGroups = inTree.getLeafGroupsSource();
             const auto& particleGroups = inTree.getParticleGroupsSource();
@@ -52,7 +52,7 @@ protected:
                        && (*currentParticleGroup).getNbLeaves() == (*currentLeafGroup).getNbCells());
                 auto& leafGroupObj = *currentLeafGroup;
                 const auto& particleGroupObj = *currentParticleGroup;
-                runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommuteWrite(*leafGroupObj.getMultipolePtr()),
+                runtime.task(SpPriority(priorities.getP2MPriority()), SpRead(*particleGroupObj.getDataPtr()), SpCommutativeWrite(*leafGroupObj.getMultipolePtr()),
                                    [this, &leafGroupObj, &particleGroupObj](const unsigned char&, unsigned char&){
                     kernelWrapper.P2M(kernels[SpUtils::GetThreadId()-1], particleGroupObj, leafGroupObj);
                 });
@@ -63,7 +63,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2M(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2M(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevelSource(idxLevel+1);
@@ -80,7 +80,7 @@ protected:
 
                 auto& upperGroup = *currentUpperGroup;
                 const auto& lowerGroup = *currentLowerGroup;
-                runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommuteWrite(*upperGroup.getMultipolePtr()),
+                runtime.task(SpPriority(priorities.getM2MPriority(idxLevel)), SpRead(*lowerGroup.getMultipolePtr()), SpCommutativeWrite(*upperGroup.getMultipolePtr()),
                                    [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.M2M(idxLevel, kernels[SpUtils::GetThreadId()-1], lowerGroup, upperGroup);
                 });
@@ -99,7 +99,7 @@ protected:
     }
 
     template <class TreeClass>
-    void M2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void M2L(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
@@ -120,7 +120,7 @@ protected:
                                                [&](auto& groupTarget, const auto& groupSrc, const auto& indexes){
                     assert(&groupTarget == &*currentCellGroup);
 
-                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommuteWrite(*groupTarget.getLocalPtr()),
+                    runtime.task(SpPriority(priorities.getM2LPriority(idxLevel)), SpRead(*groupSrc.getMultipolePtr()), SpCommutativeWrite(*groupTarget.getLocalPtr()),
                                        [this, idxLevel, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, unsigned char&){
                         kernelWrapper.M2LBetweenGroups(idxLevel, kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
                     });
@@ -132,7 +132,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2L(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2L(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
             const auto& upperCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel);
             auto& lowerCellGroup = inTree.getCellGroupsAtLevelTarget(idxLevel+1);
@@ -149,7 +149,7 @@ protected:
 
                 const auto& upperGroup = *currentUpperGroup;
                 auto& lowerGroup = *currentLowerGroup;
-                runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommuteWrite(*lowerGroup.getLocalPtr()),
+                runtime.task(SpPriority(priorities.getL2LPriority(idxLevel)), SpRead(*upperGroup.getLocalPtr()), SpCommutativeWrite(*lowerGroup.getLocalPtr()),
                                    [this, idxLevel, &upperGroup, &lowerGroup](const unsigned char&, unsigned char&){
                     kernelWrapper.L2L(idxLevel, kernels[SpUtils::GetThreadId()-1], upperGroup, lowerGroup);
                 });
@@ -168,7 +168,7 @@ protected:
     }
 
     template <class TreeClass>
-    void L2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void L2P(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         if(configuration.getTreeHeight() > 2){
             const auto& leafGroups = inTree.getLeafGroupsTarget();
             auto& particleGroups = inTree.getParticleGroupsTarget();
@@ -189,7 +189,7 @@ protected:
                 const auto& leafGroupObj = *currentLeafGroup;
                 auto& particleGroupObj = *currentParticleGroup;
                 runtime.task(SpPriority(priorities.getL2PPriority()), SpRead(*leafGroupObj.getLocalPtr()), SpRead(*particleGroupObj.getDataPtr()),
-                             SpCommuteWrite(*particleGroupObj.getRhsPtr()),
+                             SpCommutativeWrite(*particleGroupObj.getRhsPtr()),
                                    [this, &leafGroupObj, &particleGroupObj](const unsigned char&, const unsigned char&, unsigned char&){
                     kernelWrapper.L2P(kernels[SpUtils::GetThreadId()-1], leafGroupObj, particleGroupObj);
                 });
@@ -201,7 +201,7 @@ protected:
     }
 
     template <class TreeClass>
-    void P2P(SpRuntime<>& runtime, TreeClass& inTree){
+    void P2P(SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC>& runtime, TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
         auto& particleGroupsTarget = inTree.getParticleGroupsTarget();
@@ -225,9 +225,9 @@ protected:
                 assert(&groupTarget == &*currentParticleGroupTarget);
 
                 runtime.task(SpPriority(priorities.getP2PPriority()), SpRead(*groupSrc.getDataPtr()), SpRead(*groupTarget.getDataPtr()),
-                             SpCommuteWrite(*groupTarget.getRhsPtr()),
+                             SpCommutativeWrite(*groupTarget.getRhsPtr()),
                                    [this, indexesVec = indexes.toStdVector(), &groupSrc, &groupTarget](const unsigned char&, const unsigned char&, unsigned char&){
-                    kernelWrapper.P2PBetweenGroupsTsm(kernels[SpUtils::GetThreadId()-1], groupTarget, groupSrc, std::move(indexesVec));
+                    kernelWrapper.P2PBetweenGroupsTsm(kernels[SpUtils::GetThreadId()-1], groupSrc, groupTarget, std::move(indexesVec));
                 });
 
             });
@@ -243,7 +243,7 @@ protected:
     }
 
 public:
-    explicit TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    explicit TbfSmSpecxAlgorithmTsm(const SpacialConfiguration& inConfiguration, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -253,7 +253,7 @@ public:
     template <class SourceKernelClass,
               typename = typename std::enable_if<!std::is_same<long int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value
                                                  && !std::is_same<int, typename std::remove_const<typename std::remove_reference<SourceKernelClass>::type>::type>::value, void>::type>
-    TbfSmSpetabaruAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
+    TbfSmSpecxAlgorithmTsm(const SpacialConfiguration& inConfiguration, SourceKernelClass&& inKernel, const long int inStopUpperLevel = TbfDefaultLastLevel)
         : configuration(inConfiguration), spaceSystem(configuration), stopUpperLevel(std::max(0L, inStopUpperLevel)),
           kernelWrapper(configuration),
           priorities(configuration.getTreeHeight()){
@@ -264,30 +264,33 @@ public:
     void execute(TreeClass& inTree, const int inOperationToProceed = TbfAlgorithmUtils::TbfOperations::TbfNearAndFarFields){
         assert(configuration == inTree.getSpacialConfiguration());
 
-        SpRuntime runtime;
+        SpComputeEngine ce(SpWorkerTeamBuilder::TeamOfCpuWorkers());
+        SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC> tg;
+        tg.computeOn(ce);
 
-        increaseNumberOfKernels(runtime.getNbThreads());
+        increaseNumberOfKernels(ce.getNbCpuWorkers());
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
-            P2M(runtime, inTree);
+            P2M(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2M){
-            M2M(runtime, inTree);
+            M2M(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfM2L){
-            M2L(runtime, inTree);
+            M2L(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2L){
-            L2L(runtime, inTree);
+            L2L(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2P){
-            P2P(runtime, inTree);
+            P2P(tg, inTree);
         }
         if(inOperationToProceed & TbfAlgorithmUtils::TbfL2P){
-            L2P(runtime, inTree);
+            L2P(tg, inTree);
         }
 
-        runtime.waitAllTasks();
+        tg.waitAllTasks();
+        ce.stopIfNotAlreadyStopped();
     }
 
     template <class FuncType>
@@ -298,8 +301,8 @@ public:
     }
 
     template <class StreamClass>
-    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpetabaruAlgorithmTsm& inAlgo) {
-        inStream << "TbfSmSpetabaruAlgorithmTsm @ " << &inAlgo << "\n";
+    friend  StreamClass& operator<<(StreamClass& inStream, const TbfSmSpecxAlgorithmTsm& inAlgo) {
+        inStream << "TbfSmSpecxAlgorithmTsm @ " << &inAlgo << "\n";
         inStream << " - Configuration: " << "\n";
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
@@ -312,7 +315,7 @@ public:
     }
 
     static const char* GetName(){
-        return "TbfSmSpetabaruAlgorithmTsm";
+        return "TbfSmSpecxAlgorithmTsm";
     }
 };
 

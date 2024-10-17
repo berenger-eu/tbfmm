@@ -99,7 +99,9 @@ public:
 
         return boxPos;
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     IndexType getParentIndex(IndexType inIndex) const{
         return inIndex >> Dim;
     }
@@ -675,6 +677,14 @@ public:
         return nbNeighbors - 1;
     }
 
+    static long int constexpr get3PowDim() {
+        long int nbNeighbors = 1;
+        for(long int idxNeigh = 0 ; idxNeigh < Dim ; ++idxNeigh){
+            nbNeighbors *= 3;
+        }
+        return nbNeighbors;
+    }
+
     static auto getRelativePosFromInteractionIndex(long int inArrayPos){
         std::array<long int, Dim> pos;
         for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
@@ -711,6 +721,16 @@ public:
             arrayPos += (pos[idxDim] + 1);
         }
         return arrayPos;
+    }
+
+    auto getColorsIdxAtLeafLevel(const IndexType inLeafIndex) const{
+        const auto leafPos = getBoxPosFromIndex(inLeafIndex);
+        long int colorIdx = 0;
+        for(int idxDim = 0 ; idxDim < Dim ; ++idxDim){
+            colorIdx *= 3;
+            colorIdx += (leafPos[idxDim]%3);
+        }
+        return colorIdx;
     }
 
     template <class StreamClass>

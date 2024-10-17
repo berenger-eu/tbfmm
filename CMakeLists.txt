@@ -64,29 +64,95 @@ list(APPEND TBF_USE_LIST_AVAILABLE COVERAGE)
 
 #################################################
 
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru/CMakeLists.txt")
-    message(STATUS "SPETABARU Found")
-    if(NOT ${TBFMM_ENABLE_SPETABARU})
-        message(STATUS "SPETABARU Disabled")   
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/specx/CMakeLists.txt")
+    message(STATUS "SPECX Found")
+    if(NOT ${TBFMM_ENABLE_SPECX})
+        message(STATUS "SPECX Disabled")   
     else() 
-	    set(SPETABARU_JUST_LIB TRUE)
-	    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru")
+    	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
+    	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
+	    
+	    set(SPECX_JUST_LIB TRUE)
+	    add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/deps/specx")
 	    INCLUDE_DIRECTORIES(
-		     ${SPETABARU_BINARY_DIR}/Src
-		     ${SPETABARU_SOURCE_DIR}/Src
-		     ${SPETABARU_INCLUDE_DIR}
+		     ${SPECX_BINARY_DIR}/Src
+		     ${SPECX_SOURCE_DIR}/Src
+		     ${SPECX_INCLUDE_DIR}
 		)
-	    link_directories("${SPETABARU_DIR}/lib/")
-	    list(APPEND TBFMM_LIBRARIES ${SPETABARU_LIBRARIES} spetabaru)
-	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPETABARU_CXX_FLAGS}")
+		
+        message(STATUS "SPECX_DIR = ${SPECX_DIR}")
+        message(STATUS "SPECX_LIBRARIES = ${SPECX_LIBRARIES}")
+        message(STATUS "SPECX_CXX_FLAGS = ${SPECX_CXX_FLAGS}")
+		
+	    link_directories("${SPECX_DIR}/lib/")
+	    list(APPEND TBFMM_LIBRARIES ${SPECX_LIBRARIES} specx)
+	    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SPECX_CXX_FLAGS}")
 
-	    list(APPEND TBF_USE_LIST SPETABARU)
+	    list(APPEND TBF_USE_LIST SPECX)
+	    if(TBFMM_USE_CUDA)
+	        enable_language(CUDA)
+	        set(CUDA_SEPARABLE_COMPILATION ON)
+		            
+            if(NOT CMAKE_CUDA_ARCHITECTURES)
+              set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
+                  "Set CUDA target architecture" FORCE)
+            endif()
+	        list(APPEND TBF_USE_LIST CUDA)	   
+	        
+	        add_definitions("--expt-relaxed-constexpr") 
+	    endif()
     endif()
 else()
-    message(STATUS "SPETABARU Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/spetabaru (please use git submodule init && git submodule update)")
+    message(STATUS "SPECX Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/specx (please use git submodule init && git submodule update)")
 endif()
 
-list(APPEND TBF_USE_LIST_AVAILABLE SPETABARU)
+list(APPEND TBF_USE_LIST_AVAILABLE SPECX)
+
+#################################################
+
+if(DEFINED ENV{STARPU_DIR} AND NOT DEFINED TBFMM_USE_STARPU)
+    set(TBFMM_USE_STARPU $ENV{STARPU_DIR})
+endif()
+
+OPTION(TBFMM_USE_STARPU "The path to StarPU (default is env variable STARPU_DIR), empty will disable StarPU")
+
+
+if(TBFMM_USE_STARPU)
+    message(STATUS "STARPU Found")
+    if(NOT ${TBFMM_ENABLE_STARPU})
+        message(STATUS "STARPU Disabled (but env variable found)")   
+    else()	    
+    	OPTION(TBFMM_USE_CUDA "Set to on to compile tasks with CUDA callables" ${CMAKE_CUDA_COMPILER})
+    	set(SPECX_COMPILE_WITH_CUDA ${TBFMM_USE_CUDA})
+    			
+        message(STATUS "TBFMM_USE_STARPU = ${TBFMM_USE_STARPU}")
+        
+        set(TBFMM_STARPU_VERSION "1.4" CACHE STRING "Set to starpu version to look at the inalude dir and set the lib name"  )
+        message(STATUS "TBFMM_STARPU_VERSION = ${TBFMM_STARPU_VERSION}")
+		
+	    INCLUDE_DIRECTORIES(${TBFMM_USE_STARPU}/include/starpu/${TBFMM_STARPU_VERSION}/)
+	    link_directories("${TBFMM_USE_STARPU}/lib/")
+	    list(APPEND TBFMM_LIBRARIES starpu-${TBFMM_STARPU_VERSION})
+
+	    list(APPEND TBF_USE_LIST STARPU)
+	    if(TBFMM_USE_CUDA)
+	        enable_language(CUDA)
+	        set(CUDA_SEPARABLE_COMPILATION ON)
+		            
+            if(NOT CMAKE_CUDA_ARCHITECTURES)
+              set(CMAKE_CUDA_ARCHITECTURES "75" CACHE STRING
+                  "Set CUDA target architecture" FORCE)
+            endif()
+	        list(APPEND TBF_USE_LIST CUDA)	   
+	        
+	        add_definitions("--expt-relaxed-constexpr") 
+	    endif()
+    endif()
+else()
+    message(STATUS "STARPU Cannot be found, set env variable STARPU_DIR")
+endif()
+
+list(APPEND TBF_USE_LIST_AVAILABLE STARPU)
 
 #################################################
 
@@ -103,6 +169,11 @@ if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp/CMakeLists.txt")
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${INASTEMP_CXX_FLAGS}")
             
         list(APPEND TBF_USE_LIST INASTEMP)
+        
+        #if(TBFMM_USE_CUDA)
+            #set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};${INASTEMP_CXX_FLAGS}")
+            #message(STATUS "CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS}")   
+        #endif()
     endif()
 else()
     message(STATUS "Inastemp Cannot be found in ${CMAKE_CURRENT_SOURCE_DIR}/deps/inastemp (please use git submodule init && git submodule update)")
@@ -169,15 +240,35 @@ message(STATUS "Available compilation keys are: ${TBF_USE_LIST}")
 
 #################################################
 
+string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPERCASE)
+
+if(TBFMM_USE_CUDA AND (CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "DEBUG" OR CMAKE_BUILD_TYPE_UPPERCASE STREQUAL "RELWITHDEBINFO"))
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -G -g")
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -G -g")
+    message(STATUS "CMAKE_CUDA_FLAGS = ${CMAKE_CUDA_FLAGS}")
+endif()
+if(TBFMM_USE_CUDA)
+    set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} ${CMAKE_CXX_FLAGS}")
+endif()
+
 message(STATUS "CMAKE_CXX_FLAGS = ${CMAKE_CXX_FLAGS}")
 
 file(GLOB_RECURSE cpp_for_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 if(cpp_for_lib)
     file(GLOB_RECURSE hpp_for_lib ${CMAKE_CURRENT_SOURCE_DIR}/src/*.hpp)
+    if(TBFMM_USE_CUDA)
+        foreach(cppfile ${cpp_for_lib})
+            set_source_files_properties(${cppfile} PROPERTIES LANGUAGE CUDA)
+        endforeach()
+    endif()
     add_library(TBFMM STATIC ${cpp_for_lib} ${hpp_for_lib})
+    if(TBFMM_USE_CUDA)
+        set_source_files_properties(TBFMM PROPERTIES LANGUAGE CUDA)
+    endif()
     list(APPEND TBFMM_LIBRARIES TBFMM)
 endif()
 
+message(STATUS "TBFMM_LIBRARIES = ${TBFMM_LIBRARIES}")
 
 #################################################
 
@@ -199,8 +290,16 @@ foreach(an_example ${cpp_for_examples})
     if( compile_exec )
         
         message(STATUS "Add example ${execname}")
+        if(TBFMM_USE_CUDA)
+            set_source_files_properties(${an_example} PROPERTIES LANGUAGE CUDA)
+        endif()
 
         add_executable(${execname} ${an_example})
+        
+        if(TBFMM_USE_CUDA)
+            set_source_files_properties(${execname} PROPERTIES LANGUAGE CUDA)
+        endif()
+        
         if(TBFMM_LIBRARIES)
             target_link_libraries(${execname} ${TBFMM_LIBRARIES}) 
         endif()

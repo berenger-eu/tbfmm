@@ -29,7 +29,9 @@ public:
         (void)inNbItems;
         inFunc(*inPtrToData);
     }
-
+#ifdef __NVCC__
+    __device__ __host__
+#endif
     static long int GetMemorySizeFromNbItems(const long int inNbItems){
         assert(inNbItems == 1);
         (void)inNbItems;
@@ -40,11 +42,17 @@ public:
     class Viewer{
         DataType* ptrToData;
     public:
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
         explicit Viewer(DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
 
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
         DataType& getItem(){
             return *ptrToData;
         }
@@ -53,11 +61,16 @@ public:
     class ViewerConst{
         const DataType* ptrToData;
     public:
-        explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
+            explicit ViewerConst(const DataType* inPtrToData, const long int inNbItems) : ptrToData(inPtrToData){
             assert(inNbItems == 1);
             (void)inNbItems;
         }
-
+        #ifdef __NVCC__
+        __device__ __host__
+        #endif
         const DataType& getItem() const{
             return *ptrToData;
         }

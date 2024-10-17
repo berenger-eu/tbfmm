@@ -133,6 +133,7 @@ int main(int argc, char** argv){
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
     std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
+    std::cout << tree << std::endl;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -140,6 +141,7 @@ int main(int argc, char** argv){
     std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
     std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
     std::cout << "Number of threads " << algorithm->GetNbThreads() << std::endl;
+    std::cout << *algorithm << std::endl;
 
     {
         TbfTimer timerExecute;

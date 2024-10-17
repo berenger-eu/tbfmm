@@ -83,6 +83,7 @@ int main(int argc, char** argv){
         using KernelClass = TbfTestKernel<RealType>;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
         AlgorithmClass algorithm(configuration);
+        std::cout << "algorithm -- " << algorithm << std::endl;
 
         TbfTimer timerExecute;
 
@@ -140,6 +141,8 @@ int main(int argc, char** argv){
     /////////////////////////////////////////////////////////////////////////////////////////
     { // Same as above but with interaction counter & timer
         using KernelClass = TbfInteractionCounter<TbfInteractionTimer<TbfTestKernel<RealType>>>;
+        using ReduceTypeCounter = KernelClass::TbfInteractionCounter::ReduceType;
+        using ReduceTypeTimer = KernelClass::TbfInteractionTimer::ReduceType;
         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass>;
 
         AlgorithmClass algorithm(configuration);
@@ -156,8 +159,9 @@ int main(int argc, char** argv){
         auto timers = typename KernelClass::TbfInteractionTimer::ReduceType();
 
         algorithm.applyToAllKernels([&](const auto& inKernel){
-            counters = KernelClass::TbfInteractionCounter::ReduceType::Reduce(counters, inKernel.KernelClass::getReduceData());
-            timers = KernelClass::TbfInteractionTimer::ReduceType::Reduce(timers, inKernel.TbfInteractionTimer<TbfTestKernel<RealType>>::getReduceData());
+            inKernel.KernelClass::getReduceData();
+            counters = ReduceTypeCounter::Reduce(counters, inKernel.KernelClass::getReduceData());
+            timers = ReduceTypeTimer::Reduce(timers, inKernel.TbfInteractionTimer<TbfTestKernel<RealType>>::getReduceData());
         });
 
         std::cout << counters << std::endl;

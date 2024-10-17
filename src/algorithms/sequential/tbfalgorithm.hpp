@@ -177,7 +177,7 @@ protected:
             TbfAlgorithmUtils::TbfMapIndexesAndBlocks(std::move(indexesForGroup.second), particleGroups, std::distance(particleGroups.begin(), currentParticleGroup),
                                            [&](auto& groupTarget, auto& groupSrc, const auto& indexes){
                 assert(&groupTarget == &*currentParticleGroup);
-                kernelWrapper.P2PBetweenGroups(kernel, groupTarget, groupSrc, indexes);
+                kernelWrapper.P2PBetweenGroups(kernel, groupSrc, groupTarget, indexes);
             });
 
             kernelWrapper.P2PInGroup(kernel, *currentParticleGroup, indexesForGroup.first);
