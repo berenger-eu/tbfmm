@@ -88,7 +88,7 @@ public:
         return cosTheta;
     }
 
-    /** Get the sin of theta = sqrt(x2y2) / r */
+    /** Get the sin of theta = sqrt(x2 + y2) / r */
     FReal getSinTheta() const{
         return sinTheta;
     }
