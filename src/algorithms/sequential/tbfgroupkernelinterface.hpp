@@ -32,7 +32,7 @@ public:
              CellGroupClass& inUpperGroup) const {
         using CellMultipoleType = typename std::remove_reference<decltype(inLowerGroup.getCellMultipole(0))>::type;
         std::vector<std::reference_wrapper<const CellMultipoleType>> children;
-        long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+        long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
         long int nbChildren = 0;
 
         const auto startingIndex = std::max(spaceSystem.getParentIndex(inLowerGroup.getStartingSpacialIndex()),
@@ -86,7 +86,7 @@ public:
         //using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
 
         std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-        long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
+        long int* positionsOfNeighbors = new long int [spaceSystem.getNbInteractionsPerCell()];
         long int nbNeighbors = 0;
 
         long int idxInteraction = 0;
@@ -129,7 +129,7 @@ public:
         //using CellLocalType = typename std::remove_reference<decltype(inCellGroup.getCellLocal(0))>::type;
 
         std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-        long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
+        long int* positionsOfNeighbors = new long int [spaceSystem.getNbInteractionsPerCell()];
         long int nbNeighbors = 0;
 
         long int idxInteraction = 0;
@@ -173,7 +173,7 @@ public:
              CellGroupClass& inLowerGroup) const {
         using CellLocalType = typename std::remove_reference<decltype(inLowerGroup.getCellLocal(0))>::type;
         std::vector<std::reference_wrapper<CellLocalType>> children;
-        long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+        long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
         long int nbChildren = 0;
 
         const auto startingIndex = std::max(spaceSystem.getParentIndex(inLowerGroup.getStartingSpacialIndex()),
