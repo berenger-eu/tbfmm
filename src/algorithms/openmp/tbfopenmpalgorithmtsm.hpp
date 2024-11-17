@@ -296,7 +296,7 @@ protected:
     }
 
     void increaseNumberOfKernels(){
-        for(long int idxThread = kernels.size() ; idxThread < omp_get_max_threads() ; ++idxThread){
+        for(std::ptrdiff_t idxThread = kernels.size() ; idxThread < omp_get_max_threads() ; ++idxThread){
             kernels.emplace_back(kernels[0]);
         }
     }
