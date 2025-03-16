@@ -39,7 +39,7 @@ public:
                const long int inNbElementsPerBlock = -1,
                const bool inOneGroupPerParent = false)
         : configuration(inConfiguration), spaceSystem(configuration),
-          nbElementsPerBlock(inNbElementsPerBlock == -1 ? TbfBlockSizeFinder::Estimate<RealType>(inParticlePositions,
+          nbElementsPerBlock(inNbElementsPerBlock == -1 ? TbfBlockSizeFinder::Estimate<RealType, ParticleContainer, SpaceIndexType>(inParticlePositions,
                                                                                                  inConfiguration):
                                                           inNbElementsPerBlock),
           oneGroupPerParent(inOneGroupPerParent), nbParticles(static_cast<long int>(std::size(inParticlePositions))){
