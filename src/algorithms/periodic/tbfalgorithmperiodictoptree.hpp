@@ -41,7 +41,7 @@ protected:
         {
             assert(inTree.getHeight() > 1);
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
-            long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+            long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
 
             const long int idxLevelBase = 0;
@@ -77,7 +77,7 @@ protected:
 
         for(long int idxLevel = configuration.getTreeHeight()-3 ; idxLevel >= 3 ; --idxLevel){
             std::vector<std::reference_wrapper<const CellMultipoleType>> children;
-            long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+            long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
 
             for(long int idxCell = 0 ; idxCell < spaceSystem.getNbChildrenPerCell() ; ++idxCell){
@@ -152,7 +152,7 @@ protected:
         else{
             for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-2 ; ++idxLevel){
                 std::vector<std::reference_wrapper<const CellMultipoleType>> neighbors;
-                long int positionsOfNeighbors[spaceSystem.getNbInteractionsPerCell()];
+                long int* positionsOfNeighbors = new long int [spaceSystem.getNbInteractionsPerCell()];
                 long int nbNeighbors = 0;
 
                 std::array<long int, Dim> minLimits;
@@ -215,7 +215,7 @@ protected:
     void L2L(TreeClass& inTree){        
         for(long int idxLevel = 3 ; idxLevel <= configuration.getTreeHeight()-3 ; ++idxLevel){
             std::vector<std::reference_wrapper<CellLocalType>> children;
-            long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+            long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
 
             children.emplace_back(locals[idxLevel+1]);
             positionsOfChildren[0] = (0);
@@ -228,7 +228,7 @@ protected:
         {
             assert(inTree.getHeight() > 1);
             std::vector<std::reference_wrapper<CellLocalType>> children;
-            long int positionsOfChildren[spaceSystem.getNbChildrenPerCell()];
+            long int* positionsOfChildren = new long int [spaceSystem.getNbChildrenPerCell()];
             long int nbChildren = 0;
 
             const long int idxLevelBase = 0;
