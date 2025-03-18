@@ -81,6 +81,8 @@ protected:
 
     template <class TreeClass>
     void M2M(TreeClass& inTree){
+        assert(stopUpperLevel >= 0);
+        assert(configuration.getTreeHeight() > stopUpperLevel);
         for(long int idxLevel = configuration.getTreeHeight()-2 ; idxLevel >= stopUpperLevel ; --idxLevel){
             auto& upperCellGroup = inTree.getCellGroupsAtLevel(idxLevel);
             const auto& lowerCellGroup = inTree.getCellGroupsAtLevel(idxLevel+1);
@@ -128,6 +130,8 @@ protected:
     void M2L(TreeClass& inTree){
         const auto& spacialSystem = inTree.getSpacialSystem();
 
+        assert(stopUpperLevel >= 0);
+        assert(configuration.getTreeHeight() > stopUpperLevel);
         for(long int idxLevel = stopUpperLevel ; idxLevel <= configuration.getTreeHeight()-1 ; ++idxLevel){
             auto& cellGroups = inTree.getCellGroupsAtLevel(idxLevel);
 
