@@ -101,18 +101,31 @@ public:
              const ParticlesClassValuesTarget& /*inOutParticles*/,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
              const long /*arrayIndexSrc*/) const {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
+                if constexpr(SpaceIndexType::IsPeriodic){
+                    using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+                    if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+                        const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                                    inNeighbors, inNbParticlesNeighbors);
+                        FP2PLog::template GenericFullRemote<RealType> ((duplicateSources), inNbParticlesNeighbors,
+                                                                     (inTargets), (inTargetsRhs), inNbOutParticles);
+                        PeriodicShifter::FreePositions(duplicateSources);
+                    }
+                    else{
+                        FP2PLog::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
+                                                                     (inTargets), (inTargetsRhs), inNbOutParticles);
+                    }
+                }
+                else{
+                    FP2PLog::template GenericFullRemote<RealType> ((inNeighbors), inNbParticlesNeighbors,
+                                                                                               (inTargets), (inTargetsRhs), inNbOutParticles);
+                }
         }
-    }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
     void P2PInner(const LeafSymbolicData& /*inLeafIndex*/, const long int /*targetIndexes*/[],
                   const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) const {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
-        }
+            FP2PLog::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);
     }
 
     #ifdef __NVCC__
