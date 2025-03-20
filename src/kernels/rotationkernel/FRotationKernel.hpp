@@ -113,7 +113,7 @@ private:
     void precomputeFactorials(){
         factorials[0] = 1;
         RealType fidx = 1;
-        for(int idx = 1 ; idx <= P2 ; ++idx, ++fidx){
+        for(std::size_t idx = 1 ; idx <= P2 ; ++idx, ++fidx){
             factorials[idx] = fidx * factorials[idx-1];
         }
     }
