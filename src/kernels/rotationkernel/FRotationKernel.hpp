@@ -927,8 +927,7 @@ public:
     }
 
     /** Default destructor */
-    virtual ~FRotationKernel(){
-    }
+    virtual ~FRotationKernel() = default;
 
     /** P2M
       * The computation is based on the paper :
