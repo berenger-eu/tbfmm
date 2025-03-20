@@ -153,9 +153,9 @@ public:
                 const ParticlesClassValuesTarget& /*inOutParticles*/,
                 ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
                 const long /*arrayIndexSrc*/) /*const*/ {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
-        }
+        static_assert(SpaceIndexType::IsPeriodic == false);
+        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
+                                                (inTargets), (inTargetsRhs), inNbOutParticles);
     }
 
     template <class LeafSymbolicData,class ParticlesClassValues, class ParticlesClassRhs>
@@ -163,9 +163,7 @@ public:
                                         const LeafSymbolicData& /*inLeafIndex*/, const long int /*targetIndexes*/[],
                   const ParticlesClassValues& /*inOutParticles*/,
                   ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles) /*const*/ {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbOutParticles - 1;
-        }
+        TbfP2PCuda::template GenericInner<RealType>((inTargets),(inTargetsRhs), inNbOutParticles);
     }
     #endif
 };
