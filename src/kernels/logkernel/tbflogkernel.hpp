@@ -2,6 +2,7 @@
 #define TBFTESTKERNEL_HPP
 
 #include "tbfglobal.hpp"
+#include "kernels/P2P/FP2PLog.hpp"
 
 template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType2D<RealType_T>>
 class TbfLogKernel{
@@ -72,12 +73,24 @@ public:
              const ParticlesClassValues& /*inOutParticles*/,
              ParticlesClassRhs& inOutParticlesRhs, const long int inNbOutParticles,
              const long /*arrayIndexSrc*/) const {
-        for(int idxPart = 0 ; idxPart < inNbOutParticles ; ++idxPart){
-            inOutParticlesRhs[0][idxPart] += inNbParticlesNeighbors;
-        }
-        for(int idxPart = 0 ; idxPart < inNbParticlesNeighbors ; ++idxPart){
-            inParticlesNeighborsRhs[0][idxPart] += inNbOutParticles;
-        }
+                if constexpr(SpaceIndexType::IsPeriodic){
+                    using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+                    if(PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc)){
+                        const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                                    inNeighbors, inNbParticlesNeighbors);
+                                                                                    FP2PLog::template FullMutual<RealType> ((duplicateSources),(inNeighborsRhs), inNbParticlesNeighbors,
+                                                                     (inTargets), (inTargetsRhs), inNbOutParticles);
+                        PeriodicShifter::FreePositions(duplicateSources);
+                    }
+                    else{
+                        FP2PLog::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
+                                                                     (inTargets), (inTargetsRhs), inNbOutParticles);
+                    }
+                }
+                else{
+                    FP2PLog::template FullMutual<RealType> ((inNeighbors),(inNeighborsRhs), inNbParticlesNeighbors,
+                                                                                               (inTargets), (inTargetsRhs), inNbOutParticles);
+                }
     }
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
