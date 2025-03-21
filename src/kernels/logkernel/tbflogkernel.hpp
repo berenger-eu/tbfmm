@@ -195,13 +195,13 @@ public:
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
     __device__ static void P2PTsmCuda(const CudaKernelData & /*cudaKernelData*/,
-                                      const LeafSymbolicDataSource & /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
-                                      const ParticlesClassValuesSource & /*inParticlesNeighbors*/,
+                                      const LeafSymbolicDataSource &inNeighborIndex, const long int /*neighborsIndexes*/[],
+                                      const ParticlesClassValuesSource &inNeighbors,
                                       const long int inNbParticlesNeighbors,
-                                      const LeafSymbolicDataTarget & /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-                                      const ParticlesClassValuesTarget & /*inOutParticles*/,
-                                      ParticlesClassRhs &inOutParticlesRhs, const long int inNbOutParticles,
-                                      const long /*arrayIndexSrc*/) /*const*/
+                                      const LeafSymbolicDataTarget &inTargetIndex, const long int /*targetIndexes*/[],
+                                      const ParticlesClassValuesTarget &inTargets,
+                                      ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles,
+                                      [[maybe_unused]] const long arrayIndexSrc) /*const*/
     {
         static_assert(SpaceIndexType::IsPeriodic == false);
         TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
@@ -210,9 +210,9 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     __device__ static void P2PInnerCuda(const CudaKernelData & /*cudaKernelData*/,
-                                        const LeafSymbolicData & /*inLeafIndex*/, const long int /*targetIndexes*/[],
-                                        const ParticlesClassValues & /*inOutParticles*/,
-                                        ParticlesClassRhs &inOutParticlesRhs, const long int inNbOutParticles) /*const*/
+                                        const LeafSymbolicData & /*inIndex*/, const long int /*indexes*/[],
+                                        const ParticlesClassValues &inTargets,
+                                        ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles) /*const*/
     {
         TbfP2PCuda::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
     }
