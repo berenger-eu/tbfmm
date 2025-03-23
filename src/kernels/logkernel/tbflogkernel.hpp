@@ -4,6 +4,8 @@
 #include "tbfglobal.hpp"
 #include "kernels/P2P/FP2PLog.hpp"
 
+#include "utils/tbfperiodicshifter.hpp"
+
 template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType2D<RealType_T>>
 class TbfLogKernel
 {
@@ -115,16 +117,16 @@ public:
     {
         if constexpr (SpaceIndexType::IsPeriodic)
         {
-            // using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            // if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
-            // {
-            //     const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
-            //                                                                                    inNeighbors, inNbParticlesNeighbors);
-            //     FP2PLog::template FullMutual<RealType>((duplicateSources), (inNeighborsRhs), inNbParticlesNeighbors,
-            //                                            (inTargets), (inTargetsRhs), inNbOutParticles);
-            //     PeriodicShifter::FreePositions(duplicateSources);
-            // }
-            // else
+            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
+            {
+                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                                               inNeighbors, inNbParticlesNeighbors);
+                FP2PLog::template FullMutual<RealType>((duplicateSources), (inNeighborsRhs), inNbParticlesNeighbors,
+                                                       (inTargets), (inTargetsRhs), inNbOutParticles);
+                PeriodicShifter::FreePositions(duplicateSources);
+            }
+            else
             {
                 FP2PLog::template FullMutual<RealType>((inNeighbors), (inNeighborsRhs), inNbParticlesNeighbors,
                                                        (inTargets), (inTargetsRhs), inNbOutParticles);
@@ -148,16 +150,16 @@ public:
     {
         if constexpr (SpaceIndexType::IsPeriodic)
         {
-            // using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            // if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
-            // {
-            //     const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
-            //                                                                                    inNeighbors, inNbParticlesNeighbors);
-            //     FP2PLog::template GenericFullRemote<RealType>((duplicateSources), inNbParticlesNeighbors,
-            //                                                   (inTargets), (inTargetsRhs), inNbOutParticles);
-            //     PeriodicShifter::FreePositions(duplicateSources);
-            // }
-            // else
+            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
+            {
+                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+                                                                                               inNeighbors, inNbParticlesNeighbors);
+                FP2PLog::template GenericFullRemote<RealType>((duplicateSources), inNbParticlesNeighbors,
+                                                              (inTargets), (inTargetsRhs), inNbOutParticles);
+                PeriodicShifter::FreePositions(duplicateSources);
+            }
+            else
             {
                 FP2PLog::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
                                                               (inTargets), (inTargetsRhs), inNbOutParticles);

@@ -1,412 +1,123 @@
 
-#include <iostream>
 #include "spacial/tbfmortonspaceindex.hpp"
 #include "spacial/tbfspacialconfiguration.hpp"
 #include "utils/tbfrandom.hpp"
-
 #include "core/tbfcellscontainer.hpp"
 #include "core/tbfparticlescontainer.hpp"
 #include "core/tbfparticlesorter.hpp"
 #include "core/tbftree.hpp"
-
-#include "kernels/logkernel/tbflogkernel.hpp"
-#include "kernels/P2P/FP2PLog.hpp"
-#include "algorithms/tbfalgorithmutils.hpp"
 #include "algorithms/tbfalgorithmselecter.hpp"
-
-#include "utils/tbfaccuracychecker.hpp"
 #include "utils/tbftimer.hpp"
+
+#include "kernels/logkernel/tbflogKernel.hpp"
+#include "loader/tbffmaloader.hpp"
+#include "utils/tbfaccuracychecker.hpp"
+
 #include "utils/tbfparams.hpp"
 
-class TestP2P
-{
-public:
-    template <class RealType, const long int NbParticles>
-    static void TestBasic()
-    {
-        // {
-        //     if (TbfParams::ExistParameter(argc, argv, {"-h", "--help"}))
-        //     {
-        //         std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
-        //         std::cout << "[HELP] where params are:" << std::endl;
-        //         std::cout << "[HELP]   -h, --help: to get the current text" << std::endl;
-        //         std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
-        //         std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
-        //         return 1;
-        //     }
+#include <iostream>
 
-        //     const int Dim = 2;
-        //     const long int NbRhsValuesPerParticle = 1;
 
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     const std::array<RealType, Dim> BoxWidths{{1, 1}};
-        //     const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 8);
-        //     const std::array<RealType, Dim> BoxCenter{{0.5, 0.5}};
-        //     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::cout << "Particles info" << std::endl;
-        //     std::cout << " - Tree height = " << TreeHeight << std::endl;
-        //     std::cout << " - Number of particles = " << NbParticles << std::endl;
-
-        //     TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
-
-        //     std::vector<std::array<RealType, Dim + 1>> particlePositions(NbParticles);
-
-        //     for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-        //     {
-        //         auto pos = randomGenerator.getNewItem();
-        //         particlePositions[idxPart][0] = pos[0];
-        //         particlePositions[idxPart][1] = pos[1];
-        //         particlePositions[idxPart][2] = RealType(0.01);
-        //     }
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-        //     using ParticleDataType = RealType;
-        //     constexpr long int NbDataValuesPerParticle = Dim;
-        //     using ParticleRhsType = long int;
-        //     constexpr long int NbRhsValuesPerParticle = 1;
-        //     using MultipoleClass = std::array<long int, 1>;
-        //     using LocalClass = std::array<long int, 1>;
-        //     using SpaceIndexType = TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim>, false>;
-        //     using TreeClass = TbfTree<RealType,
-        //                               ParticleDataType,
-        //                               NbDataValuesPerParticle,
-        //                               ParticleRhsType,
-        //                               NbRhsValuesPerParticle,
-        //                               MultipoleClass,
-        //                               LocalClass,
-        //                               SpaceIndexType>;
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-        //     std::array<RealType *, 3> particles;
-        //     for (auto &vec : particles)
-        //     {
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType *, NbRhsValuesPerParticle> particlesRhs;
-        //     for (auto &vec : particlesRhs)
-        //     {
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType *, NbRhsValuesPerParticle> particlesRhsScalar;
-        //     for (auto &vec : particlesRhsScalar)
-        //     {
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-        //     {
-        //         particles[0][idxPart] = particlePositions[idxPart][0];
-        //         particles[1][idxPart] = particlePositions[idxPart][1];
-        //         particles[2][idxPart] = particlePositions[idxPart][2];
-        //     }
-
-        //     FP2PLog::template GenericInner<RealType>(particles, particlesRhs, NbParticles);
-        //     FP2PLog::template GenericInnerScalar<RealType>(particles, particlesRhsScalar, NbParticles);
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
-
-        //     for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-        //     {
-        //         for (int idxValue = 0; idxValue < NbRhsValuesPerParticle; ++idxValue)
-        //         {
-        //             partcilesRhsAccuracy[idxValue].addValues(particlesRhsScalar[idxValue][idxPart],
-        //                                                      particlesRhs[idxValue][idxPart]);
-        //         }
-        //     }
-
-        //     for (int idxValue = 0; idxValue < NbRhsValuesPerParticle; ++idxValue)
-        //     {
-        //         std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
-
-        //         if constexpr (std::is_same<float, RealType>::value)
-        //         {
-        //             std::cout << "This is " << (partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2) << std::endl;
-        //         }
-        //         else
-        //         {
-        //             std::cout << "This is " << (partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3) << std::endl;
-        //         }
-
-        //         //        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
-        //         //    }
-        //         //    else{
-        //         //        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
-        //         //    }
-        //     }
-
-        //     TbfTimer timerBuildTree;
-
-        //     TreeClass tree(configuration, particlePositions);
-
-        //     timerBuildTree.stop();
-        //     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
-
-        //     {
-        //         using KernelClass = TbfLogKernel<RealType, SpaceIndexType>;
-        //         using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpaceIndexType>;
-        //         AlgorithmClass algorithm(configuration);
-        //         std::cout << "algorithm -- " << algorithm << std::endl;
-
-        //         TbfTimer timerExecute;
-
-        //         algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
-
-        //         timerExecute.stop();
-        //         std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
-        //     }
-
-        // }
-        // {
-        //     const int Dim = 3;
-        //     const long int NbRhsValuesPerParticle = 4;
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
-
-        //     std::vector<std::array<RealType, Dim+1>> particlePositions1(NbParticles);
-        //     std::vector<std::array<RealType, Dim+1>> particlePositions2(NbParticles);
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         {
-        //             auto pos = randomGenerator.getNewItem();
-        //             particlePositions1[idxPart][0] = pos[0];
-        //             particlePositions1[idxPart][1] = pos[1];
-        //             particlePositions1[idxPart][2] = pos[2];
-        //             particlePositions1[idxPart][3] = RealType(0.01);
-        //         }
-        //         {
-        //             auto pos = randomGenerator.getNewItem();
-        //             particlePositions2[idxPart][0] = pos[0];
-        //             particlePositions2[idxPart][1] = pos[1];
-        //             particlePositions2[idxPart][2] = pos[2];
-        //             particlePositions2[idxPart][3] = RealType(0.02);
-        //         }
-        //     }
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::array<RealType*, 4> particles1;
-        //     for(auto& vec : particles1){
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType*, 4> particles2;
-        //     for(auto& vec : particles2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhs1;
-        //     for(auto& vec : particlesRhs1){
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhsScalar1;
-        //     for(auto& vec : particlesRhsScalar1){
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhs2;
-        //     for(auto& vec : particlesRhs2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhsScalar2;
-        //     for(auto& vec : particlesRhsScalar2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         particles1[0][idxPart] = particlePositions1[idxPart][0];
-        //         particles1[1][idxPart] = particlePositions1[idxPart][1];
-        //         particles1[2][idxPart] = particlePositions1[idxPart][2];
-        //         particles1[3][idxPart] = particlePositions1[idxPart][3];
-        //         particles2[0][idxPart] = particlePositions2[idxPart][0];
-        //         particles2[1][idxPart] = particlePositions2[idxPart][1];
-        //         particles2[2][idxPart] = particlePositions2[idxPart][2];
-        //         particles2[3][idxPart] = particlePositions2[idxPart][3];
-        //     }
-
-        //     FP2PR::template FullMutual<RealType>( particles1, particlesRhs1, NbParticles,  particles2, particlesRhs2, NbParticles);
-        //     FP2PR::template FullMutualScalar<RealType>( particles1, particlesRhsScalar1, NbParticles,  particles2, particlesRhsScalar2, NbParticles);
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-        //            partcilesRhsAccuracy[idxValue].addValues(particlesRhsScalar1[idxValue][idxPart],
-        //                                                     particlesRhs1[idxValue][idxPart]);
-        //            partcilesRhsAccuracy[idxValue].addValues(particlesRhsScalar2[idxValue][idxPart],
-        //                                                     particlesRhs2[idxValue][idxPart]);
-        //         }
-        //     }
-
-        //     for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-        //        std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
-        //        if constexpr (std::is_same<float, RealType>::value){
-        //            UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
-        //        }
-        //        else{
-        //            UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
-        //        }
-        //     }
-        // }
-        // {
-        //     const int Dim = 3;
-        //     const long int NbRhsValuesPerParticle = 4;
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     const std::array<RealType, Dim> BoxWidths{{1, 1, 1}};
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
-
-        //     std::vector<std::array<RealType, Dim+1>> particlePositions1(NbParticles);
-        //     std::vector<std::array<RealType, Dim+1>> particlePositions2(NbParticles);
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         {
-        //             auto pos = randomGenerator.getNewItem();
-        //             particlePositions1[idxPart][0] = pos[0];
-        //             particlePositions1[idxPart][1] = pos[1];
-        //             particlePositions1[idxPart][2] = pos[2];
-        //             particlePositions1[idxPart][3] = RealType(0.01);
-        //         }
-        //         {
-        //             auto pos = randomGenerator.getNewItem();
-        //             particlePositions2[idxPart][0] = pos[0];
-        //             particlePositions2[idxPart][1] = pos[1];
-        //             particlePositions2[idxPart][2] = pos[2];
-        //             particlePositions2[idxPart][3] = RealType(0.02);
-        //         }
-        //     }
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::array<RealType*, 4> particles1;
-        //     for(auto& vec : particles1){
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType*, 4> particles2;
-        //     for(auto& vec : particles2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhs2;
-        //     for(auto& vec : particlesRhs2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-        //     std::array<RealType*, NbRhsValuesPerParticle> particlesRhsScalar2;
-        //     for(auto& vec : particlesRhsScalar2){
-        //         vec = new RealType[NbParticles]();
-        //     }
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         particles1[0][idxPart] = particlePositions1[idxPart][0];
-        //         particles1[1][idxPart] = particlePositions1[idxPart][1];
-        //         particles1[2][idxPart] = particlePositions1[idxPart][2];
-        //         particles1[3][idxPart] = particlePositions1[idxPart][3];
-        //         particles2[0][idxPart] = particlePositions2[idxPart][0];
-        //         particles2[1][idxPart] = particlePositions2[idxPart][1];
-        //         particles2[2][idxPart] = particlePositions2[idxPart][2];
-        //         particles2[3][idxPart] = particlePositions2[idxPart][3];
-        //     }
-
-        //     FP2PR::template GenericFullRemote<RealType>( particles1, NbParticles,  particles2, particlesRhs2, NbParticles);
-        //     FP2PR::template GenericFullRemoteScalar<RealType>( particles1, NbParticles,  particles2, particlesRhsScalar2, NbParticles);
-
-        //     /////////////////////////////////////////////////////////////////////////////////////////
-
-        //     std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
-
-        //     for(long int idxPart = 0 ; idxPart < NbParticles ; ++idxPart){
-        //         for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-        //            partcilesRhsAccuracy[idxValue].addValues(particlesRhsScalar2[idxValue][idxPart],
-        //                                                     particlesRhs2[idxValue][idxPart]);
-        //         }
-        //     }
-
-        //     for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-        //        std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
-        //        if constexpr (std::is_same<float, RealType>::value){
-        //            UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
-        //        }
-        //        else{
-        //            UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
-        //        }
-        //     }
-        // }
-    }
-
-    // void SetTests() {
-    //     Parent::AddTest(&TestP2P::TestBasic<float,7>, "Basic test for P2P float");
-    //     Parent::AddTest(&TestP2P::TestBasic<double,3>, "Basic test for P2P double");
-    //     Parent::AddTest(&TestP2P::TestBasic<float,1000>, "Basic test for P2P float");
-    //     Parent::AddTest(&TestP2P::TestBasic<double,1000>, "Basic test for P2P double");
-    // }
-};
-
-// You must do this
-// TestClass(TestP2P)
-
-int main(int argc, char **argv)
-{
-    if (TbfParams::ExistParameter(argc, argv, {"-h", "--help"}))
-    {
+int main(int argc, char** argv){
+    // Manage the arguments, and print the help if needed
+    if(TbfParams::ExistParameter(argc, argv, {"-h", "--help"})){
         std::cout << "[HELP] Command " << argv[0] << " [params]" << std::endl;
         std::cout << "[HELP] where params are:" << std::endl;
         std::cout << "[HELP]   -h, --help: to get the current text" << std::endl;
         std::cout << "[HELP]   -th, --tree-height: the height of the tree" << std::endl;
+        std::cout << "[HELP]   -f, --file: to pass a particle file (FMA)" << std::endl;
         std::cout << "[HELP]   -nb, --nb-particles: specify the number of particles (when no file are given)" << std::endl;
+        std::cout << "[HELP]   -nc, --no-check: avoid comparing FMM results with direct computation" << std::endl;
+        std::cout << "[HELP]   -nbl, --nb-loops: the number of extra loops (FMM iterations)" << std::endl;
         return 1;
     }
 
+    // The data type used for the positions and in the computation
+    // (could have been different but it is not the case here)
     using RealType = double;
+    // In 3D
     const int Dim = 2;
 
     /////////////////////////////////////////////////////////////////////////////////////////
 
-    const std::array<RealType, Dim> BoxWidths{{1, 1}};
-    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 8);
-    const std::array<RealType, Dim> BoxCenter{{0.5, 0.5}};
-    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
-    /////////////////////////////////////////////////////////////////////////////////////////
+    // We store the positions + a physical value in a vector
+    std::vector<std::array<RealType, Dim+1>> particlePositions;
+    long int nbParticles;
+    std::array<RealType, Dim> BoxWidths;
+    std::array<RealType, Dim> BoxCenter;
 
-    const long int NbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 1000);
-    std::cout << "Particles info" << std::endl;
-    std::cout << " - Tree height = " << TreeHeight << std::endl;
-    std::cout << " - Number of particles = " << NbParticles << std::endl;
+    // We load a file if "-f" is given
+    if(TbfParams::ExistParameter(argc, argv, {"-f", "--file"})){
+        std::string filename = TbfParams::GetStr(argc, argv, {"-f", "--file"}, "");
+        TbfFmaLoader<RealType, Dim, Dim+1> loader(filename);
 
-    TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
+        if(!loader.isOpen()){
+            std::cout << "[Error] There is a problem, the given file '" << filename << "' cannot be open." << std::endl;
+            return -1;
+        }
 
-    std::vector<std::array<RealType, Dim + 1>> particlePositions(NbParticles);
+        nbParticles = loader.getNbParticles();
+        particlePositions = loader.loadAllParticles();
+        BoxWidths = loader.getBoxWidths();
+        BoxCenter = loader.getBoxCenter();
+    }
+    // Otherwise we generate random positions
+    else {
+        BoxWidths = std::array<RealType, Dim>{{1, 1}};
+        BoxCenter = std::array<RealType, Dim>{{0.5, 0.5}};
 
-    for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-    {
-        auto pos = randomGenerator.getNewItem();
-        particlePositions[idxPart][0] = pos[0];
-        particlePositions[idxPart][1] = pos[1];
-        particlePositions[idxPart][2] = RealType(0.01);
+        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 2);
+
+        TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
+
+        particlePositions.resize(nbParticles);
+
+        for(long int idxPart = 0 ; idxPart < nbParticles ; ++idxPart){
+            auto position = randomGenerator.getNewItem();
+            particlePositions[idxPart][0] = position[0];
+            particlePositions[idxPart][1] = position[1];
+            particlePositions[idxPart][2] = 0.1;
+        }
     }
 
+    // The height of the tree
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 0);
+    // The spacial configuration of our system
+    const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
+
+    std::cout << configuration << std::endl;
+
     /////////////////////////////////////////////////////////////////////////////////////////
+
+    // Simply print some data
+    std::cout << "Particles info" << std::endl;
+    std::cout << " - Tree height = " << TreeHeight << std::endl;
+    std::cout << " - Number of particles = " << nbParticles << std::endl;
+    std::cout << " - Here are the first particles..." << std::endl;
+    for(long int idxPart = 0 ; idxPart < std::min(5L, nbParticles) ; ++idxPart){
+        std::cout << TbfUtils::ArrayPrinter(particlePositions[idxPart]) << std::endl;
+    }
+    std::cout << std::endl;
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    // Fix our templates
+    const unsigned int P = 12;
     using ParticleDataType = RealType;
-    constexpr long int NbDataValuesPerParticle = Dim;
-    using ParticleRhsType = long int;
+    constexpr long int NbDataValuesPerParticle = Dim+1;
+    using ParticleRhsType = RealType;
     constexpr long int NbRhsValuesPerParticle = 1;
-    using MultipoleClass = std::array<long int, 1>;
-    using LocalClass = std::array<long int, 1>;
-    using SpaceIndexType = TbfMortonSpaceIndex<Dim, TbfSpacialConfiguration<RealType, Dim>, false>;
+
+    constexpr long int VectorSize = ((P+2)*(P+1))/2;
+
+    using MultipoleClass = std::array<std::complex<RealType>, VectorSize>;
+    using LocalClass = std::array<std::complex<RealType>, VectorSize>;
+
+    using KernelClass = TbfLogKernel<RealType>;
+    using AlgorithmClass = TbfAlgorithmSelecter::type<
+                              RealType, 
+                              KernelClass, 
+                              TbfDefaultSpaceIndexType2D<RealType>>;
     using TreeClass = TbfTree<RealType,
                               ParticleDataType,
                               NbDataValuesPerParticle,
@@ -414,87 +125,128 @@ int main(int argc, char **argv)
                               NbRhsValuesPerParticle,
                               MultipoleClass,
                               LocalClass,
-                              SpaceIndexType>;
+                              TbfDefaultSpaceIndexType2D<RealType>>;
 
     /////////////////////////////////////////////////////////////////////////////////////////
-    std::array<RealType *, 3> particles;
-    for (auto &vec : particles)
-    {
-        vec = new RealType[NbParticles]();
-    }
-    std::array<RealType *, NbRhsValuesPerParticle> particlesRhs;
-    for (auto &vec : particlesRhs)
-    {
-        vec = new RealType[NbParticles]();
-    }
-    std::array<RealType *, NbRhsValuesPerParticle> particlesRhsScalar;
-    for (auto &vec : particlesRhsScalar)
-    {
-        vec = new RealType[NbParticles]();
-    }
-
-    for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-    {
-        particles[0][idxPart] = particlePositions[idxPart][0];
-        particles[1][idxPart] = particlePositions[idxPart][1];
-        particles[2][idxPart] = particlePositions[idxPart][2];
-    }
-
-    FP2PLog::template GenericInner<RealType>(particles, particlesRhs, NbParticles);
-    FP2PLog::template GenericInnerScalar<RealType>(particles, particlesRhsScalar, NbParticles);
-
-    /////////////////////////////////////////////////////////////////////////////////////////
-
-    std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
-
-    for (long int idxPart = 0; idxPart < NbParticles; ++idxPart)
-    {
-        for (int idxValue = 0; idxValue < NbRhsValuesPerParticle; ++idxValue)
-        {
-            partcilesRhsAccuracy[idxValue].addValues(particlesRhsScalar[idxValue][idxPart],
-                                                     particlesRhs[idxValue][idxPart]);
-        }
-    }
-
-    for (int idxValue = 0; idxValue < NbRhsValuesPerParticle; ++idxValue)
-    {
-        std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
-
-        if constexpr (std::is_same<float, RealType>::value)
-        {
-            std::cout << "This is " << (partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2) << std::endl;
-        }
-        else
-        {
-            std::cout << "This is " << (partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3) << std::endl;
-        }
-
-        //        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-2);
-        //    }
-        //    else{
-        //        UASSERTETRUE(partcilesRhsAccuracy[idxValue].getRelativeL2Norm() < 9e-3);
-        //    }
-    }
 
     TbfTimer timerBuildTree;
 
-    TreeClass tree(configuration, particlePositions);
+    // Build the tree
+    TreeClass tree(configuration, TbfUtils::make_const(particlePositions));
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
+    std::cout << "Number of elements per group " << tree.getNbElementsPerGroup() << std::endl;
+    std::cout << tree << std::endl;
+
+    /////////////////////////////////////////////////////////////////////////////////////////
+
+    // Here we put the kernel in the heap to make sure not to overflow the stack
+    std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
+    std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
+    std::cout << "Number of threads " << algorithm->GetNbThreads() << std::endl;
+    std::cout << *algorithm << std::endl;
 
     {
-        using KernelClass = TbfLogKernel<RealType, SpaceIndexType>;
-        using AlgorithmClass = TbfAlgorithmSelecter::type<RealType, KernelClass, SpaceIndexType>;
-        AlgorithmClass algorithm(configuration);
-        std::cout << "algorithm -- " << algorithm << std::endl;
-
         TbfTimer timerExecute;
 
-        algorithm.execute(tree, TbfAlgorithmUtils::TbfP2P);
+        // Execute a full FMM (near + far fields)
+        algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2P);
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
     }
+
+    // /////////////////////////////////////////////////////////////////////////////////////////
+
+    // Check the results against direct computation
+    if(!TbfParams::ExistParameter(argc, argv, {"-nc", "--no-check"})){
+        std::array<RealType*, 3> particles;
+        for(auto& vec : particles){
+            vec = new RealType[nbParticles]();
+        }
+        std::array<RealType*, NbRhsValuesPerParticle> particlesRhs;
+        for(auto& vec : particlesRhs){
+            vec = new RealType[nbParticles]();
+        }
+
+        for(long int idxPart = 0 ; idxPart < nbParticles ; ++idxPart){
+            particles[0][idxPart] = particlePositions[idxPart][0];
+            particles[1][idxPart] = particlePositions[idxPart][1];
+            particles[2][idxPart] = particlePositions[idxPart][2];
+        }
+
+        TbfTimer timerDirect;
+
+        FP2PLog::template GenericInner<RealType>( particles, particlesRhs, nbParticles);
+
+        timerDirect.stop();
+
+        std::cout << "Direct execute in " << timerDirect.getElapsed() << "s" << std::endl;
+
+        //////////////////////////////////////////////////////////////////////
+
+        std::array<TbfAccuracyChecker<RealType>, Dim+1> partcilesAccuracy;
+        std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
+
+        tree.applyToAllLeaves([&particles,&partcilesAccuracy,&particlesRhs,&partcilesRhsAccuracy,NbRhsValuesPerParticle]
+                              (auto&& leafHeader, const long int* particleIndexes,
+                              const std::array<ParticleDataType*, 3> particleDataPtr,
+                              const std::array<ParticleRhsType*, NbRhsValuesPerParticle> particleRhsPtr){
+            for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                for(int idxValue = 0 ; idxValue < Dim+1 ; ++idxValue){
+                   partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
+                                                        particleDataPtr[idxValue][idxPart]);
+                }
+                for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                   partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
+                                                        particleRhsPtr[idxValue][idxPart]);
+                }
+            }
+        });
+
+        std::cout << "Relative differences:" << std::endl;
+        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+           std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
+        }
+        for(int idxValue = 0 ; idxValue < 4 ; ++idxValue){
+           std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
+        }
+
+        //////////////////////////////////////////////////////////////////////
+
+        for(auto& vec : particles){
+            delete[] vec;
+        }
+        for(auto& vec : particlesRhs){
+            delete[] vec;
+        }
+    }
+
+    //////////////////////////////////////////////////////////////////////
+
+    const long int NbLoops = TbfParams::GetValue<long int>(argc, argv, {"-nbl", "--nb-loops"}, 4);
+
+    for(long int idxLoop = 0 ; idxLoop < NbLoops ; ++idxLoop){
+        std::cout << " -- Loop " << idxLoop << std::endl;
+
+        TbfTimer timerRebuildTree;
+
+        tree.rebuild();
+
+        timerRebuildTree.stop();
+        std::cout << "Re-Build the tree in " << timerRebuildTree.getElapsed() << std::endl;
+
+        {
+            TbfTimer timerExecute;
+
+            algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2P);
+
+            timerExecute.stop();
+            std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
+        }
+    }
+
     return 0;
 }
+
