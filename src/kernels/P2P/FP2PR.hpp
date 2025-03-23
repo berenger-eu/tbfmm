@@ -100,7 +100,7 @@ static void FullMutualScalar(const ParticlesClassValues& inNeighbors, ParticlesC
     FReal*const targetsForcesZ = GetPtr(inTargetsRhs[2]);
     FReal*const targetsPotentials = GetPtr(inTargetsRhs[3]);
 
-    const FReal mOne = 1;
+    constexpr FReal mOne = 1;
 
     const FReal*const sourcesX = GetPtr(inNeighbors[0]);
     const FReal*const sourcesY = GetPtr(inNeighbors[1]);
@@ -116,10 +116,10 @@ static void FullMutualScalar(const ParticlesClassValues& inNeighbors, ParticlesC
         const FReal ty = targetsY[idxTarget];
         const FReal tz = targetsZ[idxTarget];
         const FReal tv = targetsPhysicalValues[idxTarget];
-        FReal  tfx = 0;
-        FReal  tfy = 0;
-        FReal  tfz = 0;
-        FReal  tpo = 0;
+        FReal  tfx = 0; // x-component of force acting on target idxTarget
+        FReal  tfy = 0; // y-component of force acting on target idxTarget
+        FReal  tfz = 0; // z-component of force acting on target idxTarget
+        FReal  tpo = 0; // potential at target idxTarget
 
         for(long int idxSource = 0 ; idxSource < nbParticlesSources ; ++idxSource){
             FReal dx = sourcesX[idxSource] - tx;

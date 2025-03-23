@@ -171,11 +171,11 @@ public:
     }
 
     std::vector<CellGroupClass>& getLeafGroups(){
-        return cellBlocks[cellBlocks.size()-1];
+        return cellBlocks.back(); //[cellBlocks.size()-1];
     }
 
     const std::vector<CellGroupClass>& getLeafGroups() const {
-        return cellBlocks[cellBlocks.size()-1];
+        return cellBlocks.bakc(); //[cellBlocks.size()-1];
     }
 
     long int getNbParticleGroups() const{
@@ -335,7 +335,7 @@ public:
         }
 
         {
-            TbfParticleSorter<RealType> partSorter(spaceSystem, data);
+            TbfParticleSorter<RealType, SpaceIndexType> partSorter(spaceSystem, data);
             const auto groupProperties = partSorter.splitInGroups(nbElementsPerBlock);
             particleGroups.reserve(std::size(groupProperties));
 

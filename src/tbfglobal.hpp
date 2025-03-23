@@ -12,13 +12,13 @@ template <class RealType>
 using TbfDefaultSpaceIndexType = TbfMortonSpaceIndex<3, TbfSpacialConfiguration<RealType, 3>, false>;
 
 template <class RealType>
-using TbfDefaultSpaceIndexType2D = TbfMortonSpaceIndex<3, TbfSpacialConfiguration<RealType, 2>, false>;
+using TbfDefaultSpaceIndexType2D = TbfMortonSpaceIndex<2, TbfSpacialConfiguration<RealType, 2>, false>;
 
 template <class RealType>
 using TbfDefaultSpaceIndexTypePeriodic = TbfMortonSpaceIndex<3, TbfSpacialConfiguration<RealType, 3>, true>;
 
 template <class RealType>
-using TbfDefaultSpaceIndexTypePeriodic2D = TbfMortonSpaceIndex<3, TbfSpacialConfiguration<RealType, 2>, true>;
+using TbfDefaultSpaceIndexTypePeriodic2D = TbfMortonSpaceIndex<2, TbfSpacialConfiguration<RealType, 2>, true>;
 
 constexpr static long int TbfDefaultMemoryAlignement = 64;
 

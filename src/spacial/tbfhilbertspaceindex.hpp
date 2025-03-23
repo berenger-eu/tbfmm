@@ -15,6 +15,7 @@ class TbfHilbertSpaceIndex{
 public:
     static_assert (Dim_T > 0, "Dimension must be greater than 0" );
     static_assert (Dim_T == 3, "Dimension must be 3 for now" );
+    static_assert(Dim_T == ConfigurationClass_T::Dim, "Provided dimension must be equal to dimension of ConfigurationClass_T" );
 
     using IndexType = long int;
     using ConfigurationClass = ConfigurationClass_T;
