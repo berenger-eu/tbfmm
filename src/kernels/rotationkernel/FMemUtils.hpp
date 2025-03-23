@@ -60,7 +60,7 @@ namespace FMemUtils {
         }
     }
 
-    /** copy all value from one vector to the other */
+    /** add-copy all value from one vector to the other */
     template <class TypeClass1, class TypeClass2>
     inline void addall(TypeClass1&& dest, const TypeClass2& source, long int nbElements){
         for(long int idx = 0 ; idx < nbElements ; ++idx){
