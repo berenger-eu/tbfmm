@@ -18,9 +18,9 @@ private:
     const RealType PI2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L * 2.0);
 
     //< Size of the data array computed using a suite relation
-    static const int SizeArray = ((P + 2) * (P + 1)) / 2;
-    //< To have P*2 where needed
-    static const int P2 = P * 2;
+    // static const int SizeArray = ((P + 2) * (P + 1)) / 2;
+    // //< To have P*2 where needed
+    // static const int P2 = P * 2;
 
     ///////////////////////////////////////////////////////
     // Object attributes
@@ -32,9 +32,16 @@ private:
     const int treeHeight;                    //< The height of the tree
     const RealType widthAtLeafLevel;         //< width of box at leaf level
     const RealType widthAtLeafLevelDiv2;     //< width of box at leaf leve div 2
-    const std::array<RealType, 3> boxCorner; //< position of the box corner
+    const std::array<RealType, 2> boxCorner; //< position of the box corner
 public:
-    explicit TbfLogKernel(const SpacialConfiguration & /*inConfiguration*/) {}
+    explicit TbfLogKernel(const SpacialConfiguration &inConfiguration) : spaceIndexSystem(inConfiguration),
+                                                                         boxWidth(inConfiguration.getBoxWidths()[0]),
+                                                                         treeHeight(int(inConfiguration.getTreeHeight())),
+                                                                         widthAtLeafLevel(inConfiguration.getLeafWidths()[0]),
+                                                                         widthAtLeafLevelDiv2(widthAtLeafLevel / 2),
+                                                                         boxCorner(inConfiguration.getBoxCorner())
+    {
+    }
 
     TbfLogKernel(const TbfLogKernel &) = default;
     TbfLogKernel(TbfLogKernel &&) = default;
@@ -108,16 +115,16 @@ public:
     {
         if constexpr (SpaceIndexType::IsPeriodic)
         {
-            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
-            {
-                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
-                                                                                               inNeighbors, inNbParticlesNeighbors);
-                FP2PLog::template FullMutual<RealType>((duplicateSources), (inNeighborsRhs), inNbParticlesNeighbors,
-                                                       (inTargets), (inTargetsRhs), inNbOutParticles);
-                PeriodicShifter::FreePositions(duplicateSources);
-            }
-            else
+            // using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            // if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
+            // {
+            //     const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+            //                                                                                    inNeighbors, inNbParticlesNeighbors);
+            //     FP2PLog::template FullMutual<RealType>((duplicateSources), (inNeighborsRhs), inNbParticlesNeighbors,
+            //                                            (inTargets), (inTargetsRhs), inNbOutParticles);
+            //     PeriodicShifter::FreePositions(duplicateSources);
+            // }
+            // else
             {
                 FP2PLog::template FullMutual<RealType>((inNeighbors), (inNeighborsRhs), inNbParticlesNeighbors,
                                                        (inTargets), (inTargetsRhs), inNbOutParticles);
@@ -141,16 +148,16 @@ public:
     {
         if constexpr (SpaceIndexType::IsPeriodic)
         {
-            using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
-            if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
-            {
-                const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
-                                                                                               inNeighbors, inNbParticlesNeighbors);
-                FP2PLog::template GenericFullRemote<RealType>((duplicateSources), inNbParticlesNeighbors,
-                                                              (inTargets), (inTargetsRhs), inNbOutParticles);
-                PeriodicShifter::FreePositions(duplicateSources);
-            }
-            else
+            // using PeriodicShifter = typename TbfPeriodicShifter<RealType, SpaceIndexType>::Neighbor;
+            // if (PeriodicShifter::NeedToShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc))
+            // {
+            //     const auto duplicateSources = PeriodicShifter::DuplicatePositionsAndApplyShift(inNeighborIndex, inTargetIndex, spaceIndexSystem, arrayIndexSrc,
+            //                                                                                    inNeighbors, inNbParticlesNeighbors);
+            //     FP2PLog::template GenericFullRemote<RealType>((duplicateSources), inNbParticlesNeighbors,
+            //                                                   (inTargets), (inTargetsRhs), inNbOutParticles);
+            //     PeriodicShifter::FreePositions(duplicateSources);
+            // }
+            // else
             {
                 FP2PLog::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
                                                               (inTargets), (inTargetsRhs), inNbOutParticles);
