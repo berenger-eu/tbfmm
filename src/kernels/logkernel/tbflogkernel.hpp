@@ -102,7 +102,7 @@ public:
     {
         for (int idxPart = 0; idxPart < inNbParticles; ++idxPart)
         {
-            inOutParticlesRhs[0][idxPart] += inLeaf[0];
+            // inOutParticlesRhs[0][idxPart] += inLeaf[0];
         }
     }
 
