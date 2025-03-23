@@ -4,6 +4,8 @@
 #include "tbfglobal.hpp"
 #include "kernels/P2P/FP2PLog.hpp"
 
+#include "utils/tbfperiodicshifter.hpp"
+
 template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType2D<RealType_T>>
 class TbfLogKernel
 {
@@ -17,10 +19,10 @@ private:
     const RealType PIDiv2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L / 2.0);
     const RealType PI2 = RealType(3.14159265358979323846264338327950288419716939937510582097494459230781640628620899863L * 2.0);
 
-    //< Size of the data array computed using a suite relation
-    static const int SizeArray = ((P + 2) * (P + 1)) / 2;
-    //< To have P*2 where needed
-    static const int P2 = P * 2;
+    // //< Size of the data array computed using a suite relation
+    // static const int SizeArray = ((P + 2) * (P + 1)) / 2;
+    // //< To have P*2 where needed
+    // static const int P2 = P * 2;
 
     ///////////////////////////////////////////////////////
     // Object attributes
@@ -32,9 +34,21 @@ private:
     const int treeHeight;                    //< The height of the tree
     const RealType widthAtLeafLevel;         //< width of box at leaf level
     const RealType widthAtLeafLevelDiv2;     //< width of box at leaf leve div 2
-    const std::array<RealType, 3> boxCorner; //< position of the box corner
+    const std::array<RealType, 2> boxCorner; //< position of the box corner
 public:
-    explicit TbfLogKernel(const SpacialConfiguration & /*inConfiguration*/) {}
+/** Constructor, needs system information */
+    explicit TbfLogKernel(const SpacialConfiguration& inConfiguration)  :
+        spaceIndexSystem(inConfiguration),
+        boxWidth(inConfiguration.getBoxWidths()[0]),
+        treeHeight(int(inConfiguration.getTreeHeight())),
+        widthAtLeafLevel(inConfiguration.getLeafWidths()[0]),
+        widthAtLeafLevelDiv2(widthAtLeafLevel/2),
+        boxCorner(inConfiguration.getBoxCorner())
+    { }
+
+
+
+
 
     TbfLogKernel(const TbfLogKernel &) = default;
     TbfLogKernel(TbfLogKernel &&) = default;
@@ -91,10 +105,10 @@ public:
              const ParticlesClassValues & /*inOutParticles*/, ParticlesClassRhs &inOutParticlesRhs,
              const long int inNbParticles) const
     {
-        for (int idxPart = 0; idxPart < inNbParticles; ++idxPart)
-        {
-            inOutParticlesRhs[0][idxPart] += inLeaf[0];
-        }
+        // for (int idxPart = 0; idxPart < inNbParticles; ++idxPart)
+        // {
+        //     inOutParticlesRhs[0][idxPart] += inLeaf[0];
+        // }
     }
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
@@ -195,13 +209,13 @@ public:
 
     template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
     __device__ static void P2PTsmCuda(const CudaKernelData & /*cudaKernelData*/,
-                                      const LeafSymbolicDataSource & /*inNeighborIndex*/, const long int /*neighborsIndexes*/[],
-                                      const ParticlesClassValuesSource & /*inParticlesNeighbors*/,
+                                      const LeafSymbolicDataSource &inNeighborIndex, const long int /*neighborsIndexes*/[],
+                                      const ParticlesClassValuesSource &inNeighbors,
                                       const long int inNbParticlesNeighbors,
-                                      const LeafSymbolicDataTarget & /*inParticlesIndex*/, const long int /*targetIndexes*/[],
-                                      const ParticlesClassValuesTarget & /*inOutParticles*/,
-                                      ParticlesClassRhs &inOutParticlesRhs, const long int inNbOutParticles,
-                                      const long /*arrayIndexSrc*/) /*const*/
+                                      const LeafSymbolicDataTarget &inTargetIndex, const long int /*targetIndexes*/[],
+                                      const ParticlesClassValuesTarget &inTargets,
+                                      ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles,
+                                      [[maybe_unused]] const long arrayIndexSrc) /*const*/
     {
         static_assert(SpaceIndexType::IsPeriodic == false);
         TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
@@ -210,9 +224,9 @@ public:
 
     template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
     __device__ static void P2PInnerCuda(const CudaKernelData & /*cudaKernelData*/,
-                                        const LeafSymbolicData & /*inLeafIndex*/, const long int /*targetIndexes*/[],
-                                        const ParticlesClassValues & /*inOutParticles*/,
-                                        ParticlesClassRhs &inOutParticlesRhs, const long int inNbOutParticles) /*const*/
+                                        const LeafSymbolicData & /*inIndex*/, const long int /*indexes*/[],
+                                        const ParticlesClassValues &inTargets,
+                                        ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles) /*const*/
     {
         TbfP2PCuda::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
     }

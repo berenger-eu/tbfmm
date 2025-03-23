@@ -335,7 +335,7 @@ public:
         }
 
         {
-            TbfParticleSorter<RealType> partSorter(spaceSystem, data);
+            TbfParticleSorter<RealType, SpaceIndexType> partSorter(spaceSystem, data);
             const auto groupProperties = partSorter.splitInGroups(nbElementsPerBlock);
             particleGroups.reserve(std::size(groupProperties));
 

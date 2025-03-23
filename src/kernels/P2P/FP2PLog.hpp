@@ -216,8 +216,8 @@ namespace FP2PLog
 
                     std::complex<VecType> source_point{VecType(&targetsX[idxSource]), VecType(&targetsY[idxSource])};
 
-                    std::complex<FReal> distance{target_point - source_point};
-                    std::complex<FReal> ln_distance{distance};
+                    std::complex<VecType> distance{target_point - source_point};
+                    std::complex<VecType> ln_distance{distance};
 
                     tpo += ln_distance.real() * VecType(&targetsPhysicalValues[idxSource]);
 
@@ -229,16 +229,15 @@ namespace FP2PLog
             {
 
                 std::complex<FReal> target_point{targetsX[idxTarget], targetsY[idxTarget]};
-                const FReal tv = targetsPhysicalValues[idxTarget];
                 FReal tpo = 0;
 
                 for (long int idxSource = nbVectorizedInteractions; idxSource < nbParticlesTargets; ++idxSource)
                 {
-                    std::complex<FReal> source_point{sourcesX[idxSource], sourcesY[idxSource]};
+                    std::complex<FReal> source_point{targetsX[idxSource], targetsY[idxSource]};
                     std::complex<FReal> distance{target_point - source_point};
                     std::complex<FReal> ln_distance{distance};
 
-                    tpo += ln_distance.real() * sourcesPhysicalValues[idxSource];
+                    tpo += ln_distance.real() * targetsPhysicalValues[idxSource];
                 }
 
                 targetsPotentials[idxTarget] += (tpo);
@@ -319,7 +318,7 @@ namespace FP2PLog
                 targetsPotentials[idxTarget] += (tpo.horizontalSum());
             }
             {
-
+                std::complex<FReal> target_point{targetsX[idxTarget], targetsY[idxTarget]};
                 const FReal tv = targetsPhysicalValues[idxTarget];
                 FReal tpo = 0;
 
