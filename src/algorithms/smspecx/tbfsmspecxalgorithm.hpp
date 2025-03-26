@@ -268,7 +268,7 @@ public:
         SpTaskGraph<SpSpeculativeModel::SP_NO_SPEC> tg;
         tg.computeOn(ce);
 
-        increaseNumberOfKernels(ce.getNbCpuWorkers());
+        increaseNumberOfKernels(int(ce.getNbCpuWorkers()));
 
         if(inOperationToProceed & TbfAlgorithmUtils::TbfP2M){
             P2M(tg, inTree);
