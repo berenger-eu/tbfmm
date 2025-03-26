@@ -20,11 +20,10 @@ private:
 public:
     template <class ContainerClass>
     explicit TbfParticleSorter(const SpaceIndexType& inSpaceSystem, const ContainerClass& inParticlePositions){
-        particleIndexes.resize(inParticlePositions.size());
+        particleIndexes.reserve(inParticlePositions.size());
 
-        for(long int idxPart = 0 ; idxPart < static_cast<long int>(inParticlePositions.size()) ; ++idxPart){
-            particleIndexes[idxPart].first = inSpaceSystem.getIndexFromPosition(inParticlePositions[idxPart]);
-            particleIndexes[idxPart].second = idxPart;
+        for(std::size_t idxPart = 0ul ; idxPart < static_cast<std::size_t>(inParticlePositions.size()) ; ++idxPart){
+            particleIndexes.emplace_back(inSpaceSystem.getIndexFromPosition(inParticlePositions[idxPart]), idxPart);
         }
 
         std::sort(particleIndexes.begin(), particleIndexes.end(),[](auto& p1, auto& p2){

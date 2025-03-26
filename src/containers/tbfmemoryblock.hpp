@@ -84,7 +84,7 @@ public:
     TbfMemoryBlock()
         : allocatedMemorySizeInByte(0), rawMemoryPtr(nullptr), nbItemsInBlocks(nullptr),
         offsetOfBlocksForPtrs(nullptr), objectOwnData(false){
-        for(int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
+        for(long int idxBlock = 0 ; idxBlock < NbBlocks ; ++idxBlock){
             blockRawPtrs[idxBlock] = nullptr;
         }
     }

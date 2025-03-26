@@ -247,10 +247,10 @@ public:
         //                return std::optional<long int>(idxCell);
         //            }
         //        }
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        ContainerHeader header = objectData.template getViewerForBlockConst<0>().getItem();
 
         const long int idxCell = TbfUtils::lower_bound_indexes( 0, header.nbCells, inIndex, [this](const auto& idxCellIterate, const auto& index){
-            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
+            CellHeader cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
             return cellHeader.spaceIndex < index;
         });
 
@@ -258,7 +258,7 @@ public:
             return std::nullopt;
         }
 
-        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        CellHeader cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
         if(cellHeader.spaceIndex != inIndex){
             return std::nullopt;
         }
@@ -276,10 +276,10 @@ public:
         //                return std::optional<long int>(idxCell);
         //            }
         //        }
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        ContainerHeader header = objectData.template getViewerForBlockConst<0>().getItem();
 
         const long int idxCell = TbfUtils::lower_bound_indexes( 0, header.nbCells, inParentIndex, [this, &spaceSystem](const auto& idxCellIterate, const auto& parentIndex){
-            const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
+            CellHeader cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCellIterate);
             return (spaceSystem.getParentIndex(cellHeader.spaceIndex) < parentIndex);
         });
 
@@ -287,7 +287,7 @@ public:
             return std::nullopt;
         }
 
-        const CellHeader& cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
+        CellHeader cellHeader = objectData.template getViewerForBlockConst<1>().getItem(idxCell);
         if(spaceSystem.getParentIndex(cellHeader.spaceIndex) != inParentIndex){
             return std::nullopt;
         }
