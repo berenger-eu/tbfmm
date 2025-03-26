@@ -312,7 +312,7 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
         //                return std::optional<long int>(idxLeaf);
         //            }
         //        }
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        ContainerHeader header = objectData.template getViewerForBlockConst<0>().getItem();
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
 
         const long int idxLeaf = TbfUtils::lower_bound_indexes( 0, header.nbLeaves, inIndex, [&leavesViewer](const auto& idxLeafIterate, const auto& index){
@@ -413,7 +413,7 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
 
     template <class FuncClass>
     void applyToAllLeaves(FuncClass&& inFunc) {
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        ContainerHeader header = objectData.template getViewerForBlockConst<0>().getItem();
 
         auto leavesViewer = objectData.template getViewerForBlock<1>();
 
