@@ -203,7 +203,7 @@ int main(int argc, char **argv)
         std::cout << "Direct execute in " << timerDirect.getElapsed() << "s" << std::endl;
 
         //////////////////////////////////////////////////////////////////////
-
+    {
         std::array<TbfAccuracyChecker<RealType>, Dim + 1> partcilesAccuracy;
         std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
 
@@ -231,9 +231,7 @@ int main(int argc, char **argv)
         {
             std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
         }
-
-        //////////////////////////////////////////////////////////////////////
-
+        
         for (auto &vec : particles)
         {
             delete[] vec;
@@ -242,6 +240,35 @@ int main(int argc, char **argv)
         {
             delete[] vec;
         }
+    }
+        //////////////////////////////////////////////////////////////////////
+
+#pragma region GET_COMPUTED_VALS
+    {
+        std::vector<std::array<RealType, Dim + 1>> partcilesDataDiv2PI;
+        std::vector<std::array<RealType, NbRhsValuesPerParticle>> partcilesRhsData;
+
+        tree.applyToAllLeaves([&particles, &partcilesDataDiv2PI, &particlesRhs, &partcilesRhsData, NbRhsValuesPerParticle](auto &&leafHeader, const long int *,
+                                                                                                                             const std::array<ParticleDataType *, Dim + 1> particleDataPtr,
+                                                                                                                             const std::array<ParticleRhsType *, NbRhsValuesPerParticle> particleRhsPtr)
+                              {
+            for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+                partcilesDataDiv2PI.emplace_back(std::array<RealType, Dim + 1>{});
+                for(int idxValue = 0 ; idxValue < Dim+1 ; ++idxValue){
+                    partcilesDataDiv2PI.back()[idxValue] = particleDataPtr[idxValue][idxPart];
+                }
+                partcilesDataDiv2PI.back().back() *= FMath::FOneDiv2Pi<RealType>();
+                partcilesRhsData.emplace_back(std::array<RealType, NbRhsValuesPerParticle>{});
+                for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
+                    partcilesRhsData.back()[idxValue] = particleRhsPtr[idxValue][idxPart];
+                }
+            } });
+    }
+
+#pragma endregion
+
+
+
     }
 
     //////////////////////////////////////////////////////////////////////
