@@ -60,7 +60,8 @@ int main(int argc, char** argv){
         BoxWidths = loader.getBoxWidths();
         BoxCenter = loader.getBoxCenter();
     }
-    // Otherwise we generate random positions
+    // Otherwise we generate random positions,
+    // and random physical value --- the source power (the charge)
     else {
         BoxWidths = std::array<RealType, Dim>{{1, 1, 1}};
         BoxCenter = std::array<RealType, Dim>{{0.5, 0.5, 0.5}};
@@ -76,7 +77,7 @@ int main(int argc, char** argv){
             particlePositions[idxPart][0] = position[0];
             particlePositions[idxPart][1] = position[1];
             particlePositions[idxPart][2] = position[2];
-            particlePositions[idxPart][3] = 0.1;
+            particlePositions[idxPart][3] = 0.1; // the charge
         }
     }
 
@@ -138,7 +139,7 @@ int main(int argc, char** argv){
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // Here we put the kernel in the heap to make sure not to overflow the stack
-    std::unique_ptr<AlgorithmClass> algorithm(new AlgorithmClass(configuration));    
+    std::unique_ptr<AlgorithmClass> algorithm{std::make_unique<AlgorithmClass>(configuration)};  
     std::cout << "Algorithm name " << algorithm->GetName() << std::endl;
     std::cout << "Number of threads " << algorithm->GetNbThreads() << std::endl;
     std::cout << *algorithm << std::endl;

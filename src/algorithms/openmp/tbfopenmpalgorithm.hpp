@@ -108,7 +108,7 @@ protected:
 
                 auto* kernelsPtr = kernels.data();
 
-#pragma omp task depend(in:ptr_lowerGroupGetMultipolePtr[0]) depend(commute:ptr_upperGroupGetMultipolePtr[0]) default(shared) firstprivate(upperGroup, lowerGroup, kernelsPtr)  priority(priorities.getM2MPriority(idxLevel))
+#pragma omp task depend(in:ptr_lowerGroupGetMultipolePtr[0]) depend(commute:ptr_upperGroupGetMultipolePtr[0]) default(shared) firstprivate(idxLevel, upperGroup, lowerGroup, kernelsPtr)  priority(priorities.getM2MPriority(idxLevel))
                 {
                     kernelWrapper.M2M(idxLevel, kernelsPtr[omp_get_thread_num()], *lowerGroup, *upperGroup);
                 }
