@@ -96,8 +96,8 @@ public:
 
     template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData & /*inLeafIndex*/,
-             const LeafClass &inLeaf, const long int /*particlesIndexes*/[],
-             const ParticlesClassValues & /*inOutParticles*/, ParticlesClassRhs &inOutParticlesRhs,
+             [[maybe_unused]] const LeafClass &inLeaf, const long int /*particlesIndexes*/[],
+             const ParticlesClassValues & /*inOutParticles*/,[[maybe_unused]] ParticlesClassRhs &inOutParticlesRhs,
              const long int inNbParticles) const
     {
         for (int idxPart = 0; idxPart < inNbParticles; ++idxPart)
