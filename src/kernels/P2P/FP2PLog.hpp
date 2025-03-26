@@ -16,7 +16,7 @@
 #ifndef FP2PLog_HPP
 #define FP2PLog_HPP
 #include <complex>
-// #include "kernels/unifkernel/FMath.hpp"
+#include "kernels/unifkernel/FMath.hpp"
 
 #ifdef TBF_USE_INASTEMP
 #include "InastempGlobal.h"
@@ -43,10 +43,10 @@ namespace FP2PLog
         std::complex<FReal> target_point{targetX, targetY};
         std::complex<FReal> source_point{sourceX, sourceY};
         std::complex<FReal> distance{target_point - source_point};
-        std::complex<FReal> ln_distance{distance};
+        FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-        *targetPotential += (ln_distance.real() * sourcePhysicalValue);
-        *sourcePotential += (ln_distance.real() * targetPhysicalValue);
+        *targetPotential += (ln_distance * sourcePhysicalValue);
+        *sourcePotential += (ln_distance * targetPhysicalValue);
     }
 
     template <class FReal>
@@ -57,9 +57,9 @@ namespace FP2PLog
         std::complex<FReal> target_point{targetX, targetY};
         std::complex<FReal> source_point{sourceX, sourceY};
         std::complex<FReal> distance{target_point - source_point};
-        std::complex<FReal> ln_distance{distance};
+        FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-        *targetPotential += (ln_distance.real() * sourcePhysicalValue);
+        *targetPotential += (ln_distance * sourcePhysicalValue);
     }
 
     template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
@@ -88,11 +88,11 @@ namespace FP2PLog
                 std::complex<FReal> source_point{sourcesX[idxSource], sourcesY[idxSource]};
 
                 std::complex<FReal> distance{target_point - source_point};
-                std::complex<FReal> ln_distance{distance};
+                FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-                tpo += ln_distance.real() * sourcesPhysicalValues[idxSource];
+                tpo += ln_distance * sourcesPhysicalValues[idxSource];
 
-                sourcesPotentials[idxSource] += ln_distance.real() * tv;
+                sourcesPotentials[idxSource] += ln_distance * tv;
             }
 
             targetsPotentials[idxTarget] += (tpo);
@@ -181,11 +181,11 @@ namespace FP2PLog
                 std::complex<FReal> source_point{targetsX[idxSource], targetsY[idxSource]};
 
                 std::complex<FReal> distance{target_point - source_point};
-                std::complex<FReal> ln_distance{distance};
+                FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-                targetsPotentials[idxTarget] += ln_distance.real() * targetsPhysicalValues[idxSource];
+                targetsPotentials[idxTarget] += ln_distance * targetsPhysicalValues[idxSource];
 
-                targetsPotentials[idxSource] += ln_distance.real() * targetsPhysicalValues[idxTarget];
+                targetsPotentials[idxSource] += ln_distance * targetsPhysicalValues[idxTarget];
             }
         }
     }
@@ -272,9 +272,9 @@ namespace FP2PLog
 
                 std::complex<FReal> source_point{sourcesX[idxSource], sourcesY[idxSource]};
                 std::complex<FReal> distance{target_point - source_point};
-                std::complex<FReal> ln_distance{distance};
+                FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-                tpo += ln_distance.real() * sourcesPhysicalValues[idxSource];
+                tpo += ln_distance * sourcesPhysicalValues[idxSource];
             }
 
             targetsPotentials[idxTarget] += (tpo);
