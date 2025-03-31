@@ -32,12 +32,12 @@ endif()
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual  -Wall -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wno-error -fopenmp=libomp" CACHE STRING "Additional flags"  )
+    set(TBFMM_EXTRA_FLAG "-march=native -Wdangling-reference -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual  -Wall -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wno-error -fopenmp=libomp" CACHE STRING "Additional flags"  )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 # suppress warnings from getenv
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else()
-    set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual -Wconversion  -Wall -Wno-sign-conversion -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wconversion -Wno-error" CACHE STRING "Additional flags"  )
+    set(TBFMM_EXTRA_FLAG "-march=native -Wdangling-reference -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual -Wconversion  -Wall -Wno-sign-conversion -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wconversion -Wno-error" CACHE STRING "Additional flags"  )
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TBFMM_EXTRA_FLAG}")
 
