@@ -951,7 +951,7 @@ public:
       */
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
     void P2M(const CellSymbolicData& LeafIndex,  const long int /*particlesIndexes*/[],
-             const ParticlesClass& SourceParticles, const long int inNbParticles, LeafClass& LeafCell)
+             const ParticlesClass& SourceParticles, const unsigned long long inNbParticles, LeafClass& LeafCell)
     {
         const RealType i_pow_m[4] = {0, PIDiv2, PI, -PIDiv2};
         // w is the multipole moment
