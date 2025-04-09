@@ -312,15 +312,16 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
         //                return std::optional<long int>(idxLeaf);
         //            }
         //        }
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        // const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        const auto nbLeaves{objectData.template getViewerForBlockConst<0>().getItem().nbLeaves};
         auto leavesViewer = objectData.template getViewerForBlockConst<1>();
 
-        const long int idxLeaf = TbfUtils::lower_bound_indexes( 0, header.nbLeaves, inIndex, [&leavesViewer](const auto& idxLeafIterate, const auto& index){
+        const long int idxLeaf = TbfUtils::lower_bound_indexes( 0, nbLeaves, inIndex, [&leavesViewer](const auto& idxLeafIterate, const auto& index){
             const auto& leafHeader = leavesViewer.getItem(idxLeafIterate);
             return (leafHeader.spaceIndex < index);
         });
 
-        if(idxLeaf == header.nbLeaves){
+        if(idxLeaf == nbLeaves){
             return std::nullopt;
         }
 
@@ -413,11 +414,12 @@ const long int* getParticleIndexes(const long int inIdxLeaf) const {
 
     template <class FuncClass>
     void applyToAllLeaves(FuncClass&& inFunc) {
-        const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        // const ContainerHeader& header = objectData.template getViewerForBlockConst<0>().getItem();
+        const auto nbLeaves{objectData.template getViewerForBlockConst<0>().getItem().nbLeaves};
 
         auto leavesViewer = objectData.template getViewerForBlock<1>();
 
-        for(long int idxLeaf = 0 ; idxLeaf < header.nbLeaves ; ++idxLeaf){
+        for(long int idxLeaf = 0 ; idxLeaf < nbLeaves ; ++idxLeaf){
             auto& leafHeader = leavesViewer.getItem(idxLeaf);
 
             long int* particleIndexes = &objectData.template getViewerForBlock<2>().getItem(leafHeader.offSet);
