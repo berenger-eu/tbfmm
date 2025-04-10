@@ -72,7 +72,7 @@ int main(int argc, char **argv)
         BoxWidths = std::array<RealType, Dim>{{10, 10}};
         BoxCenter = std::array<RealType, Dim>{{0.1, 0.1}};
 
-        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 2);
+        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 3);
 
         TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
 
@@ -90,11 +90,14 @@ int main(int argc, char **argv)
         particlePositions[0][2] = 1 * FMath::FTwoPi<RealType>();
         particlePositions[1][1] = 0;
         particlePositions[1][0] = std::exp(1);
-        particlePositions[1][2] = 2 * FMath::FTwoPi<RealType>();
+        particlePositions[1][2] = 1 * FMath::FTwoPi<RealType>();
+        particlePositions[2][1] = std::exp(1);
+        particlePositions[2][0] = 1.5*std::exp(1);
+        particlePositions[2][2] = 1 * FMath::FTwoPi<RealType>();
     }
 
     // The height of the tree
-    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 1);
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 2);
     // The spacial configuration of our system
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
