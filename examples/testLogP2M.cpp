@@ -38,7 +38,7 @@ int main(int argc, char **argv)
     // The data type used for the positions and in the computation
     // (could have been different but it is not the case here)
     using RealType = double;
-    // In 3D
+    // In 2D
     const int Dim = 2;
 
     /////////////////////////////////////////////////////////////////////////////////////////
@@ -88,16 +88,16 @@ int main(int argc, char **argv)
         particlePositions[0][0] = 0;
         particlePositions[0][1] = 0;
         particlePositions[0][2] = 1 * FMath::FTwoPi<RealType>();
-        particlePositions[1][1] = 0;
         particlePositions[1][0] = std::exp(1);
+        particlePositions[1][1] = 0;
         particlePositions[1][2] = 1 * FMath::FTwoPi<RealType>();
+        particlePositions[2][0] = std::exp(1);
         particlePositions[2][1] = std::exp(1);
-        particlePositions[2][0] = 1.5*std::exp(1);
         particlePositions[2][2] = 1 * FMath::FTwoPi<RealType>();
     }
 
     // The height of the tree
-    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 2);
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 3);
     // The spacial configuration of our system
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     /////////////////////////////////////////////////////////////////////////////////////////
 
     // Fix our templates
-    const unsigned int P = 12;
+    const unsigned int P = 5;
     using ParticleDataType = RealType;
     constexpr long int NbDataValuesPerParticle = Dim + 1;
     using ParticleRhsType = RealType;
@@ -149,7 +149,7 @@ int main(int argc, char **argv)
     TbfTimer timerBuildTree;
 
     // Build the tree
-    TreeClass tree(configuration, TbfUtils::make_const(particlePositions));
+    TreeClass tree(configuration, TbfUtils::make_const(particlePositions), 3);
 
     timerBuildTree.stop();
     std::cout << "Build the tree in " << timerBuildTree.getElapsed() << "s" << std::endl;
@@ -168,135 +168,10 @@ int main(int argc, char **argv)
         TbfTimer timerExecute;
 
         // Execute a full FMM (near + far fields)
-        algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2P);
+        algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2M);
 
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
-    }
-
-    // /////////////////////////////////////////////////////////////////////////////////////////
-
-    // Check the results against direct computation
-    if (!TbfParams::ExistParameter(argc, argv, {"-nc", "--no-check"}))
-    {
-        std::array<RealType *, 3> particles;
-        for (auto &vec : particles)
-        {
-            vec = new RealType[nbParticles]();
-        }
-        std::array<RealType *, NbRhsValuesPerParticle> particlesRhs;
-        for (auto &vec : particlesRhs)
-        {
-            vec = new RealType[nbParticles]();
-        }
-
-        for (long int idxPart = 0; idxPart < nbParticles; ++idxPart)
-        {
-            particles[0][idxPart] = particlePositions[idxPart][0];
-            particles[1][idxPart] = particlePositions[idxPart][1];
-            particles[2][idxPart] = particlePositions[idxPart][2];
-        }
-
-        TbfTimer timerDirect;
-
-        FP2PLog::template GenericInner<RealType>(particles, particlesRhs, nbParticles);
-
-        timerDirect.stop();
-
-        std::cout << "Direct execute in " << timerDirect.getElapsed() << "s" << std::endl;
-
-        //////////////////////////////////////////////////////////////////////
-    {
-        std::array<TbfAccuracyChecker<RealType>, Dim + 1> partcilesAccuracy;
-        std::array<TbfAccuracyChecker<RealType>, NbRhsValuesPerParticle> partcilesRhsAccuracy;
-
-        tree.applyToAllLeaves([&particles, &partcilesAccuracy, &particlesRhs, &partcilesRhsAccuracy, NbRhsValuesPerParticle](auto &&leafHeader, const long int *particleIndexes,
-                                                                                                                             const std::array<ParticleDataType *, Dim + 1> particleDataPtr,
-                                                                                                                             const std::array<ParticleRhsType *, NbRhsValuesPerParticle> particleRhsPtr)
-                              {
-            for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                for(int idxValue = 0 ; idxValue < Dim+1 ; ++idxValue){
-                   partcilesAccuracy[idxValue].addValues(particles[idxValue][particleIndexes[idxPart]],
-                                                        particleDataPtr[idxValue][idxPart]);
-                }
-                for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                   partcilesRhsAccuracy[idxValue].addValues(particlesRhs[idxValue][particleIndexes[idxPart]],
-                                                        particleRhsPtr[idxValue][idxPart]);
-                }
-            } });
-
-        std::cout << "Relative differences:" << std::endl;
-        for (int idxValue = 0; idxValue < Dim + 1; ++idxValue)
-        {
-            std::cout << " - Data " << idxValue << " = " << partcilesAccuracy[idxValue] << std::endl;
-        }
-        for (int idxValue = 0; idxValue < NbRhsValuesPerParticle; ++idxValue)
-        {
-            std::cout << " - Rhs " << idxValue << " = " << partcilesRhsAccuracy[idxValue] << std::endl;
-        }
-        
-        for (auto &vec : particles)
-        {
-            delete[] vec;
-        }
-        for (auto &vec : particlesRhs)
-        {
-            delete[] vec;
-        }
-    }
-        //////////////////////////////////////////////////////////////////////
-
-#pragma region GET_COMPUTED_VALS
-    {
-        std::vector<std::array<RealType, Dim + 1>> partcilesDataDiv2PI;
-        std::vector<std::array<RealType, NbRhsValuesPerParticle>> partcilesRhsData;
-
-        tree.applyToAllLeaves([&particles, &partcilesDataDiv2PI, &particlesRhs, &partcilesRhsData, NbRhsValuesPerParticle](auto &&leafHeader, const long int *,
-                                                                                                                             const std::array<ParticleDataType *, Dim + 1> particleDataPtr,
-                                                                                                                             const std::array<ParticleRhsType *, NbRhsValuesPerParticle> particleRhsPtr)
-                              {
-            for(int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                partcilesDataDiv2PI.emplace_back(std::array<RealType, Dim + 1>{});
-                for(int idxValue = 0 ; idxValue < Dim+1 ; ++idxValue){
-                    partcilesDataDiv2PI.back()[idxValue] = particleDataPtr[idxValue][idxPart];
-                }
-                partcilesDataDiv2PI.back().back() *= FMath::FOneDiv2Pi<RealType>();
-                partcilesRhsData.emplace_back(std::array<RealType, NbRhsValuesPerParticle>{});
-                for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
-                    partcilesRhsData.back()[idxValue] = particleRhsPtr[idxValue][idxPart];
-                }
-            } });
-    }
-
-#pragma endregion
-
-
-
-    }
-
-    //////////////////////////////////////////////////////////////////////
-
-    const long int NbLoops = TbfParams::GetValue<long int>(argc, argv, {"-nbl", "--nb-loops"}, 4);
-
-    for (long int idxLoop = 0; idxLoop < NbLoops; ++idxLoop)
-    {
-        std::cout << " -- Loop " << idxLoop << std::endl;
-
-        TbfTimer timerRebuildTree;
-
-        tree.rebuild();
-
-        timerRebuildTree.stop();
-        std::cout << "Re-Build the tree in " << timerRebuildTree.getElapsed() << std::endl;
-
-        {
-            TbfTimer timerExecute;
-
-            algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2P);
-
-            timerExecute.stop();
-            std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
-        }
     }
 
     return 0;

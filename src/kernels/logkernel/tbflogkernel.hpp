@@ -6,7 +6,7 @@
 
 #include "utils/tbfperiodicshifter.hpp"
 
-template <class RealType_T, class SpaceIndexType_T = TbfDefaultSpaceIndexType2D<RealType_T>>
+template <class RealType_T, int P, class SpaceIndexType_T = TbfDefaultSpaceIndexType2D<RealType_T>>
 class TbfLogKernel
 {
 public:
@@ -21,8 +21,9 @@ private:
 
     //< Size of the data array computed using a suite relation
     // static const int SizeArray = ((P + 2) * (P + 1)) / 2;
+    static const int SizeArray = ((P + 2) * (P + 1)) / 2;
     // //< To have P*2 where needed
-    // static const int P2 = P * 2;
+    static const int P2 = P * 2;
 
     ///////////////////////////////////////////////////////
     // Object attributes
@@ -35,6 +36,41 @@ private:
     const RealType widthAtLeafLevel;         //< width of box at leaf level
     const RealType widthAtLeafLevelDiv2;     //< width of box at leaf leve div 2
     const std::array<RealType, 2> boxCorner; //< position of the box corner
+
+    RealType factorials[P2 + 1]; //< This contains the factorial until 2*P+1
+
+    ///////////////////////////////////////////////////////
+    // Precomputation
+    ///////////////////////////////////////////////////////
+
+    /** Compute the factorial from 0 to P*2
+     * Then the data is accessible in factorials array:
+     * factorials[n] = n! with n <= 2*P
+     */
+    void precomputeFactorials()
+    {
+        factorials[0] = 1;
+        RealType fidx = 1;
+        for (std::size_t idx = 1; idx <= P2; ++idx, ++fidx)
+        {
+            factorials[idx] = fidx * factorials[idx - 1];
+        }
+    }
+
+    /** Return the position of a leaf from its tree coordinate
+     * This is used only for the leaf
+     */
+    std::array<RealType, 2> getLeafCenter(const std::array<long int, 2> &coordinate) const
+    {
+        return std::array<RealType, 2>{boxCorner[0] + (RealType(coordinate[0]) + RealType(.5)) * widthAtLeafLevel,
+                                       boxCorner[1] + (RealType(coordinate[1]) + RealType(.5)) * widthAtLeafLevel};
+    }
+
+    std::array<RealType, 2> getLeafCenter(const typename SpaceIndexType::IndexType &inIndex) const
+    {
+        return getLeafCenter(spaceIndexSystem.getBoxPosFromIndex(inIndex));
+    }
+
 public:
     explicit TbfLogKernel(const SpacialConfiguration &inConfiguration) : spaceIndexSystem(inConfiguration),
                                                                          boxWidth(inConfiguration.getBoxWidths()[0]),
@@ -52,10 +88,40 @@ public:
     TbfLogKernel &operator=(TbfLogKernel &&) = default;
 
     template <class CellSymbolicData, class ParticlesClass, class LeafClass>
-    void P2M(const CellSymbolicData & /*inLeafIndex*/, const long int /*particlesIndexes*/[],
-             const ParticlesClass & /*inParticles*/, const long int inNbParticles, LeafClass &inOutLeaf) const
+    void P2M(const CellSymbolicData &LeafIndex, const long int /*particlesIndexes*/[],
+             const ParticlesClass &SourceParticles, const unsigned long long inNbParticles, LeafClass &LeafCell) const
     {
-        inOutLeaf[0] += inNbParticles;
+        // w is the multipole moment
+        std::complex<RealType> *const w = &LeafCell[0];
+
+        // Copying the position is faster than using cell position
+        const std::array<RealType, SpaceIndexType_T::Dim> cellPosition = getLeafCenter(LeafIndex.boxCoord);
+
+        const RealType *const physicalValues = SourceParticles[1]; // pointer to contiguously allocated physical parameters (other than coordinates)
+        const RealType *const positionsX = SourceParticles[0];     // x-coordinate
+        const RealType *const positionsY = SourceParticles[1];     // y-coordinate
+        for (unsigned long long idxPart = 0; idxPart < inNbParticles; ++idxPart)
+        {
+            // const std::array<RealType, SpaceIndexType_T::Dim> relativePosition{
+            //     {positionsX[idxPart] - cellPosition[0],
+            //      positionsY[idxPart] - cellPosition[1]}};
+            // The physical value (charge)
+            const RealType q = physicalValues[idxPart];
+            int index_l_m = 0; // To construct the index of (l,m) continously
+            std::complex<RealType> diff{1.0};
+            std::complex<RealType> relativePosition{positionsX[idxPart] - cellPosition[0],
+                                            positionsY[idxPart] - cellPosition[1]};
+            for (int l = 0; l <= P; ++l)
+            {
+                const RealType potential = q / factorials[l];
+                for (int m = 0; m <= l; ++m, ++index_l_m)
+                {
+                    w[index_l_m].real(w[index_l_m].real() + potential * diff.real());
+                    w[index_l_m].imag(w[index_l_m].imag() + potential * diff.imag());
+                }
+                diff *= relativePosition;
+            }
+        }
     }
 
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
@@ -97,7 +163,7 @@ public:
     template <class CellSymbolicData, class LeafClass, class ParticlesClassValues, class ParticlesClassRhs>
     void L2P(const CellSymbolicData & /*inLeafIndex*/,
              [[maybe_unused]] const LeafClass &inLeaf, const long int /*particlesIndexes*/[],
-             const ParticlesClassValues & /*inOutParticles*/,[[maybe_unused]] ParticlesClassRhs &inOutParticlesRhs,
+             const ParticlesClassValues & /*inOutParticles*/, [[maybe_unused]] ParticlesClassRhs &inOutParticlesRhs,
              const long int inNbParticles) const
     {
         for (int idxPart = 0; idxPart < inNbParticles; ++idxPart)
