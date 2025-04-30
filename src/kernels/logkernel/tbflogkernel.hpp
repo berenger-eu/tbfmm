@@ -3,6 +3,8 @@
 
 #include "tbfglobal.hpp"
 #include "kernels/P2P/FP2PLog.hpp"
+#include "FSmartPointer.hpp"
+#include "FMemUtils.hpp"
 
 #include "utils/tbfperiodicshifter.hpp"
 
@@ -21,7 +23,7 @@ private:
 
     //< Size of the data array computed using a suite relation
     // static const int SizeArray = ((P + 2) * (P + 1)) / 2;
-    static const int SizeArray = ((P + 2) * (P + 1)) / 2;
+    static const int SizeArray = P + 1;
     // //< To have P*2 where needed
     static const int P2 = P * 2;
 
@@ -71,6 +73,14 @@ private:
         return getLeafCenter(spaceIndexSystem.getBoxPosFromIndex(inIndex));
     }
 
+    std::array<RealType, 2> getBoxCenter(const std::array<long int, 2> &coord, long int level) const
+    {
+        RealType widthAtLevel = boxWidth * std::pow(RealType(0.5), RealType(level));
+        return {
+            boxCorner[0] + (RealType(coord[0]) + RealType(.5)) * widthAtLevel,
+            boxCorner[1] + (RealType(coord[1]) + RealType(.5)) * widthAtLevel};
+    }
+
 public:
     explicit TbfLogKernel(const SpacialConfiguration &inConfiguration) : spaceIndexSystem(inConfiguration),
                                                                          boxWidth(inConfiguration.getBoxWidths()[0]),
@@ -110,7 +120,7 @@ public:
             int index_l_m = 0; // To construct the index of (l,m) continously
             std::complex<RealType> diff{1.0};
             std::complex<RealType> relativePosition{positionsX[idxPart] - cellPosition[0],
-                                            positionsY[idxPart] - cellPosition[1]};
+                                                    positionsY[idxPart] - cellPosition[1]};
             for (int l = 0; l <= P; ++l)
             {
                 const RealType potential = q / factorials[l];
@@ -125,14 +135,54 @@ public:
     }
 
     template <class CellSymbolicData, class CellClassContainer, class CellClass>
-    void M2M(const CellSymbolicData & /*inCellIndex*/,
-             const long int /*inLevel*/, const CellClassContainer &inLowerCell, CellClass &inOutUpperCell,
-             const long int /*childrenPos*/[], const long int inNbChildren) const
+    void M2M(const CellSymbolicData &inParentIndex,
+             const long int inLevel, const CellClassContainer &inLowerCell, CellClass &inOutUpperCell,
+             const long int childrenPos[], const long int inNbChildren) const
     {
+        // Get the translation coef for this level (same for all child)
+        // const RealType *const coef = M2MTranslationCoef[inLevel];
+        // A buffer to copy the source w allocated once
+        std::complex<RealType> source_w[SizeArray];
+        const std::array<RealType, SpaceIndexType_T::Dim> parent_center = getBoxCenter(inParentIndex.boxCoord, inLevel);
+        // For all children
         for (long int idxChild = 0; idxChild < inNbChildren; ++idxChild)
         {
-            const auto &child = inLowerCell[idxChild].get();
-            inOutUpperCell[0] += child[0];
+            const std::array<RealType, SpaceIndexType_T::Dim> child_center = getBoxCenter(spaceIndexSystem.getBoxPosFromIndex(childrenPos[idxChild]), inLevel + 1);
+            std::complex<RealType> diff{child_center[0] - parent_center[0],
+                                        child_center[1] - parent_center[1]};
+            FMemUtils::copyall(source_w, inLowerCell[idxChild].get(), SizeArray);
+
+            std::complex<RealType> target_w[SizeArray];
+            // int index_lm = 0;
+            // for (int l = 0; l <= P; ++l)
+            // {
+            //     std::complex<RealType> coef{1.0};
+            //     RealType w_lm_real = 0.0;
+            //     RealType w_lm_imag = 0.0;
+            //     for (int s = l; s >= 0; --s, ++index_lm)
+            //     {
+            //         w_lm_real += coef.real() / factorials[s] * source_w[s].real();
+            //         w_lm_imag += coef.imag() / factorials[s] * source_w[s].imag();
+            //         coef *= diff;
+            //     }
+            //     target_w[index_lm] = std::complex<RealType>(w_lm_real, w_lm_imag);
+            // }
+            for (int k = 0; k <= P; ++k)
+            {
+                std::complex<RealType> acc(0.0, 0.0);
+                std::complex<RealType> diff_power(1.0, 0.0); // (z_c - z_cp)^0
+
+                for (int s = k; s >= 0; --s)
+                {
+                    acc += diff_power * source_w[s] / factorials[k - s];
+                    diff_power *= diff; // increment power (no std::pow)
+                }
+
+                target_w[k] = acc;
+            }
+
+            // Sum the result
+            FMemUtils::addall(inOutUpperCell, target_w, SizeArray);
         }
     }
 
@@ -245,53 +295,6 @@ public:
     {
         FP2PLog::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
     }
-
-#ifdef __NVCC__
-    static constexpr bool CpuP2P = true;
-    static constexpr bool CudaP2P = true;
-
-    struct CudaKernelData
-    {
-        bool notUsed;
-    };
-
-    void initCudaKernelData(const cudaStream_t & /*inStream*/)
-    {
-    }
-
-    auto getCudaKernelData()
-    {
-        return CudaKernelData();
-    }
-
-    void releaseCudaKernelData(const cudaStream_t & /*inStream*/)
-    {
-    }
-
-    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
-    __device__ static void P2PTsmCuda(const CudaKernelData & /*cudaKernelData*/,
-                                      const LeafSymbolicDataSource &inNeighborIndex, const long int /*neighborsIndexes*/[],
-                                      const ParticlesClassValuesSource &inNeighbors,
-                                      const long int inNbParticlesNeighbors,
-                                      const LeafSymbolicDataTarget &inTargetIndex, const long int /*targetIndexes*/[],
-                                      const ParticlesClassValuesTarget &inTargets,
-                                      ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles,
-                                      [[maybe_unused]] const long arrayIndexSrc) /*const*/
-    {
-        static_assert(SpaceIndexType::IsPeriodic == false);
-        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
-                                                         (inTargets), (inTargetsRhs), inNbOutParticles);
-    }
-
-    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
-    __device__ static void P2PInnerCuda(const CudaKernelData & /*cudaKernelData*/,
-                                        const LeafSymbolicData & /*inIndex*/, const long int /*indexes*/[],
-                                        const ParticlesClassValues &inTargets,
-                                        ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles) /*const*/
-    {
-        TbfP2PCuda::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
-    }
-#endif
 };
 
 #endif

@@ -69,35 +69,44 @@ int main(int argc, char **argv)
     // Otherwise we generate random positions
     else
     {
-        BoxWidths = std::array<RealType, Dim>{{10, 10}};
-        BoxCenter = std::array<RealType, Dim>{{0.1, 0.1}};
+        // BoxWidths = std::array<RealType, Dim>{{10, 10}};
+        // BoxCenter = std::array<RealType, Dim>{{0.1, 0.1}};
 
-        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 3);
+        // nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 3);
+
+        // TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
+
+        // particlePositions.resize(nbParticles);
+        // particlePositions[0][0] = 0;
+        // particlePositions[0][1] = 0;
+        // particlePositions[0][2] = 1 * FMath::FTwoPi<RealType>();
+        // particlePositions[1][0] = std::exp(1);
+        // particlePositions[1][1] = 0;
+        // particlePositions[1][2] = 1 * FMath::FTwoPi<RealType>();
+        // particlePositions[2][0] = std::exp(1);
+        // particlePositions[2][1] = std::exp(1);
+        // particlePositions[2][2] = 1 * FMath::FTwoPi<RealType>();
+        BoxWidths = std::array<RealType, Dim>{{1, 1}};
+        BoxCenter = std::array<RealType, Dim>{{0.5, 0.5}};
+
+        nbParticles = TbfParams::GetValue<long int>(argc, argv, {"-nb", "--nb-particles"}, 1000);
 
         TbfRandom<RealType, Dim> randomGenerator(BoxWidths);
 
         particlePositions.resize(nbParticles);
 
-        // for (long int idxPart = 0; idxPart < nbParticles; ++idxPart)
-        // {
-        //     auto position = randomGenerator.getNewItem();
-        //     particlePositions[idxPart][0] = position[0];
-        //     particlePositions[idxPart][1] = position[1];
-        //     particlePositions[idxPart][2] = 0.1;
-        // }
-        particlePositions[0][0] = 0;
-        particlePositions[0][1] = 0;
-        particlePositions[0][2] = 1 * FMath::FTwoPi<RealType>();
-        particlePositions[1][0] = std::exp(1);
-        particlePositions[1][1] = 0;
-        particlePositions[1][2] = 1 * FMath::FTwoPi<RealType>();
-        particlePositions[2][0] = std::exp(1);
-        particlePositions[2][1] = std::exp(1);
-        particlePositions[2][2] = 1 * FMath::FTwoPi<RealType>();
+        for (long int idxPart = 0; idxPart < nbParticles; ++idxPart)
+        {
+            auto position = randomGenerator.getNewItem();
+            particlePositions[idxPart][0] = position[0];
+            particlePositions[idxPart][1] = position[1];
+            particlePositions[idxPart][2] = position[2];
+            particlePositions[idxPart][3] = 0.1; // the charge
+        }
     }
 
     // The height of the tree
-    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 3);
+    const long int TreeHeight = TbfParams::GetValue<long int>(argc, argv, {"-th", "--tree-height"}, 4);
     // The spacial configuration of our system
     const TbfSpacialConfiguration<RealType, Dim> configuration(TreeHeight, BoxWidths, BoxCenter);
 
@@ -168,8 +177,8 @@ int main(int argc, char **argv)
         TbfTimer timerExecute;
 
         // Execute a full FMM (near + far fields)
-        algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2M);
-
+        // algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfP2M);
+        algorithm->execute(tree, TbfAlgorithmUtils::TbfOperations::TbfM2M);
         timerExecute.stop();
         std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
     }
