@@ -45,8 +45,8 @@ namespace FP2PLog
         std::complex<FReal> distance{target_point - source_point};
         FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-        *targetPotential += (ln_distance * sourcePhysicalValue);
-        *sourcePotential += (ln_distance * targetPhysicalValue);
+        *targetPotential -= (ln_distance * sourcePhysicalValue);
+        *sourcePotential -= (ln_distance * targetPhysicalValue);
     }
 
     template <class FReal>
@@ -59,7 +59,7 @@ namespace FP2PLog
         std::complex<FReal> distance{target_point - source_point};
         FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-        *targetPotential += (ln_distance * sourcePhysicalValue);
+        *targetPotential -= (ln_distance * sourcePhysicalValue);
     }
 
     template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
@@ -92,10 +92,10 @@ namespace FP2PLog
 
                 tpo += ln_distance * sourcesPhysicalValues[idxSource];
 
-                sourcesPotentials[idxSource] += ln_distance * tv;
+                sourcesPotentials[idxSource] -= ln_distance * tv;
             }
 
-            targetsPotentials[idxTarget] += (tpo);
+            targetsPotentials[idxTarget] -= (tpo);
         }
     }
 
@@ -183,9 +183,9 @@ namespace FP2PLog
                 std::complex<FReal> distance{target_point - source_point};
                 FReal ln_distance{std::log(distance).real() * FMath::FOneDiv2Pi<FReal>()};
 
-                targetsPotentials[idxTarget] += ln_distance * targetsPhysicalValues[idxSource];
+                targetsPotentials[idxTarget] -= ln_distance * targetsPhysicalValues[idxSource];
 
-                targetsPotentials[idxSource] += ln_distance * targetsPhysicalValues[idxTarget];
+                targetsPotentials[idxSource] -= ln_distance * targetsPhysicalValues[idxTarget];
             }
         }
     }
@@ -279,7 +279,7 @@ namespace FP2PLog
                 tpo += ln_distance * sourcesPhysicalValues[idxSource];
             }
 
-            targetsPotentials[idxTarget] += (tpo);
+            targetsPotentials[idxTarget] -= (tpo);
         }
     }
 
