@@ -2,8 +2,8 @@
 #define TBFTESTKERNEL_HPP
 #include "tbfglobal.hpp"
 #include "kernels/P2P/FP2PLog.hpp"
-#include "FSmartPointer.hpp"
-#include "FMemUtils.hpp"
+#include "kernels/rotationkernel/FSmartPointer.hpp"
+#include "kernels/rotationkernel/FMemUtils.hpp"
 
 #include "utils/tbfperiodicshifter.hpp"
 
