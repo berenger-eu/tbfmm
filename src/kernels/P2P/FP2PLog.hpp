@@ -19,6 +19,7 @@
 #include "kernels/unifkernel/FMath.hpp"
 
 #ifdef TBF_USE_INASTEMP
+static_cast("LogKernel is not adapted for Inastemp");
 #include "InastempGlobal.h"
 #endif
 
