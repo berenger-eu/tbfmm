@@ -150,7 +150,6 @@ public:
 
             auto child_center = getBoxCenter(child_coord, inLevel + 1);
 
-
             std::complex<RealType> diff{child_center[0] - parent_center[0],
                                         child_center[1] - parent_center[1]};
             FMemUtils::copyall(source_w, inLowerCell[idxChild].get(), SizeArray);
@@ -405,6 +404,54 @@ public:
     {
         FP2PLog::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
     }
+
+#ifdef __NVCC__
+    static_cast("LogKernel is not adapted for CUDA");
+    static constexpr bool CpuP2P = true;
+    static constexpr bool CudaP2P = true;
+
+    struct CudaKernelData
+    {
+        bool notUsed;
+    };
+
+    void initCudaKernelData(const cudaStream_t & /*inStream*/)
+    {
+    }
+
+    auto getCudaKernelData()
+    {
+        return CudaKernelData();
+    }
+
+    void releaseCudaKernelData(const cudaStream_t & /*inStream*/)
+    {
+    }
+
+    template <class LeafSymbolicDataSource, class ParticlesClassValuesSource, class LeafSymbolicDataTarget, class ParticlesClassValuesTarget, class ParticlesClassRhs>
+    __device__ static void P2PTsmCuda(const CudaKernelData & /*cudaKernelData*/,
+                                      const LeafSymbolicDataSource &inNeighborIndex, const long int /*neighborsIndexes*/[],
+                                      const ParticlesClassValuesSource &inNeighbors,
+                                      const long int inNbParticlesNeighbors,
+                                      const LeafSymbolicDataTarget &inTargetIndex, const long int /*targetIndexes*/[],
+                                      const ParticlesClassValuesTarget &inTargets,
+                                      ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles,
+                                      [[maybe_unused]] const long arrayIndexSrc) /*const*/
+    {
+        static_assert(SpaceIndexType::IsPeriodic == false);
+        TbfP2PCuda::template GenericFullRemote<RealType>((inNeighbors), inNbParticlesNeighbors,
+                                                         (inTargets), (inTargetsRhs), inNbOutParticles);
+    }
+
+    template <class LeafSymbolicData, class ParticlesClassValues, class ParticlesClassRhs>
+    __device__ static void P2PInnerCuda(const CudaKernelData & /*cudaKernelData*/,
+                                        const LeafSymbolicData & /*inIndex*/, const long int /*indexes*/[],
+                                        const ParticlesClassValues &inTargets,
+                                        ParticlesClassRhs &inTargetsRhs, const long int inNbOutParticles) /*const*/
+    {
+        TbfP2PCuda::template GenericInner<RealType>((inTargets), (inTargetsRhs), inNbOutParticles);
+    }
+#endif
 };
 
 #endif
