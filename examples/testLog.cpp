@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <filesystem>
+#include <map>
 
 template <typename RealType, int Dim>
 void generateParticles(std::vector<std::array<RealType, Dim + 1>> &particlePositions,
@@ -196,7 +197,7 @@ void runWithP(const long int TreeHeight, const long int nbParticles, const std::
     }
 
     std::map<long int, int> hist;
-    tree.applyToAllLeaves([&hist](auto &&leafHeader, const long int *particleIndexes,
+    tree.applyToAllLeaves([&hist](auto &&leafHeader, const long int *,
                                   const std::array<ParticleDataType *, Dim + 1> /*particleDataPtr*/,
                                   const std::array<ParticleRhsType *, NbRhsValuesPerParticle> /*particleRhsPtr*/)
                           {
@@ -287,7 +288,7 @@ void runWithP(const long int TreeHeight, const long int nbParticles, const std::
         std::cout << TreeHeight << "," << P << "," << distributionType << ","
                   << partcilesRhsAccuracy[0].getRelativeInfNorm() << ","
                   << timerExecute.getElapsed() << ","
-                  <<
+                  << timerDirect.getElapsed() << "," << nbParticles << std::endl;
     }
     else
     {
