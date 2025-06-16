@@ -101,7 +101,7 @@ namespace FP2PLog
     }
 
 #ifdef TBF_USE_INASTEMP
-    static_cast("LogKernel is not adapted for Inastemp");
+    static_assert(false, "LogKernel is not adapted for CUDA");
 
     template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
     static void FullMutual(const ParticlesClassValues &inNeighbors, ParticlesClassRhs &inNeighborsRhs, const long int nbParticlesSources,
@@ -194,7 +194,7 @@ namespace FP2PLog
     }
 
 #ifdef TBF_USE_INASTEMP
-    static_cast("LogKernel is not adapted for Inastemp");
+    static_assert(false, "LogKernel is not adapted for CUDA");
     template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
     static void GenericInner(const ParticlesClassValues &inTargets,
                              ParticlesClassRhs &inTargetsRhs, const long int nbParticlesTargets)
@@ -287,7 +287,7 @@ namespace FP2PLog
     }
 
 #ifdef TBF_USE_INASTEMP
-    static_cast("LogKernel is not adapted for Inastemp");
+    static_assert(false, "LogKernel is not adapted for CUDA");
     template <class FReal, class ParticlesClassValues, class ParticlesClassRhs>
     static void GenericFullRemote(const ParticlesClassValues &inNeighbors, const long int nbParticlesSources,
                                   const ParticlesClassValues &inTargets, ParticlesClassRhs &inTargetsRhs, const long int nbParticlesTargets)

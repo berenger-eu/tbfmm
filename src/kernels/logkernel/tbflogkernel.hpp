@@ -406,7 +406,7 @@ public:
     }
 
 #ifdef __NVCC__
-    static_cast("LogKernel is not adapted for CUDA");
+    static_assert(false, "LogKernel is not adapted for CUDA");
     static constexpr bool CpuP2P = true;
     static constexpr bool CudaP2P = true;
 
