@@ -260,7 +260,7 @@ public:
     __device__ __host__
     #endif
         auto getViewerForBlock(){
-        static_assert(IdxBlock < NbBlocks, "Index of block out of range");
+        static_assert(IdxBlock < NbBlocks, "Index of block is out of range");
 
         using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
         if(nbItemsInBlocks){
