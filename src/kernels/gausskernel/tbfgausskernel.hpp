@@ -394,6 +394,90 @@ public:
         }
     }
 
+    /**
+     * @brief Multipole to Multipole.
+     *
+     * Translate Gaussian multipole expansion coefficients
+     * from child cells to the parent cell.
+     */
+    template <
+        class CellSymbolicData,
+        class CellClassContainer,
+        class CellClass>
+    void M2M(
+        const CellSymbolicData& inParentIndex,
+        const long int inLevel,
+        const CellClassContainer& inLowerCell,
+        CellClass& inOutUpperCell,
+        const long int childrenPos[],
+        const long int inNbChildren) const
+    {
+        const std::array<RealType, SpaceIndexType::Dim> parentCenter =
+            getBoxCenter(inParentIndex.boxCoord, inLevel);
+
+        for (long int idxChild = 0; idxChild < inNbChildren; ++idxChild)
+        {
+            const auto childIndex =
+                spaceIndexSystem.getChildIndexFromParent(
+                    inParentIndex.spaceIndex,
+                    childrenPos[idxChild]);
+
+            const std::array<long int, SpaceIndexType::Dim> childCoord =
+                spaceIndexSystem.getBoxPosFromIndex(childIndex);
+
+            const std::array<RealType, SpaceIndexType::Dim> childCenter =
+                getBoxCenter(childCoord, inLevel + 1);
+
+            const RealType dx =
+                (childCenter[0] - parentCenter[0]) * invSqrtDelta;
+
+            const RealType dy =
+                (childCenter[1] - parentCenter[1]) * invSqrtDelta;
+
+            RealType powersX[OrderSize];
+            RealType powersY[OrderSize];
+
+            powersX[0] = RealType(1);
+            powersY[0] = RealType(1);
+
+            for (int k = 1; k < OrderSize; ++k)
+            {
+                powersX[k] = powersX[k - 1] * dx;
+                powersY[k] = powersY[k - 1] * dy;
+            }
+
+            const auto& childMultipole = inLowerCell[idxChild];
+
+            for (int ax = 0; ax < OrderSize; ++ax)
+            {
+                for (int ay = 0; ay < OrderSize; ++ay)
+                {
+                    RealType accumulator = RealType(0);
+
+                    for (int bx = 0; bx <= ax; ++bx)
+                    {
+                        for (int by = 0; by <= ay; ++by)
+                        {
+                            const int childIdx =
+                                expansionIndex(bx, by);
+
+                            accumulator +=
+                                GetPtr(childMultipole)[childIdx]
+                                * powersX[ax - bx]
+                                * powersY[ay - by]
+                                / (factorials[ax - bx]
+                                   * factorials[ay - by]);
+                        }
+                    }
+
+                    const int parentIdx =
+                        expansionIndex(ax, ay);
+
+                    GetPtr(inOutUpperCell)[parentIdx] += accumulator;
+                }
+            }
+        }
+    }
 };
 
 #endif // TBFGAUSSKERNEL_HPP
