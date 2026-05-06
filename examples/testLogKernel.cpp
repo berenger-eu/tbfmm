@@ -39,7 +39,79 @@ void generateParticles(std::vector<std::array<RealType, Dim + 1>> &particlePosit
             particlePositions[i][2] = 1.0; // заряд
         }
     }
+    else if (distributionType == "well_grid")
+    {
+        const int nSide = static_cast<int>(std::ceil(std::sqrt(nbParticles)));
+        const RealType step = (nSide > 1) ? 1.0 / (nSide - 1) : 0.0;
+        
+        long int idx = 0;
+        
+        // Вычисляем индекс центра: всегда будет ровно 0.5 при нечётном nSide
+        const int centerIdx = nSide / 2;  // при nSide=9 → 4, при nSide=10 → 5
+        
+        for (int i = 0; i < nSide && idx < nbParticles; ++i)
+        {
+            for (int j = 0; j < nSide && idx < nbParticles; ++j)
+            {
+                RealType x = (nSide > 1) ? i * step : 0.5;
+                RealType y = (nSide > 1) ? j * step : 0.5;
+                
+                particlePositions[idx][0] = x;
+                particlePositions[idx][1] = y;
+                
+                // Скважина строго в центре (0.5, 0.5)
+                if (i == centerIdx && j == centerIdx)
+                {
+                    particlePositions[idx][2] = -1.0;  // well
+                }
+                else
+                {
+                    particlePositions[idx][2] = 0.0;   // observer
+                }
+                ++idx;
+            }
+        }
+        
+        // Заполнение остатка, если nbParticles не квадрат
+        while (idx < nbParticles)
+        {
+            particlePositions[idx][0] = 0.5;
+            particlePositions[idx][1] = 0.5;
+            particlePositions[idx][2] = 0.0;
+            ++idx;
+        }
+    }
+    else if (distributionType == "two_clustered")
+    {
+        std::array<std::pair<RealType, RealType>, 2> centers = {
+        std::make_pair(0.25, 0.25),
+        std::make_pair(0.75, 0.75)
+        };
 
+        std::uniform_real_distribution<RealType> chargeDist(-1.0, 1.0);
+        
+        long int perCluster = nbParticles / 2;
+        long int idx = 0;
+    
+        for (const auto &c : centers)
+        {
+            for (int i = 0; i < perCluster; ++i)
+            {
+
+                RealType x = c.first + 0.05 * normal(rng);
+                RealType y = c.second + 0.05 * normal(rng);
+                
+
+                x = std::min(std::max(x, RealType(0.0)), RealType(1.0));
+                y = std::min(std::max(y, RealType(0.0)), RealType(1.0));
+                
+                particlePositions[idx][0] = x;
+                particlePositions[idx][1] = y;
+                particlePositions[idx][2] = chargeDist(rng);
+                ++idx;
+            }
+        }
+    }
     else if (distributionType == "normal")
     {
         std::normal_distribution<RealType> normalX(0.5, 0.15); // center=0.5, std=0.15
@@ -183,7 +255,33 @@ void runWithP(const long int TreeHeight, const long int nbParticles, const std::
     }
     timerExecute.stop();
     std::cout << "Execute in " << timerExecute.getElapsed() << "s" << std::endl;
+{
+        std::string resultsCsv = distributionType + "_fmm_results.csv";
+        std::ofstream out(resultsCsv);
+        if (!out.is_open()) {
+            std::cerr << "Warning: Could not save " << resultsCsv << "\n";
+        } else {
+            out << "x,y,charge_input,potential_output\n";
+            out << std::scientific << std::setprecision(15); // точность double
 
+            tree.applyToAllLeaves([&out](auto &&leafHeader, const long int *particleIndexes,
+                                         const std::array<ParticleDataType *, Dim + 1> particleDataPtr,
+                                         const std::array<ParticleRhsType *, NbRhsValuesPerParticle> particleRhsPtr)
+            {
+                for (int idx = 0; idx < leafHeader.nbParticles; ++idx)
+                {
+                    RealType x = particleDataPtr[0][idx];
+                    RealType y = particleDataPtr[1][idx];
+                    RealType charge = particleDataPtr[2][idx];        // входной заряд
+                    RealType potential = particleRhsPtr[0][idx];      // ← РЕЗУЛЬТАТ FMM!
+                    out << x << "," << y << "," << charge << "," << potential << "\n";
+                }
+            });
+            out.close();
+            std::cout << "FMM results saved to: " << resultsCsv 
+                      << " (" << nbParticles << " points)" << std::endl;
+        }
+    }
     std::ofstream resultFile("results.csv", std::ios::app);
     if (!std::filesystem::exists("results.csv"))
     {
@@ -205,26 +303,26 @@ void runWithP(const long int TreeHeight, const long int nbParticles, const std::
     hist[n] += 1; });
 
     // Save histogram to CSV
-    // std::string histFileName = distributionType + "_hist.csv";
-    // std::ofstream histFile(histFileName, std::ios::app);
-    // histFile << "N,TreeHeight,ParticlesPerLeaf,LeafCount\n";
-    // for (const auto &kv : hist)
-    // {
-    //     histFile << nbParticles << "," << TreeHeight << "," << kv.first << "," << kv.second << "\n";
-    // }
-    // histFile.close();
-    // std::cout << "Histogram saved to: " << histFileName << std::endl;
-    // if (nbParticles < 1e4)
-    // {
-    //     std::string particleFile = distributionType + "_particles.csv";
-    //     std::ofstream particleOut(particleFile);
-    //     particleOut << "x,y,charge\n";
-    //     for (const auto &p : particlePositions)
-    //     {
-    //         particleOut << p[0] << "," << p[1] << "," << p[2] << "\n";
-    //     }
-    //     std::cout << "Saved particle positions to: " << particleFile << std::endl;
-    // }
+    std::string histFileName = distributionType + "_hist.csv";
+    std::ofstream histFile(histFileName, std::ios::app);
+    histFile << "N,TreeHeight,ParticlesPerLeaf,LeafCount\n";
+    for (const auto &kv : hist)
+    {
+        histFile << nbParticles << "," << TreeHeight << "," << kv.first << "," << kv.second << "\n";
+    }
+    histFile.close();
+    std::cout << "Histogram saved to: " << histFileName << std::endl;
+    if (nbParticles < 1e4)
+    {
+        std::string particleFile = distributionType + "_particles.csv";
+        std::ofstream particleOut(particleFile);
+        particleOut << "x,y,charge\n";
+        for (const auto &p : particlePositions)
+        {
+            particleOut << p[0] << "," << p[1] << "," << p[2] << "\n";
+        }
+        std::cout << "Saved particle positions to: " << particleFile << std::endl;
+    }
     if (!noCheck)
     {
         std::array<RealType *, 3> particles;
@@ -281,10 +379,10 @@ void runWithP(const long int TreeHeight, const long int nbParticles, const std::
 
         //////////////////////////////////////////////////////////////////////
         // result.csv
-        //  resultFile << TreeHeight << "," << P << "," << distributionType << ","
-        //             << partcilesRhsAccuracy[0].getRelativeInfNorm() << ","
-        //             << timerExecute.getElapsed() << ","
-        //             << timerDirect.getElapsed() << "," << nbParticles << std::endl;
+         resultFile << TreeHeight << "," << P << "," << distributionType << ","
+                    << partcilesRhsAccuracy[0].getRelativeInfNorm() << ","
+                    << timerExecute.getElapsed() << ","
+                    << timerDirect.getElapsed() << "," << nbParticles << std::endl;
         std::cout << TreeHeight << "," << P << "," << distributionType << ","
                   << partcilesRhsAccuracy[0].getRelativeInfNorm() << ","
                   << timerExecute.getElapsed() << ","

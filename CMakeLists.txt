@@ -320,5 +320,3 @@ if( BUILD_TESTS )
     enable_testing()
     add_subdirectory(unit-tests)
 endif()
-
-
