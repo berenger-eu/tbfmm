@@ -65,6 +65,28 @@ private:
         return ax * OrderSize + ay;
     }
 
+    static void computeHermiteValues(
+        const RealType x,
+        RealType* const h,
+        const int size)
+    {
+        h[0] = std::exp(-x * x);
+
+        if (size <= 1)
+        {
+            return;
+        }
+
+        h[1] = RealType(2) * x * h[0];
+
+        for (int n = 1; n < size - 1; ++n)
+        {
+            h[n + 1] =
+                RealType(2) * x * h[n]
+                - RealType(2 * n) * h[n - 1];
+        }
+    }
+
     void precomputeFactorials()
     {
         factorials[0] = RealType(1);
@@ -474,6 +496,87 @@ public:
                         expansionIndex(ax, ay);
 
                     GetPtr(inOutUpperCell)[parentIdx] += accumulator;
+                }
+            }
+        }
+    }
+    
+    /**
+     * @brief Multipole to Local.
+     *
+     * L_beta += (-1)^|beta| / beta!
+     *           sum_alpha A_alpha h_{alpha+beta}((s_B - t_C)/sqrt(delta)).
+     */
+    template <
+        class CellSymbolicData,
+        class CellClassContainer,
+        class CellClass>
+    void M2L(
+        const CellSymbolicData& inTargetIndex,
+        const long int inLevel,
+        const CellClassContainer& inInteractingCells,
+        const long int neighPos[],
+        const long int inNbNeighbors,
+        CellClass& inOutCell) const
+    {
+        const std::array<RealType, SpaceIndexType::Dim> targetCenter =
+            getBoxCenter(inTargetIndex.boxCoord, inLevel);
+
+        constexpr int HermiteSize = 2 * P + 1;
+
+        for (long int idxNeigh = 0; idxNeigh < inNbNeighbors; ++idxNeigh)
+        {
+            const std::array<long int, SpaceIndexType::Dim> relativePos =
+                spaceIndexSystem.getRelativePosFromInteractionIndex(
+                    neighPos[idxNeigh]);
+
+            const std::array<long int, SpaceIndexType::Dim> sourceCoord{
+                inTargetIndex.boxCoord[0] + relativePos[0],
+                inTargetIndex.boxCoord[1] + relativePos[1]};
+
+            const std::array<RealType, SpaceIndexType::Dim> sourceCenter =
+                getBoxCenter(sourceCoord, inLevel);
+
+            const RealType dx =
+                (sourceCenter[0] - targetCenter[0]) * invSqrtDelta;
+
+            const RealType dy =
+                (sourceCenter[1] - targetCenter[1]) * invSqrtDelta;
+
+            RealType hermiteX[HermiteSize];
+            RealType hermiteY[HermiteSize];
+
+            computeHermiteValues(dx, hermiteX, HermiteSize);
+            computeHermiteValues(dy, hermiteY, HermiteSize);
+
+            const auto& sourceMultipole =
+                inInteractingCells[idxNeigh];
+
+            for (int bx = 0; bx < OrderSize; ++bx)
+            {
+                for (int by = 0; by < OrderSize; ++by)
+                {
+                    RealType accumulator = RealType(0);
+
+                    for (int ax = 0; ax < OrderSize; ++ax)
+                    {
+                        for (int ay = 0; ay < OrderSize; ++ay)
+                        {
+                            accumulator +=
+                                GetPtr(sourceMultipole)[expansionIndex(ax, ay)]
+                                * hermiteX[ax + bx]
+                                * hermiteY[ay + by];
+                        }
+                    }
+
+                    if ((bx + by) % 2 != 0)
+                    {
+                        accumulator = -accumulator;
+                    }
+
+                    accumulator /= factorials[bx] * factorials[by];
+
+                    GetPtr(inOutCell)[expansionIndex(bx, by)] += accumulator;
                 }
             }
         }
