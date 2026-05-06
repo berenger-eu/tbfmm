@@ -669,6 +669,70 @@ public:
             }
         }
     }
+    
+    /**
+     * @brief Local to Particle.
+     *
+     * Evaluate local expansion at target particles inside one leaf.
+     */
+    template <
+        class CellSymbolicData,
+        class LeafClass,
+        class ParticlesClass,
+        class ParticlesClassRhs>
+    void L2P(
+        const CellSymbolicData& LeafIndex,
+        const LeafClass& LeafCell,
+        const long int /*particlesIndexes*/[],
+        const ParticlesClass& inOutParticles,
+        ParticlesClassRhs& inOutParticlesRhs,
+        const long int inNbParticles) const
+    {
+        const RealType* const local = GetPtr(LeafCell);
+
+        const std::array<RealType, SpaceIndexType::Dim> cellPosition =
+            getLeafCenter(LeafIndex.boxCoord);
+
+        const RealType* const positionsX = GetPtr(inOutParticles[0]);
+        const RealType* const positionsY = GetPtr(inOutParticles[1]);
+        RealType* const potentials = GetPtr(inOutParticlesRhs[0]);
+
+        for (long int idxPart = 0; idxPart < inNbParticles; ++idxPart)
+        {
+            const RealType dx =
+                (positionsX[idxPart] - cellPosition[0]) * invSqrtDelta;
+
+            const RealType dy =
+                (positionsY[idxPart] - cellPosition[1]) * invSqrtDelta;
+
+            RealType powersX[OrderSize];
+            RealType powersY[OrderSize];
+
+            powersX[0] = RealType(1);
+            powersY[0] = RealType(1);
+
+            for (int k = 1; k < OrderSize; ++k)
+            {
+                powersX[k] = powersX[k - 1] * dx;
+                powersY[k] = powersY[k - 1] * dy;
+            }
+
+            RealType potential = RealType(0);
+
+            for (int bx = 0; bx < OrderSize; ++bx)
+            {
+                for (int by = 0; by < OrderSize; ++by)
+                {
+                    potential +=
+                        local[expansionIndex(bx, by)]
+                        * powersX[bx]
+                        * powersY[by];
+                }
+            }
+
+            potentials[idxPart] += potential;
+        }
+    }
 };
 
 #endif // TBFGAUSSKERNEL_HPP
