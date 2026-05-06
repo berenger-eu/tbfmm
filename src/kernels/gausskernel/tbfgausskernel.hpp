@@ -97,6 +97,16 @@ private:
         }
     }
 
+    RealType binomial(const int n, const int k) const
+    {
+        if (k < 0 || k > n)
+        {
+            return RealType(0);
+        }
+
+        return factorials[n] / (factorials[k] * factorials[n - k]);
+    }
+
     std::array<RealType, SpaceIndexType::Dim>
     getLeafCenter(const std::array<long int, SpaceIndexType::Dim>& coordinate) const
     {
@@ -500,7 +510,7 @@ public:
             }
         }
     }
-    
+
     /**
      * @brief Multipole to Local.
      *
@@ -577,6 +587,84 @@ public:
                     accumulator /= factorials[bx] * factorials[by];
 
                     GetPtr(inOutCell)[expansionIndex(bx, by)] += accumulator;
+                }
+            }
+        }
+    }
+
+    /**
+     * @brief Local to Local.
+     *
+     * Translate local expansion coefficients
+     * from parent target cell to child target cells.
+     */
+    template <
+        class CellSymbolicData,
+        class CellClass,
+        class CellClassContainer>
+    void L2L(
+        const CellSymbolicData& inParentIndex,
+        const long int inLevel,
+        const CellClass& inUpperCell,
+        CellClassContainer& inOutLowerCell,
+        const long int childrenPos[],
+        const long int inNbChildren) const
+    {
+        const std::array<RealType, SpaceIndexType::Dim> parentCenter =
+            getBoxCenter(inParentIndex.boxCoord, inLevel);
+
+        for (long int idxChild = 0; idxChild < inNbChildren; ++idxChild)
+        {
+            const auto childIndex =
+                spaceIndexSystem.getChildIndexFromParent(
+                    inParentIndex.spaceIndex,
+                    childrenPos[idxChild]);
+
+            const std::array<long int, SpaceIndexType::Dim> childCoord =
+                spaceIndexSystem.getBoxPosFromIndex(childIndex);
+
+            const std::array<RealType, SpaceIndexType::Dim> childCenter =
+                getBoxCenter(childCoord, inLevel + 1);
+
+            const RealType dx =
+                (childCenter[0] - parentCenter[0]) * invSqrtDelta;
+
+            const RealType dy =
+                (childCenter[1] - parentCenter[1]) * invSqrtDelta;
+
+            RealType powersX[OrderSize];
+            RealType powersY[OrderSize];
+
+            powersX[0] = RealType(1);
+            powersY[0] = RealType(1);
+
+            for (int k = 1; k < OrderSize; ++k)
+            {
+                powersX[k] = powersX[k - 1] * dx;
+                powersY[k] = powersY[k - 1] * dy;
+            }
+
+            for (int bx = 0; bx < OrderSize; ++bx)
+            {
+                for (int by = 0; by < OrderSize; ++by)
+                {
+                    RealType accumulator = RealType(0);
+
+                    for (int ax = bx; ax < OrderSize; ++ax)
+                    {
+                        for (int ay = by; ay < OrderSize; ++ay)
+                        {
+                            accumulator +=
+                                GetPtr(inUpperCell)[expansionIndex(ax, ay)]
+                                * binomial(ax, bx)
+                                * binomial(ay, by)
+                                * powersX[ax - bx]
+                                * powersY[ay - by];
+                        }
+                    }
+
+                    GetPtr(inOutLowerCell[idxChild])[expansionIndex(bx, by)] +=
+                        accumulator;
                 }
             }
         }
