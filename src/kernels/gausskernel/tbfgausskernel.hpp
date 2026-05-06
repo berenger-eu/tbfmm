@@ -3,6 +3,9 @@
 
 #include <array>
 #include <cmath>
+#include <functional>
+#include <atomic>
+#include <iostream>
 
 #include "tbfglobal.hpp"
 #include "kernels/P2P/FP2PGauss.hpp"
@@ -47,6 +50,16 @@ private:
     const RealType invSqrtDelta;
 
     RealType factorials[OrderSize];
+    #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+    inline static std::atomic<long long> counterP2M{0};
+    inline static std::atomic<long long> counterM2M{0};
+    inline static std::atomic<long long> counterM2L{0};
+    inline static std::atomic<long long> counterL2L{0};
+    inline static std::atomic<long long> counterL2P{0};
+    inline static std::atomic<long long> counterP2P{0};
+    inline static std::atomic<long long> counterP2PTsm{0};
+    inline static std::atomic<long long> counterP2PInner{0};
+    #endif
 
     template <class Container>
     static auto GetPtr(Container& ptr)
@@ -58,6 +71,18 @@ private:
     static auto GetPtr(const Container& ptr)
     {
         return &ptr[0];
+    }
+
+    template <class Container>
+    static auto GetPtr(std::reference_wrapper<Container> ptr)
+    {
+        return &ptr.get()[0];
+    }
+
+    template <class Container>
+    static auto GetPtr(std::reference_wrapper<const Container> ptr)
+    {
+        return &ptr.get()[0];
     }
 
     static constexpr int expansionIndex(const int ax, const int ay)
@@ -185,7 +210,32 @@ public:
 
     TbfGaussKernel& operator=(const TbfGaussKernel&) = default;
     TbfGaussKernel& operator=(TbfGaussKernel&&) = default;
+    #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+    static void ResetCounters()
+    {
+        counterP2M = 0;
+        counterM2M = 0;
+        counterM2L = 0;
+        counterL2L = 0;
+        counterL2P = 0;
+        counterP2P = 0;
+        counterP2PTsm = 0;
+        counterP2PInner = 0;
+    }
 
+    static void PrintCounters()
+    {
+        std::cout << "Kernel call counters:\n";
+        std::cout << "P2M      = " << counterP2M << "\n";
+        std::cout << "M2M      = " << counterM2M << "\n";
+        std::cout << "M2L      = " << counterM2L << "\n";
+        std::cout << "L2L      = " << counterL2L << "\n";
+        std::cout << "L2P      = " << counterL2P << "\n";
+        std::cout << "P2P      = " << counterP2P << "\n";
+        std::cout << "P2PTsm   = " << counterP2PTsm << "\n";
+        std::cout << "P2PInner = " << counterP2PInner << "\n";
+    }
+    #endif
     template <
         class LeafSymbolicData,
         class ParticlesClassValues,
@@ -202,7 +252,10 @@ public:
         ParticlesClassRhs& inTargetsRhs,
         const long int inNbOutParticles,
         [[maybe_unused]] const long arrayIndexSrc) const
-    {
+    {   
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterP2P;
+        #endif
         if constexpr (SpaceIndexType::IsPeriodic)
         {
             using PeriodicShifter =
@@ -280,6 +333,9 @@ public:
         const long int inNbOutParticles,
         [[maybe_unused]] const long arrayIndexSrc) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterP2PTsm;
+        #endif
         if constexpr (SpaceIndexType::IsPeriodic)
         {
             using PeriodicShifter =
@@ -347,6 +403,9 @@ public:
         ParticlesClassRhs& inTargetsRhs,
         const long int inNbOutParticles) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterP2PInner;
+        #endif
         FP2PGauss::template GenericInner<RealType>(
             inTargets,
             inTargetsRhs,
@@ -372,6 +431,9 @@ public:
         const unsigned long long inNbParticles,
         LeafClass& LeafCell) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterP2M;
+        #endif
         RealType* const multipole = &LeafCell[0];
 
         const std::array<RealType, SpaceIndexType::Dim> cellPosition =
@@ -444,6 +506,9 @@ public:
         const long int childrenPos[],
         const long int inNbChildren) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterM2M;
+        #endif
         const std::array<RealType, SpaceIndexType::Dim> parentCenter =
             getBoxCenter(inParentIndex.boxCoord, inLevel);
 
@@ -529,6 +594,9 @@ public:
         const long int inNbNeighbors,
         CellClass& inOutCell) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterM2L;
+        #endif
         const std::array<RealType, SpaceIndexType::Dim> targetCenter =
             getBoxCenter(inTargetIndex.boxCoord, inLevel);
 
@@ -548,10 +616,10 @@ public:
                 getBoxCenter(sourceCoord, inLevel);
 
             const RealType dx =
-                (sourceCenter[0] - targetCenter[0]) * invSqrtDelta;
+                (targetCenter[0] - sourceCenter[0]) * invSqrtDelta;
 
             const RealType dy =
-                (sourceCenter[1] - targetCenter[1]) * invSqrtDelta;
+                (targetCenter[1] - sourceCenter[1]) * invSqrtDelta;
 
             RealType hermiteX[HermiteSize];
             RealType hermiteY[HermiteSize];
@@ -610,6 +678,9 @@ public:
         const long int childrenPos[],
         const long int inNbChildren) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterL2L;
+        #endif
         const std::array<RealType, SpaceIndexType::Dim> parentCenter =
             getBoxCenter(inParentIndex.boxCoord, inLevel);
 
@@ -669,7 +740,7 @@ public:
             }
         }
     }
-    
+
     /**
      * @brief Local to Particle.
      *
@@ -688,6 +759,9 @@ public:
         ParticlesClassRhs& inOutParticlesRhs,
         const long int inNbParticles) const
     {
+        #ifdef DEBUG_GAUSS_KERNEL_COUNTERS
+        ++counterL2P;
+        #endif
         const RealType* const local = GetPtr(LeafCell);
 
         const std::array<RealType, SpaceIndexType::Dim> cellPosition =
