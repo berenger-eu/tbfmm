@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <array>
+#include <stdexcept>
 
 template <class RealType, class DataType, long int NbDataValuesPerParticle, class RhsType, long int NbRhsValuesPerParticle,
           class MultipoleClass, class LocalClass, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
@@ -18,7 +19,7 @@ public:
     using LeafGroupClass = TbfParticlesContainer<RealType, DataType, NbDataValuesPerParticle, RhsType, NbRhsValuesPerParticle, SpaceIndexType>;
     using CellGroupClass = TbfCellsContainer<RealType, MultipoleClass, LocalClass, SpaceIndexType>;
     using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
-    using IndexType = typename TbfDefaultSpaceIndexType<RealType>::IndexType;
+    using IndexType = typename SpaceIndexType::IndexType;
 
 protected:
     const SpacialConfiguration configuration;
@@ -45,6 +46,9 @@ public:
                                                           inNbElementsPerBlock),
           oneGroupPerParent(inOneGroupPerParent), nbParticles(static_cast<long int>(std::size(inParticlePositions))){
 
+        if(nbElementsPerBlock <= 0){
+            throw std::invalid_argument("TbfTree requires a positive block size (or -1 for automatic selection)");
+        }
         cellBlocks.resize(configuration.getTreeHeight());
         if(std::size(inParticlePositions) == 0){
             return;
@@ -175,7 +179,7 @@ public:
     }
 
     const std::vector<CellGroupClass>& getLeafGroups() const {
-        return cellBlocks.bakc(); //[cellBlocks.size()-1];
+        return cellBlocks.back(); //[cellBlocks.size()-1];
     }
 
     long int getNbParticleGroups() const{
@@ -274,14 +278,14 @@ public:
     //////////////////////////////////////////////////////////////////////////////
 
     auto getAllParticlesData(){
-        std::unique_ptr<std::array<RealType, NbDataValuesPerParticle>[]> data(new std::array<RealType, NbDataValuesPerParticle>[nbParticles]());
+        std::unique_ptr<std::array<DataType, NbDataValuesPerParticle>[]> data(new std::array<DataType, NbDataValuesPerParticle>[nbParticles]());
 
         applyToAllLeaves([&data](auto&& leafHeader, const long int* particleIndexes,
                              const std::array<DataType*, NbDataValuesPerParticle> particleDataPtr,
                              const std::array<RhsType*, NbRhsValuesPerParticle> /*particleRhsPtr*/){
             for(int idxValue = 0 ; idxValue < NbDataValuesPerParticle ; ++idxValue){
                 for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                    data[idxValue][particleIndexes[idxPart]] = particleDataPtr[idxValue][idxPart];
+                    data[particleIndexes[idxPart]][idxValue] = particleDataPtr[idxValue][idxPart];
                 }
             }
         });
@@ -297,7 +301,7 @@ public:
                              const std::array<RhsType*, NbRhsValuesPerParticle> particleRhsPtr){
             for(int idxValue = 0 ; idxValue < NbRhsValuesPerParticle ; ++idxValue){
                 for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
-                    rhs[idxValue][particleIndexes[idxPart]] = particleRhsPtr[idxValue][idxPart];
+                    rhs[particleIndexes[idxPart]][idxValue] = particleRhsPtr[idxValue][idxPart];
                 }
             }
         });
@@ -306,7 +310,7 @@ public:
     }
 
     void rebuild(){
-        std::vector<std::array<RealType, NbDataValuesPerParticle>> data(nbParticles);
+        std::vector<std::array<DataType, NbDataValuesPerParticle>> data(nbParticles);
         std::vector<std::array<RhsType, NbRhsValuesPerParticle>> rhs(nbParticles);
 
         applyToAllLeaves([&data, &rhs](auto&& leafHeader, const long int* particleIndexes,

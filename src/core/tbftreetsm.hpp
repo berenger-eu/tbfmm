@@ -26,7 +26,7 @@ public:
     using CellGroupClassTarget = typename TreeClassTarget::CellGroupClass;
 
     using SpacialConfiguration = TbfSpacialConfiguration<RealType, SpaceIndexType::Dim>;
-    using IndexType = typename TbfDefaultSpaceIndexType<RealType>::IndexType;
+    using IndexType = typename SpaceIndexType::IndexType;
 
 protected:
     const SpacialConfiguration configuration;
@@ -46,12 +46,12 @@ public:
         : configuration(inConfiguration), spaceSystem(configuration),
           treeSource(inConfiguration, inParticleSourcePositions,
                      inNbElementsPerBlock == -1 ?
-                         TbfBlockSizeFinder::EstimateTsm<RealType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
+                         TbfBlockSizeFinder::EstimateTsm<RealType, ParticleContainer, ParticleContainer, SpaceIndexType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
                          inNbElementsPerBlock,
                      inOneGroupPerParent),
           treeTarget(inConfiguration, inParticleTargetPositions,
                      inNbElementsPerBlock == -1 ?
-                         TbfBlockSizeFinder::EstimateTsm<RealType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
+                         TbfBlockSizeFinder::EstimateTsm<RealType, ParticleContainer, ParticleContainer, SpaceIndexType>(inParticleSourcePositions, inParticleTargetPositions, configuration):
                          inNbElementsPerBlock,
                      inOneGroupPerParent){
     }
@@ -259,22 +259,8 @@ public:
         inStream << inAlgo.configuration << "\n";
         inStream << " - Space system: " << "\n";
         inStream << inAlgo.spaceSystem << "\n";
-        inStream << " - Number of elements per block: " << inAlgo.nbElementsPerBlock << "\n";
-        inStream << " - One group per element: " << inAlgo.oneGroupPerParent << "\n";
-        inStream << " - Number of particles: " << inAlgo.nbParticles << "\n";
-
-        inStream << " -- Cell groups:" << "\n";
-        for (long int idxLevel = 0 ; idxLevel < inAlgo.configuration.getTreeHeight() ; ++idxLevel) {
-            inStream << " -- level:" << idxLevel << "\n";
-            for(const auto& cellGroup : inAlgo.cellBlocks[idxLevel]){
-                inStream << (cellGroup) << "\n";
-            }
-        }
-
-        inStream << " -- Leaf groups:" << "\n";
-        for(const auto& leafGroup : inAlgo.particleGroups){
-            inStream << (leafGroup) << "\n";
-        }
+        inStream << " -- Source tree:" << "\n" << inAlgo.treeSource;
+        inStream << " -- Target tree:" << "\n" << inAlgo.treeTarget;
         return inStream;
     }
 };

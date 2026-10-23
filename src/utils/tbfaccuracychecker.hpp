@@ -1,6 +1,7 @@
 #ifndef TBFACCURACYCHECKER_HPP
 #define TBFACCURACYCHECKER_HPP
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -11,7 +12,7 @@ public:
 
 private:
     RealType maxDiff = 0;
-    RealType maxValue = std::numeric_limits<RealType>::min();
+    RealType maxValue = 0;
     RealType l2Diff = 0;
     RealType l2Dot = 0;
     RealType maxRelativeDiff = 0;
@@ -27,10 +28,10 @@ public:
 
     void addValues(const RealType inGood, const RealType inBad){
         maxDiff = std::max(maxDiff, std::abs(inGood - inBad));
-        maxValue = std::max(maxValue, inGood);
+        maxValue = std::max(maxValue, std::abs(inGood));
         l2Diff += ((inBad - inGood) * (inBad - inGood));
         l2Dot += (inGood * inGood);
-        maxRelativeDiff = std::max(maxRelativeDiff, (inGood != 0 ? std::abs(inGood - inBad)/std::abs(inGood) : inBad));
+        maxRelativeDiff = std::max(maxRelativeDiff, (inGood != 0 ? std::abs(inGood - inBad)/std::abs(inGood) : std::abs(inBad)));
         nbElements += 1;
     }
 
@@ -90,12 +91,13 @@ public:
             return std::sqrt(l2Diff / l2Dot);
         }
         else{
-            return l2Diff;
+            return std::sqrt(l2Diff);
         }
     }
 
     RealType getRelativeInfNorm() const{
-        return maxDiff / maxValue;
+        // With an all-zero reference, report the absolute error.
+        return maxValue != 0 ? maxDiff / maxValue : maxDiff;
     }
 
     RealType getMaxRelativeDiff() const{

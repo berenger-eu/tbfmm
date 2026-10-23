@@ -3,9 +3,11 @@
 
 #include "tbfglobal.hpp"
 
+#include <algorithm>
 #include <thread>
 #include <set>
 #include <sstream>
+#include <cstdlib>
 
 namespace TbfBlockSizeFinder{
 
@@ -16,8 +18,10 @@ int Estimate(const ParticleContainer& inParticlePositions,
     if(getenv("TBFMM_BLOCK_SIZE")){
         std::istringstream iss(getenv("TBFMM_BLOCK_SIZE"),std::istringstream::in);
         int blockSize = -1;
-        iss >> blockSize;
-        if( /*iss.tellg()*/ iss.eof() ) return blockSize;
+        if(iss >> blockSize){
+            iss >> std::ws;
+            if(iss.eof() && blockSize > 0) return blockSize;
+        }
     }
 
     using IndexType = typename SpaceIndexType::IndexType;
@@ -31,7 +35,7 @@ int Estimate(const ParticleContainer& inParticlePositions,
         allIndexes.insert(index);
     }
 
-    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*2)));
+    return std::max(1, static_cast<int>(allIndexes.size()/(static_cast<std::size_t>(std::max(1, inNbThreads))*2)));
 }
 
 template <class RealType, class ParticleContainerSource, class ParticleContainerTarget, class SpaceIndexType = TbfDefaultSpaceIndexType<RealType>>
@@ -42,8 +46,10 @@ int EstimateTsm(const ParticleContainerSource& inParticlePositionsSource,
     if(getenv("TBFMM_BLOCK_SIZE")){
         std::istringstream iss(getenv("TBFMM_BLOCK_SIZE"),std::istringstream::in);
         int blockSize = -1;
-        iss >> blockSize;
-        if( /*iss.tellg()*/ iss.eof() ) return blockSize;
+        if(iss >> blockSize){
+            iss >> std::ws;
+            if(iss.eof() && blockSize > 0) return blockSize;
+        }
     }
 
     using IndexType = typename SpaceIndexType::IndexType;
@@ -62,7 +68,7 @@ int EstimateTsm(const ParticleContainerSource& inParticlePositionsSource,
         allIndexes.insert(index);
     }
 
-    return std::max(1, static_cast<int>(allIndexes.size()/(inNbThreads*2)));
+    return std::max(1, static_cast<int>(allIndexes.size()/(static_cast<std::size_t>(std::max(1, inNbThreads))*2)));
 }
 
 }

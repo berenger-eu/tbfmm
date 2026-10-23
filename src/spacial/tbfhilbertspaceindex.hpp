@@ -162,11 +162,11 @@ public:
             host[idxDim] = getTreeCoordinate( inPos[idxDim] - configuration.getBoxCorner()[idxDim], idxDim);
         }
 
-        return Morton2Hilbert(getIndexFromBoxPos(host));
+        return getIndexFromBoxPos(host);
     }
 
     std::array<RealType,Dim> getRealPosFromBoxPos(const std::array<long int,Dim>& inPos) const {
-        const std::array<RealType,Dim> boxCorner(configuration.getBoxCenter(),-(configuration.getBoxWidths()/2));
+        const auto& boxCorner = configuration.getBoxCorner();
 
         std::array<RealType,Dim> host;
 

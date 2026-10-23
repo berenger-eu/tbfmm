@@ -10,6 +10,8 @@
 #include <memory>
 #include <cassert>
 #include <cstring>
+#include <algorithm>
+#include <new>
 
 template <class ... BlockDefinitions>
 class TbfMemoryBlock{
@@ -22,6 +24,11 @@ class TbfMemoryBlock{
 
     using TupleOfBlockDefinitions = std::tuple<typename std::decay<BlockDefinitions>::type ...>;
 
+    // Both the allocation base and each block offset must satisfy alignment.
+    constexpr static std::size_t MemoryAlignment = std::max({
+        std::size_t(alignof(long int)), std::size_t(BlockDefinitions::BlockMemoryAlignementBytes)...,
+        std::size_t(alignof(typename BlockDefinitions::DataType))...});
+
     template <class SizeContainerClass>
 #ifdef __NVCC__
     __device__ __host__
@@ -33,7 +40,8 @@ class TbfMemoryBlock{
         TbfUtils::for_each<TupleOfBlockDefinitions>([&](auto structWithBlockType, auto idxBlock){
             using BlockType = typename decltype(structWithBlockType)::BlockTypeT;
             sizeOfBlocks[idxBlock] = BlockType::GetMemorySizeFromNbItems(inSizes[idxBlock]);
-            alignementOfBlocks[idxBlock] = BlockType::BlockMemoryAlignementBytes;
+            alignementOfBlocks[idxBlock] = std::max(
+                BlockType::BlockMemoryAlignementBytes, static_cast<long int>(alignof(typename BlockType::DataType)));
         });
 
         std::array<std::pair<long int, long int>, NbBlocks + 1> sizeAndOffset;
@@ -43,11 +51,16 @@ class TbfMemoryBlock{
 
         for(long int idxBlock = 1 ; idxBlock < static_cast<long int>(inSizes.size()) ; ++idxBlock){
             sizeAndOffset[idxBlock].first = sizeOfBlocks[idxBlock];
-            sizeAndOffset[idxBlock].second = (sizeAndOffset[idxBlock-1].first + sizeAndOffset[idxBlock-1].second);
+            const long int endOfPrevious = sizeAndOffset[idxBlock-1].first + sizeAndOffset[idxBlock-1].second;
+            const long int alignment = alignementOfBlocks[idxBlock];
+            sizeAndOffset[idxBlock].second = ((endOfPrevious + alignment - 1)/alignment)*alignment;
         }
 
         sizeAndOffset[NbBlocks].first = 0;
-        sizeAndOffset[NbBlocks].second = (sizeAndOffset[NbBlocks-1].first + sizeAndOffset[NbBlocks-1].second);
+        const long int endOfBlocks = sizeAndOffset[NbBlocks-1].first + sizeAndOffset[NbBlocks-1].second;
+        // The two trailing arrays contain long int, even if the last block is bytes.
+        const long int headerAlignment = alignof(long int);
+        sizeAndOffset[NbBlocks].second = ((endOfBlocks + headerAlignment - 1)/headerAlignment)*headerAlignment;
 
         return sizeAndOffset;
     }
@@ -96,7 +109,7 @@ public:
 #ifndef __CUDA_ARCH__
         if(objectOwnData == true){
             freeAllItems();
-            delete[] rawMemoryPtr;
+            ::operator delete[](rawMemoryPtr, std::align_val_t(MemoryAlignment));
         }
 #endif
     }
@@ -114,10 +127,13 @@ public:
     __device__ __host__
 #endif
     TbfMemoryBlock& operator=(TbfMemoryBlock&& other){
+        if(this == &other){
+            return *this;
+        }
 #ifndef __CUDA_ARCH__
         if(objectOwnData == true){
             freeAllItems();
-            delete[] rawMemoryPtr;
+            ::operator delete[](rawMemoryPtr, std::align_val_t(MemoryAlignment));
         }
 #endif
 
@@ -183,23 +199,24 @@ public:
 
     template <class SizeContainerClass>
     void resetBlocksFromSizes(SizeContainerClass&& inNbItemsInBlocks){
-        if(objectOwnData){
-            freeAllItems();
-        }
-
         const std::array<std::pair<long int, long int>, NbBlocks + 1> sizeAndOffsetOfBlocks = GetSizeAndOffsetOfBlocks(inNbItemsInBlocks);
         const long int totalMemoryToAlloc = (sizeAndOffsetOfBlocks[NbBlocks].second
                                             + sizeof(long int) * NbBlocks
                                             + sizeof(long int) * NbBlocks);
 
-        if(allocatedMemorySizeInByte < totalMemoryToAlloc || objectOwnData == false){
-            if(objectOwnData == true){
-                freeAllItems();
-                delete[] rawMemoryPtr;
+        const bool needsAllocation = allocatedMemorySizeInByte < totalMemoryToAlloc || !objectOwnData;
+        // Allocate first so an allocation failure leaves the previous block intact.
+        unsigned char* newMemory = needsAllocation ? static_cast<unsigned char*>(
+            ::operator new[](totalMemoryToAlloc, std::align_val_t(MemoryAlignment))) : nullptr;
+        if(objectOwnData){
+            freeAllItems();
+        }
+        if(needsAllocation){
+            if(objectOwnData){
+                ::operator delete[](rawMemoryPtr, std::align_val_t(MemoryAlignment));
             }
-            // We allocate, so we will have to deallocate too
             objectOwnData = true;
-            rawMemoryPtr= new unsigned char[totalMemoryToAlloc];
+            rawMemoryPtr = newMemory;
             allocatedMemorySizeInByte = totalMemoryToAlloc;
         }
         memset(rawMemoryPtr, 0, totalMemoryToAlloc);
@@ -250,7 +267,7 @@ public:
     auto applyToBlock(FuncType&& inFunc){
         if(nbItemsInBlocks){
             using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
-            BlockType::ApplyToAllElements(reinterpret_cast<typename BlockType::DataType>(blockRawPtrs[IdxBlock]),
+            BlockType::ApplyToAllElements(reinterpret_cast<typename BlockType::DataType*>(blockRawPtrs[IdxBlock]),
                                           nbItemsInBlocks[IdxBlock], inFunc);
         }
     }
@@ -279,7 +296,7 @@ public:
         if(nbItemsInBlocks){
             TbfUtils::for_each<TupleOfBlockDefinitions>([&](auto structWithBlockType, auto idxBlock){
                 using BlockType = typename decltype(structWithBlockType)::BlockTypeT;
-                BlockType::ApplyToAllElementsConst(reinterpret_cast<typename BlockType::DataType*>(blockRawPtrs[idxBlock]),
+                BlockType::ApplyToAllElementsConst(reinterpret_cast<const typename BlockType::DataType*>(blockRawPtrs[idxBlock]),
                                               nbItemsInBlocks[idxBlock], inFunc);
             });
         }
@@ -289,7 +306,7 @@ public:
     auto applyToBlockConst(FuncType&& inFunc) const {
         if(nbItemsInBlocks){
             using BlockType = typename std::tuple_element<IdxBlock, TupleOfBlockDefinitions>::type;
-            BlockType::ApplyToAllElementsConst(reinterpret_cast<typename BlockType::DataType>(blockRawPtrs[IdxBlock]),
+            BlockType::ApplyToAllElementsConst(reinterpret_cast<const typename BlockType::DataType*>(blockRawPtrs[IdxBlock]),
                                           nbItemsInBlocks[IdxBlock], inFunc);
         }
     }

@@ -98,6 +98,43 @@ cmake -DTBFMM_USE_STARPU=/my_computer/StarPU/install/  -DTBFMM_ENABLE_SPECX=OFF
 make
 ```
 
+## Reproducible CPU build and tests
+
+Use a fresh build directory when changing compilers or enabling CUDA. A small
+CPU configuration with no third-party runtime or vectorization dependency is:
+
+```bash
+cmake -S . -B build-cpu -DCMAKE_BUILD_TYPE=Debug -DBUILD_TESTS=ON \
+  -DTBFMM_ENABLE_SPECX=OFF -DTBFMM_ENABLE_STARPU=OFF \
+  -DTBFMM_ENABLE_INASTEMP=OFF -DTBFMM_ENABLE_FFTW=OFF \
+  -DTBFMM_ENABLE_OPENMP=OFF
+cmake --build build-cpu --parallel 2
+ctest --test-dir build-cpu --output-on-failure
+```
+
+All `TBFMM_ENABLE_*` options default to `ON`; a dependency must also be found
+before its examples and tests are enabled. Enable OpenMP with
+`-DTBFMM_ENABLE_OPENMP=ON` and bound test parallelism, for example with
+`OMP_NUM_THREADS=3 ctest --test-dir build-cpu --output-on-failure`.
+Use `Release` for timing measurements; Debug builds retain assertions.
+The default extra flags include `-march=native`; set `-DTBFMM_EXTRA_FLAG=""`
+when building a portable CPU binary. If an existing cache contains an unsupported
+warning flag, clear `TBFMM_EXTRA_FLAG` or configure a new build directory.
+
+For GCC or Clang, the focused regression tests can also run with sanitizers:
+
+```bash
+cmake -S . -B build-sanitize -DBUILD_TESTS=ON -DCMAKE_BUILD_TYPE=Debug \
+  -DTBFMM_ENABLE_SPECX=OFF -DTBFMM_ENABLE_STARPU=OFF \
+  -DTBFMM_ENABLE_INASTEMP=OFF -DTBFMM_ENABLE_FFTW=OFF \
+  -DTBFMM_ENABLE_OPENMP=OFF -DTBFMM_EXTRA_FLAG= \
+  -DCMAKE_CXX_FLAGS="-fsanitize=address,undefined -fno-omit-frame-pointer"
+cmake --build build-sanitize --parallel 2 --target \
+  utest-tree-regressions utest-memoryblock utest-blocksizefinder utest-accuracychecker
+ctest --test-dir build-sanitize --output-on-failure \
+  -R 'utest-(tree-regressions|memoryblock|blocksizefinder|accuracychecker)$'
+```
+
 ## How to Compile on Windows
 First, you need to install a MSYS2 MinGW build envirnment following extensive instructions provided in the links below
 
@@ -1051,11 +1088,11 @@ for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
                          const std::array<ParticleRhsType*, 
                          				NbRhsValuesPerParticle> particleRhsPtr){
         // Update the position of the particles
-        for(lont int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
+        for(long int idxPart = 0 ; idxPart < leafHeader.nbParticles ; ++idxPart){
             // Use particle id if needed
             const long int originalParticleIndex = particleIndexes[idxPart];
             for(long int idxDim = 0 ; idxDim < Dim ; ++idxDim){
-                particleDataPtr[idxPart][idxDim] = ... TODO ... ;
+                particleDataPtr[idxDim][idxPart] = ... TODO ... ;
             }
         }
     });
@@ -1065,6 +1102,22 @@ for(long int idxLoop = 0 ; idxLoop < 10 ; ++idxLoop){
 	algorithm.execute(tree);
 }
 ```
+
+### Exporting particles and preserving identity
+
+`tree.getAllParticlesData()` returns a
+`std::unique_ptr<std::array<DataType, NbDataValuesPerParticle>[]>`;
+`tree.getAllParticlesRhs()` returns the corresponding array of RHS values.
+Both arrays are indexed as `[originalParticleIndex][component]`, independent of
+the spatial order used inside the tree. Leaf callback pointers instead use
+`[component][indexWithinLeaf]`. Their `particleIndexes` array maps each leaf entry
+back to its original index.
+
+`rebuild()` preserves original particle indices, particle data (in `DataType`),
+and RHS values while regrouping particles at their updated positions. Cell
+multipoles and local expansions are recreated. RHS values are preserved, so clear
+them before a fresh FMM evaluation if accumulation across iterations is unwanted.
+Keep positions inside the configured box before rebuilding.
 
 ## Cell/leaf/particles header (cellHeader/leafHeader)
 
@@ -1108,6 +1161,12 @@ if(accurater.getRelativeL2Norm() > 1E-6){
     // Oups...
 }
 ```
+
+The relative infinity norm divides the largest absolute error by the largest
+absolute reference value, so negative references are supported. For an all-zero
+reference vector, relative L2 and infinity accessors return the corresponding
+absolute norms. Per-element relative differences use absolute error when that
+reference element is zero. An empty checker reports zero errors.
 
 To check all the values of the particles, one can do as follows:
 
@@ -1157,6 +1216,22 @@ What could be done is to perform several test and try attempts to find the best 
 ## Select the block size (blocksize)
 
 We are currently trying to create a method to find a good blocksize, which is a balance between good granularity of the parallel tasks and the degree of parallelism.
+
+An explicit block size must be positive; `-1` selects automatic estimation.
+Invalid explicit sizes throw `std::invalid_argument` instead of constructing an
+empty tree for nonempty input. `TBFMM_BLOCK_SIZE` overrides automatic estimation
+only when it contains a positive integer; malformed and nonpositive overrides
+are ignored. If the worker count is unavailable or nonpositive, estimation uses
+one worker.
+
+### Memory block alignment
+
+`TbfMemoryBlock` aligns owned allocations and individual block offsets to their
+requested alignment, and aligns the trailing size/offset header to `long int`.
+A view constructed from an external raw buffer borrows it: the caller must keep
+that buffer alive and sufficiently aligned. Its header and data must come from
+the same block layout. Raw buffers are an in-memory interchange format; regenerate
+buffers when changing block definitions or library versions.
 
 ## Creating a new kernel
 

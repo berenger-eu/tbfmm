@@ -32,16 +32,23 @@ endif()
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/src")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    set(TBFMM_EXTRA_FLAG "-march=native -Wdangling-reference -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual  -Wall -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wno-error -fopenmp=libomp" CACHE STRING "Additional flags"  )
+    set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual  -Wall -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wno-error -fopenmp=libomp" CACHE STRING "Additional flags"  )
 elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 # suppress warnings from getenv
     add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 else()
-    set(TBFMM_EXTRA_FLAG "-march=native -Wdangling-reference -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual -Wconversion  -Wall -Wno-sign-conversion -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wconversion -Wno-error" CACHE STRING "Additional flags"  )
+    set(TBFMM_EXTRA_FLAG "-march=native -Wextra -Wnon-virtual-dtor -Wshadow -Wpointer-arith -Wcast-qual -Wconversion  -Wall -Wno-sign-conversion -pedantic -Woverloaded-virtual -Wpointer-arith -Wcast-qual -Wconversion -Wno-error" CACHE STRING "Additional flags"  )
 endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TBFMM_EXTRA_FLAG}")
 
 #################################################
+
+# Optional dependencies are enabled when found, unless explicitly disabled.
+option(TBFMM_ENABLE_SPECX "Enable Specx when available" ON)
+option(TBFMM_ENABLE_STARPU "Enable StarPU when configured" ON)
+option(TBFMM_ENABLE_INASTEMP "Enable Inastemp when available" ON)
+option(TBFMM_ENABLE_OPENMP "Enable OpenMP when available" ON)
+option(TBFMM_ENABLE_FFTW "Enable FFTW when available" ON)
 
 set(TBF_USE_LIST "")
 set(TBF_USE_LIST_AVAILABLE "")
@@ -185,8 +192,9 @@ list(APPEND TBF_USE_LIST_AVAILABLE INASTEMP)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     message(STATUS "MSVC detected")
-    if(NOT ${TBFMM_ENABLE_OPENMP})
-        message(STATUS "OpenMP Disabled")   
+    if(NOT TBFMM_ENABLE_OPENMP)
+        message(STATUS "OpenMP Disabled")
+    else()
         message(STATUS "OpenMP enabled with  -openmp:llvm -openmp:experimental")   
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -openmp:llvm -openmp:experimental")
         list(APPEND TBF_USE_LIST OPENMP)
